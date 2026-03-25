@@ -13,12 +13,18 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@types/express": "5.0.6",
-    "@types/node": "25.5.0",
+    "@mikro-orm/cli": "^7.0.5",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
     "tsc-watch": "6.3.1",
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "express": "5.2.1"
+    "@mikro-orm/core": "^7.0.5",
+    "@mikro-orm/decorators": "^7.0.5",
+    "@mikro-orm/mysql": "^7.0.5",
+    "@mikro-orm/sql-highlighter": "^1.0.1",
+    "express": "5.2.1",
+    "reflect-metadata": "^0.2.2"
   }
 }
