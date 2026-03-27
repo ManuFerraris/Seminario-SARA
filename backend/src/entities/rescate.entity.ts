@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Rescatista } from './rescatista.entity';
-import { Animal } from './animal.entity';
+import { Rescatista } from './rescatista.entity.js';
+import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Rescate {
@@ -18,7 +18,7 @@ export class Rescate {
     @PrimaryKey({ type: 'datetime' })
     fecha_hora!: Date;
 
-    @Property({ length: 255 })
+    @Property({type: 'string', length: 255 })
     lugar_rescate!: string;
 
 }

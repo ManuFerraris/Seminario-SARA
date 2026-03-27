@@ -3,16 +3,16 @@ import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 @Entity()
 export class Vacuna {
 
-    @PrimaryKey()
+    @PrimaryKey({ type: 'number' })
     numero!: number;
 
     @Property({ type: 'date' })
     fecha_vencimiento!: Date;
 
-    @Property({ length: 255 })
+    @Property({ type: 'string', length: 255 })
     droga!: string;
 
-    @Property()
+    @Property({ type: 'number' })
     stock!: number;
 
     @Property({ type: 'date' })

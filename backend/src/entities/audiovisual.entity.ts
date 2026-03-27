@@ -1,5 +1,5 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Animal } from './animal.entity';
+import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Audiovisual {
@@ -9,13 +9,13 @@ export class Audiovisual {
     animal!: Animal;
 
     // Segunda parte de la PK: el identificador interno del material para ese animal
-    @PrimaryKey()
+    @PrimaryKey({ type: 'number' })
     numero!: number;
 
-    @Property({ length: 255 })
+    @Property({ type: 'string', length: 255 })
     url_material!: string;
 
-    @Property({ length: 255, nullable: true })
+    @Property({ type: 'string',  length: 255, nullable: true })
     descripcion?: string;
 
 }

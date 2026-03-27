@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Vacuna } from './vacuna.entity';
-import { FichaMedica } from './ficha-medica.entity';
+import { Vacuna } from './vacuna.entity.js';
+import { FichaMedica } from './ficha-medica.entity.js';
 
 @Entity()
 export class AsignadaEn {

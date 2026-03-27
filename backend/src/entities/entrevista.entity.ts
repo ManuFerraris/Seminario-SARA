@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Adoptante } from './adoptante.entity';
-import { Colaborador } from './colaborador.entity';
+import { Adoptante } from './adoptante.entity.js';
+import { Colaborador } from './colaborador.entity.js';
 
 @Entity()
 export class Entrevista {
@@ -20,13 +20,13 @@ export class Entrevista {
     @Property({ type: 'datetime' })
     fecha_hora_rep!: Date;
 
-    @Property({ length: 15 })
+    @Property({type: 'string', length: 15 })
     estado!: string;
 
-    @Property({ length: 255, nullable: true })
+    @Property({type: 'string', length: 255, nullable: true })
     descripcion?: string;
 
-    @Property({ default: false })
+    @Property({ type: 'boolean', default: false })
     aprobada!: boolean;
 
 }

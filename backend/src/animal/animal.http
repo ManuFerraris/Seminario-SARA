@@ -1,0 +1,31 @@
+### findAll:
+GET http://localhost:3000/api/animal
+
+### getone:
+GET http://localhost:3000/api/animal
+
+### create:
+POST http://localhost:3000/api/animal
+Content-Type: application/json
+
+{
+    "especie": "Perro",
+    "raza": "Labrador",
+    "edad_estimada": 5,
+    "fecha_ingreso": "2024-01-01",
+    "estado": "Disponible",
+    "sexo": "Macho",
+    "peso": 30,
+    "descripcion": "Un perro amigable y juguetón."
+}
+
+### update:
+PUT http://localhost:3000/api/animal/1
+Content-Type: application/json
+
+{
+    "estado": "Adoptado"
+}
+
+### deleteAnimal:
+DELETE http://localhost:3000/api/animal/4

@@ -3,16 +3,16 @@ import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 @Entity()
 export class Donacion {
 
-    @PrimaryKey()
+    @PrimaryKey({ type: 'number' })
     numero!: number;
 
-    @Property({ length: 20 })
+    @Property({ type: 'string', length: 20 })
     tipo!: string;
 
-    @Property({ nullable: true })
+    @Property({ type: 'number',  nullable: true })
     cantidad?: number;
 
-    @Property({ length: 255, nullable: true })
+    @Property({ type: 'string', length: 255, nullable: true })
     descripcion?: string;
 
     @Property({ type: 'date' })

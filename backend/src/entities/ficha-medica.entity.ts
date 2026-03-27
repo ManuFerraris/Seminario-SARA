@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Animal } from './animal.entity';
-import { Veterinario } from './veterinario.entity';
+import { Animal } from './animal.entity.js';
+import { Veterinario } from './veterinario.entity.js';
 
 @Entity()
 export class FichaMedica {
@@ -17,7 +17,7 @@ export class FichaMedica {
     @PrimaryKey({ type: 'datetime' })
     fecha_ficha!: Date;
 
-    @Property({ length: 255, nullable: true })
+    @Property({type: 'string', length: 255, nullable: true })
     observaciones?: string;
 
 }

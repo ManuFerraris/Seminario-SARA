@@ -1,6 +1,6 @@
 import { Entity, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Adoptante } from './adoptante.entity';
-import { Animal } from './animal.entity';
+import { Adoptante } from './adoptante.entity.js';
+import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Adopcion {
@@ -17,10 +17,10 @@ export class Adopcion {
     @Property({ type: 'date', nullable: true })
     fecha_retiro?: Date;
 
-    @Property({ length: 255, nullable: true })
+    @Property({ type: 'string', length: 255, nullable: true })
     motivos_retiro?: string;
 
-    @Property({ length: 255, nullable: true })
+    @Property({ type: 'string', length: 255, nullable: true })
     evidencia_maltrato?: string;
 
 }

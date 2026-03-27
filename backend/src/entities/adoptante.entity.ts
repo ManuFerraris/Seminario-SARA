@@ -1,5 +1,5 @@
 import { Entity, Property, OneToOne } from '@mikro-orm/decorators/legacy';
-import { Persona } from './persona.entity';
+import { Persona } from './persona.entity.js';
 
 @Entity()
 export class Adoptante {
@@ -7,9 +7,9 @@ export class Adoptante {
     @OneToOne(() => Persona, { primary: true, joinColumn: 'numero_persona' })
     persona!: Persona;
 
-    @Property({ length: 15 })
+    @Property({type: 'string', length: 15 })
     estado!: string;
 
-    @Property({ length: 50 })
+    @Property({type: 'string', length: 50 })
     domicilio!: string;
 }

@@ -1,5 +1,5 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Adopcion } from './adopcion.entity';
+import { Adopcion } from './adopcion.entity.js';
 
 @Entity()
 export class Seguimiento {
@@ -16,10 +16,10 @@ export class Seguimiento {
     @PrimaryKey({ type: 'datetime' })
     fecha_hora!: Date;
 
-    @Property({ length: 20 })
+    @Property({type: 'string', length: 20 })
     estado_animal!: string;
 
-    @Property({ length: 255, nullable: true })
+    @Property({type: 'string', length: 255, nullable: true })
     entorno?: string;
 
 }
