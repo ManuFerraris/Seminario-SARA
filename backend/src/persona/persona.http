@@ -1,0 +1,29 @@
+### findAll:
+GET http://localhost:3000/api/persona
+
+### getOne:
+GET http://localhost:3000/api/persona/5
+
+### create:
+POST http://localhost:3000/api/persona/9
+Content-Type: application/json
+
+{
+    "dni": "88888888",
+    "nombre": "Carla",
+    "apellido": "Perez",
+    "email": "carlytaperez@gmail.com",
+    "contrasenia": "Ab123456!",
+    "telefono": "2698754125"
+}
+
+### update:
+PUT http://localhost:3000/api/persona/9
+Content-Type: application/json
+
+{
+    "email": "carlos.vet@sara.com"
+}
+
+### deletePersona:
+DELETE http://localhost:3000/api/persona/9

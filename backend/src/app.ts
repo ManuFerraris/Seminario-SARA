@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import { orm } from './shared/mikro-orm.config.js';
 import { animalRouter } from './animal/animal.routes.js';
+import { personaRouter } from './persona/persona.routes.js';
 
 const app = express();
 app.locals.orm = orm
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Rutas de la API
 app.use("/api/animal", animalRouter);
+app.use("/api/persona", personaRouter);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);
