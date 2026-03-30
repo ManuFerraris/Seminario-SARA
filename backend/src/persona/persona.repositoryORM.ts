@@ -34,9 +34,9 @@ export class PersonaRepositoryORM implements PersonaRepository {
     };
 
     async delete(numero: number): Promise<void> {
-        const animal = await this.em.findOne(Persona, {numero});
-        if (animal) {
-            this.em.remove(animal);
+        const persona = await this.em.findOne(Persona, {numero});
+        if (persona) {
+            this.em.remove(persona);
             await this.em.flush();
         };
     };

@@ -1,0 +1,26 @@
+### findAll:
+GET http://localhost:3000/api/adoptante
+
+### getOne:
+GET http://localhost:3000/api/adoptante/8
+
+### create:
+POST http://localhost:3000/api/adoptante
+Content-Type: application/json
+
+{
+    "numero_persona": 8,
+    "estado": "Apto",
+    "domicilio": "Mitre 1899"
+}
+
+### update:
+PUT http://localhost:3000/api/adoptante/8
+Content-Type: application/json
+
+{
+    "domicilio": "España 1234"
+}
+
+### deletePersona:
+DELETE http://localhost:3000/api/adoptante/9
