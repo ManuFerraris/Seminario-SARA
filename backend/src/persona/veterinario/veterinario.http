@@ -1,0 +1,26 @@
+### findAll:
+GET http://localhost:3000/api/veterinario
+
+### getOne:
+GET http://localhost:3000/api/veterinario/8
+
+### create:
+POST http://localhost:3000/api/veterinario
+Content-Type: application/json
+
+{
+    "numero_persona": "8",
+    "matricula": "AA-5496395",
+    "anio_experiencia": 6
+}
+
+### update:
+PUT http://localhost:3000/api/veterinario/8
+Content-Type: application/json
+
+{
+    "matricula": "BB-5496395"
+}
+
+### deleteVeterinario:
+DELETE http://localhost:3000/api/veterinario/5
