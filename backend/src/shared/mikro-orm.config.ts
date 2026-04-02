@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
 import { MikroORM } from '@mikro-orm/core';
 import { MySqlDriver } from '@mikro-orm/mysql';
 import { SqlHighlighter } from '@mikro-orm/sql-highlighter';
@@ -18,16 +19,28 @@ import { Rescatista } from '../entities/rescatista.entity.js';
 import { Audiovisual } from '../entities/audiovisual.entity.js';
 import { AsignadaEn } from '../entities/asignada-en.entity.js';
 
+dotenv.config();
+const DB_URL = process.env.DB_URL as string;
+const DB_NAME = process.env.DB_NAME as string;
+const SSL_MODE = process.env.SSL_MODE as string;
+
 export const orm = await MikroORM.init({
     entities: [Animal, Persona, Veterinario, Adoptante, Colaborador,
         Donacion, Vacuna, Adopcion, Seguimiento, Entrevista, FichaMedica,
         Rescate, Rescatista, Audiovisual, AsignadaEn],
     entitiesTs: ['src/**/*.entity.ts'],
-    dbName: 'protectora_sara',
+    dbName: DB_NAME,
     driver: MySqlDriver,
-    clientUrl: 'mysql://root:root@localhost:3306/protectora_sara',
+    clientUrl: DB_URL,
     highlighter: new SqlHighlighter(),
     debug: true,
+    // Esto le dice al driver de MySQL que fuerce la encriptación SSL
+    // pero que no exija un archivo de certificado físico en nuestra computadora.
+    driverOptions: {
+        ssl: {
+            rejectUnauthorized: false
+        }
+    },
     schemaGenerator: {
         disableForeignKeys: true,
         createForeignKeyConstraints: true,
