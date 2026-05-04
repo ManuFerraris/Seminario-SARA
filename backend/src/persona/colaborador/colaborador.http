@@ -1,0 +1,20 @@
+### findAll:
+GET http://localhost:3000/api/colaborador
+
+### getOne:
+GET http://localhost:3000/api/colaborador/8
+
+### create:
+POST http://localhost:3000/api/colaborador
+Content-Type: application/json
+
+{
+    "numero_persona": 1,
+    "id_colaborador": "COL-001"
+}
+
+### update:
+###No lo vemos necesario, a menos que sea para una baja logica en un futuro.
+
+### deleteColaborador:
+DELETE http://localhost:3000/api/colaborador/5
