@@ -1,0 +1,28 @@
+### findAll:
+GET http://localhost:3000/api/donacion
+
+### getOne:
+GET http://localhost:3000/api/donacion/1
+
+### Crear una nueva donación:
+POST http://localhost:3000/api/donacion
+Content-Type: application/json
+
+{
+    "tipo": "Alimento Balanceado",
+    "cantidad": 50,
+    "descripcion": "Bolsa de alimento marca X para perros adultso",
+    "fecha_vencimiento": "2026-10-15"
+}
+
+### Actualizar una donación existente:
+PUT http://localhost:3000/api/donacion/1
+Content-Type: application/json
+
+{
+    "cantidad": 20,
+    "descripcion": "Bolsa de alimento marca X para cachorros (Actualizado con más kilos)"
+}
+
+### deleteDonacion:
+DELETE http://localhost:3000/api/donacion/2
