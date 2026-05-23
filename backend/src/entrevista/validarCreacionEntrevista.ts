@@ -10,10 +10,10 @@ export function validarCreacionEntrevista(dto: any): string[] {
         errores.push('El número de adoptante debe ser un valor numérico.');
     }
 
-    if (!dto.numero_colaborador) {
-        errores.push('El número de colaborador es obligatorio.');
-    } else if (typeof dto.numero_colaborador !== 'number') {
-        errores.push('El número de colaborador debe ser un valor numérico.');
+    if (!dto.id_colaborador) {
+        errores.push('El ID de colaborador es obligatorio.');
+    } else if (typeof dto.id_colaborador !== 'string') {
+        errores.push('El ID de colaborador debe ser un valor de tipo string.');
     }
 
     // 2. Validar Fechas (Transformamos el string del JSON a Date para verificar que sea válido)

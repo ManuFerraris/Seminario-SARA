@@ -1,4 +1,4 @@
 export interface ColaboradorDTO {
     numero_persona: number;
-    id: string;
+    id_colaborador: string;
 };

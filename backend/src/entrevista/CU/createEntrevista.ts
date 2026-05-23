@@ -30,12 +30,12 @@ export class CreateEntrevista {
         // 2. Validación de Reglas de Negocio (Integridad Referencial)
         // Buscamos a los actores involucrados en la entrevista
         
-        const colaborador = await this.colabRepo.findOne(String(dto.numero_colaborador));
+        const colaborador = await this.colabRepo.findOne(String(dto.id_colaborador));
         if (!colaborador) {
             return {
                 success: false,
                 status: 404,
-                messages: [`No se encontró un colaborador con el ID ${dto.numero_colaborador}`],
+                messages: [`No se encontró un colaborador con el ID ${dto.id_colaborador}`],
                 data: undefined
             };
         }

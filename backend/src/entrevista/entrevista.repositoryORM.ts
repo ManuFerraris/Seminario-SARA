@@ -23,8 +23,7 @@ export class EntrevistaRepositoryORM implements EntrevistaRepository {
         return nuevaEntrevista;
     }
 
-    async actualizarEntrevista(entrevista: Entrevista, dto: any): Promise<Entrevista> {
-        this.em.assign(entrevista, dto);
+    async actualizarEntrevista(entrevista: Entrevista): Promise<Entrevista> {
         await this.em.flush();
         return entrevista;
     }

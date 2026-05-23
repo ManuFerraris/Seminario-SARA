@@ -12,7 +12,7 @@ export class CreateColaborador {
 
     async ejecutar(dto:ColaboradorDTO):Promise<ServiceResponse<Colaborador>>{
 
-        const colaboradorExistente = await this.colaboradorRepo.findOne(dto.id);
+        const colaboradorExistente = await this.colaboradorRepo.findOne(dto.id_colaborador);
         if(colaboradorExistente){
             return {
                 success: false,
@@ -34,7 +34,7 @@ export class CreateColaborador {
 
         const nuevoColaborador = new Colaborador();
         nuevoColaborador.persona = persona;
-        nuevoColaborador.id = dto.id;
+        nuevoColaborador.id = dto.id_colaborador;
         
         const colaboradorCreado = await this.colaboradorRepo.create(nuevoColaborador);
         return {

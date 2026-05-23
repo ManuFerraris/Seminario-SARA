@@ -13,8 +13,8 @@ export class UpdateEntrevista {
     ) {}
 
     async ejecutar(
-        id_adoptante: number, 
-        id_colaborador: number, 
+        numero_adoptante: number, 
+        id_colaborador: string, 
         fecha_hora: Date, 
         dto: any ): Promise<ServiceResponse<Entrevista>> {
         
@@ -40,7 +40,7 @@ export class UpdateEntrevista {
             };
         }
 
-        const adoptante = await this.adoptRepo.findOne(id_adoptante);
+        const adoptante = await this.adoptRepo.findOne(numero_adoptante);
         if (!adoptante) {
             return {
                 success: false,
@@ -61,16 +61,32 @@ export class UpdateEntrevista {
             };
         }
 
+        console.log("Fecha hora de reposición de entrevista original encontrada:", entrevista.fecha_hora_rep);
+        const fechaRepActual = new Date(entrevista.fecha_hora_rep);
+        console.log("Fecha hora de reposición de entrevista enviada en DTO:", dto.fecha_hora_rep);
+        const fechaRepNueva = new Date(dto.fecha_hora_rep ? dto.fecha_hora_rep : entrevista.fecha_hora_rep);
+        if (fechaRepNueva.getTime() <= fechaRepActual.getTime()) {
+            console.log("Error de cronología: La fecha de reposicion no puede ser anterior a la fecha actual.");
+            return {
+                status: 400,
+                success: false,
+                messages: ["Conflicto cronológico: La fecha de reposicion no puede ser anterior a la fecha actual."],
+                data: undefined
+            };
+        }
+
         // 4. Mapeo selectivo de actualización
         // Solo actualizamos lo que nos enviaron en el DTO
+        
         if (dto.fecha_hora_rep) entrevista.fecha_hora_rep = new Date(dto.fecha_hora_rep);
+        console.log("Entrevista después de actualizar fecha_hora_rep:", entrevista.fecha_hora_rep);
         if (dto.estado !== undefined) entrevista.estado = dto.estado;
         if (dto.descripcion !== undefined) entrevista.descripcion = dto.descripcion;
         if (dto.aprobada !== undefined) entrevista.aprobada = dto.aprobada;
 
         // 5. Persistencia (usamos el update genérico del ORM o un em.flush() si usas persist implícito)
         // Ajusta la llamada según tengas definido el update en tu EntrevistaRepository
-        const entrevistaActualizada = await this.entRepo.actualizarEntrevista(entrevista, dto);
+        const entrevistaActualizada = await this.entRepo.actualizarEntrevista(entrevista);
 
         return {
             success: true,
