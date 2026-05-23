@@ -1,0 +1,36 @@
+### Obtener todas las vacunas
+GET http://localhost:3000/api/vacuna
+
+### Obtener una vacuna por NUMERO
+GET http://localhost:3000/api/vacuna/6
+
+### Ingresar una nueva vacuna
+POST http://localhost:3000/api/vacuna
+Content-Type: application/json
+
+{
+    "droga": "Antitetanica Lote C",
+    "stock": 30,
+    "fecha_ingreso": "2026-05-23T08:00:00",
+    "fecha_vencimiento": "2026-12-23T00:00:00"
+}
+
+### Actualizar una vacuna por NUMERO
+###Actualizar solo el stock
+PUT http://localhost:3000/api/vacuna/1
+Content-Type: application/json
+
+{
+    "stock": 45
+}
+
+### Actualizar una fecha (Si la pones anterior al ingreso original, el Caso de Uso la bloqueará)
+PUT http://localhost:3000/api/vacuna/5
+Content-Type: application/json
+
+{
+    "fecha_vencimiento": "2024-07-07T00:00:00"
+}
+
+### Eliminar una vacuna por NUMERO
+DELETE http://localhost:3000/api/vacuna/6

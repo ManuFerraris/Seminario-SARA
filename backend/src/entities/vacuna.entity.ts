@@ -6,7 +6,7 @@ export class Vacuna {
     @PrimaryKey({ type: 'number' })
     numero!: number;
 
-    @Property({ type: 'date' })
+    @Property({ type:'date' })
     fecha_vencimiento!: Date;
 
     @Property({ type: 'string', length: 255 })
@@ -15,7 +15,7 @@ export class Vacuna {
     @Property({ type: 'number' })
     stock!: number;
 
-    @Property({ type: 'date' })
+    @Property({ type:'date' })
     fecha_ingreso!: Date;
 
 }
