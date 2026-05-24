@@ -7,7 +7,7 @@ export function validarCreacionPersona(dto: PersonaDTO): string[] {
     if (!dto.nombre) errores.push('El nombre es obligatorio');
     if (!dto.apellido) errores.push('El apellido es obligatorio');
     if (!dto.email) errores.push('El email es obligatorio');
-    console.log('Antes de validar constraseña: dto.contrasenia:', dto.contrasenia);
+    //console.log('Antes de validar constraseña: dto.contrasenia:', dto.contrasenia);
     if (!dto.contrasenia) errores.push('La contraseña es obligatoria');
     if (dto.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dto.email)) errores.push('El email no es válido');
     if (dto.contrasenia && dto.contrasenia.length < 8) errores.push('La contraseña debe tener al menos 8 caracteres');

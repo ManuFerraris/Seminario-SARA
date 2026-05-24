@@ -30,6 +30,6 @@ export class Animal {
     @Property({ columnType: 'decimal(10,2)', type: 'number' })
     peso!: number;
 
-    @Property({ length: 255, type: 'string' })
-    descripcion!: string;
+    @Property({ length: 255, type: 'string', nullable: true })
+    descripcion?: string;
 }

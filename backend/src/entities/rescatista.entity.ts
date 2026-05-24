@@ -1,4 +1,5 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
+
+/*import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 
 @Entity()
 export class Rescatista {
@@ -18,4 +19,4 @@ export class Rescatista {
     @Property({ type: 'string', length: 30, nullable: true })
     telefono?: string;
 
-}
+}*/

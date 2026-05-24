@@ -1,4 +1,6 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
+import { Entity, PrimaryKey, Property, OneToMany } from '@mikro-orm/decorators/legacy';
+import { Rescate } from './rescate.entity.js';
+import { Collection } from '@mikro-orm/core';
 
 @Entity()
 export class Persona {
@@ -23,4 +25,7 @@ export class Persona {
 
     @Property({ type: 'string', length: 30, nullable: true })
     telefono?: string;
+
+    @OneToMany(() => Rescate, (rescate) => rescate.persona)
+    rescates = new Collection<Rescate>(this);
 }

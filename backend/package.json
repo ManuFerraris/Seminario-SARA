@@ -17,6 +17,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
     "tsc-watch": "6.3.1",
+    "tsx": "^4.22.3",
     "typescript": "5.9.3"
   },
   "dependencies": {
@@ -27,5 +28,11 @@
     "dotenv-cli": "^11.0.0",
     "express": "5.2.1",
     "reflect-metadata": "^0.2.2"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/shared/mikro-orm.config.ts"
+    ]
   }
 }
