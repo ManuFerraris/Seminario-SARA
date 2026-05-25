@@ -10,8 +10,8 @@ export class AnimalRepositoryORM implements AnimalRepository {
         return await this.em.find(Animal, {});
     };
 
-    async getOne(numero:number):Promise<Animal>{
-        return await this.em.findOneOrFail(Animal, {numero});
+    async getOne(numero:number):Promise<Animal | null>{
+        return await this.em.findOne(Animal, {numero});
     };
 
     async create(animal:Animal):Promise<Animal>{

@@ -18,7 +18,7 @@ export class GetOne {
                 success: false,
                 status: 400,
                 messages: ['Animal no encontrado'],
-                data: animal
+                data: undefined
             }
         };
     };

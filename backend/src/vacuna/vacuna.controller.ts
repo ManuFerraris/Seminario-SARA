@@ -7,7 +7,6 @@ import { UpdateVacunas } from "./CU/updateVacuna.js";
 import { CreateVacunas } from "./CU/createVacuna.js";
 import { GetOneVacunas } from "./CU/getOneVacuna.js";
 import { DeleteVacunas } from "./CU/deleteVacuna.js";
-import { Vacuna } from "../entities/vacuna.entity.js";
 
 export const findAllVacunas = async (req:Request, res:Response):Promise<void> => {
     try{
