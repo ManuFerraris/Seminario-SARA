@@ -1,0 +1,2 @@
+### Eliminar una imagen de Cloudinary al eliminar un audiovisual
+DELETE http://localhost:3000/api/audiovisual/2

@@ -15,7 +15,9 @@
   "devDependencies": {
     "@mikro-orm/cli": "^7.0.5",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.5.0",
+    "@types/streamifier": "^0.1.2",
     "tsc-watch": "6.3.1",
     "tsx": "^4.22.3",
     "typescript": "5.9.3"
@@ -25,9 +27,12 @@
     "@mikro-orm/decorators": "^7.0.5",
     "@mikro-orm/mysql": "^7.0.5",
     "@mikro-orm/sql-highlighter": "^1.0.1",
+    "cloudinary": "^2.10.0",
     "dotenv-cli": "^11.0.0",
     "express": "5.2.1",
-    "reflect-metadata": "^0.2.2"
+    "multer": "^2.1.1",
+    "reflect-metadata": "^0.2.2",
+    "streamifier": "^0.1.1"
   },
   "mikro-orm": {
     "useTsNode": true,
