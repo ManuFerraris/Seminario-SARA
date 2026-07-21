@@ -10,9 +10,9 @@ bajaLogicaEntrevista
 
 export const entrevistaRouter = Router();
 
-entrevistaRouter.get("/:numero_adoptante/:id_colaborador/:fecha_hora", getOneEntrevista);
+entrevistaRouter.get("/:id_entrevista", getOneEntrevista);
 entrevistaRouter.get("/", findAllEntrevistas);
 entrevistaRouter.post("/", createEntrevista);
-entrevistaRouter.put("/:numero_adoptante/:id_colaborador/:fecha_hora", updateEntrevista);
-//entrevistaRouter.delete("/:numero_adoptante/:id_colaborador/:fecha_hora", deleteEntrevista);
-entrevistaRouter.delete("/:numero_adoptante/:id_colaborador/:fecha_hora", bajaLogicaEntrevista);
+entrevistaRouter.put("/:id_entrevista", updateEntrevista);
+//entrevistaRouter.delete("/:id_entrevista", deleteEntrevista);
+entrevistaRouter.delete("/:id_entrevista", bajaLogicaEntrevista);

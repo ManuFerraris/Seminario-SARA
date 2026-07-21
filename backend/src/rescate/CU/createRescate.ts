@@ -24,20 +24,22 @@ export class CreateRescate {
             };
         }
 
-        const fechaRescate = new Date(dto.fecha_hora);
+        const fechaRescate = new Date(dto.fecha_rescate); // Asegúrate de que el DTO envíe fecha_rescate
 
         // 2. VALIDACIONES ASÍNCRONAS (Base de Datos)
-        const persona = await this.personaRepository.findOne(dto.numero_persona);
+        
+        // OJO AQUÍ: Ahora buscamos por DNI (string), no por número
+        const persona = await this.personaRepository.findOne(dto.dni_persona);
         if (!persona) {
             return {
                 success: false,
                 status: 404,
-                messages: ["Persona no encontrada"],
+                messages: ["Persona rescatista no encontrada con el DNI provisto"],
                 data: undefined,
             };
         }
 
-        const animal = await this.animalRepository.getOne(dto.numero_animal);
+        const animal = await this.animalRepository.getOne(dto.nro_animal);
         if (!animal) {
             return {
                 success: false,
@@ -47,12 +49,14 @@ export class CreateRescate {
             };
         }
 
-        const rescateExistente = await this.rescateRepository.getOneRescate(dto.numero_persona, dto.numero_animal, fechaRescate);
+        // Validación de duplicados (opcional, pero buena práctica si el negocio lo exige)
+        // Ojo: tu repositorio deberá tener un método que busque por (persona, animal, fecha)
+        const rescateExistente = await this.rescateRepository.buscarRescatePorRelaciones(persona, animal, fechaRescate);
         if (rescateExistente) {
             return {
                 success: false,
-                status: 409,
-                messages: ["El rescate ya se encuentra registrado"],
+                status: 409, // 409 Conflict
+                messages: ["El rescate ya se encuentra registrado para esta persona y animal en esa fecha"],
                 data: undefined
             };
         }
@@ -61,7 +65,7 @@ export class CreateRescate {
         const nuevoRescate = new Rescate();
         nuevoRescate.persona = persona;
         nuevoRescate.animal = animal;
-        nuevoRescate.fecha_hora = fechaRescate;
+        nuevoRescate.fecha_rescate = fechaRescate;
         nuevoRescate.lugar_rescate = dto.lugar_rescate.trim();
         
         await this.rescateRepository.createRescate(nuevoRescate);

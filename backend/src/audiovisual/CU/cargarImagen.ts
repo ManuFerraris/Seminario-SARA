@@ -14,8 +14,26 @@ export class CreateAudiovisual {
 
     async ejecutar(dto: AudiovisualDTO, fileBuffer: Buffer): Promise<ServiceResponse<Audiovisual>> {
         
-        // 1. Validamos que el animal exista
-        const animal = await this.animalRepository.getOne(dto.numero_animal);
+        // 1. Validaciones de DTO (¡ANTES de tocar Cloudinary!)
+        if (!dto.nro_animal) {
+            return {
+                success: false,
+                status: 400,
+                messages: ["El nro_animal es obligatorio"],
+                data: undefined
+            };
+        }
+        if (dto.descripcion && dto.descripcion.length > 255) {
+            return {
+                success: false,
+                status: 400,
+                messages: ["La descripción no puede tener más de 255 caracteres"],
+                data: undefined
+            };
+        }
+
+        // 2. Validamos que el animal exista
+        const animal = await this.animalRepository.getOne(dto.nro_animal);
         if (!animal) {
             return {
                 success: false,
@@ -25,10 +43,9 @@ export class CreateAudiovisual {
             };
         }
 
-        // 2. Subimos el archivo a Cloudinary
+        // 3. Subimos el archivo a Cloudinary (ahora es seguro)
         let urlCloudinary: string;
         try {
-            // Guardamos en una carpeta específica del refugio
             urlCloudinary = await this.cloudinaryService.uploadBuffer(fileBuffer, 'SARA_Audiovisuales');
         } catch (error) {
             return {
@@ -39,7 +56,7 @@ export class CreateAudiovisual {
             };
         }
 
-        // 3. Creamos el registro en la base de datos
+        // 4. Creamos el registro
         const nuevoAudiovisual = new Audiovisual();
         nuevoAudiovisual.animal = animal;
         nuevoAudiovisual.url_material = urlCloudinary; 

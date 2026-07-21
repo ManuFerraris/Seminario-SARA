@@ -10,7 +10,7 @@ import {
 export const animalRouter = Router();
 
 animalRouter.get("/", findAll);
-animalRouter.get("/:numero", getOne);
+animalRouter.get("/:nro_animal", getOne);
 animalRouter.post("/", create);
-animalRouter.put("/:numero", update);
-animalRouter.delete("/:numero", deleteAnimal);
+animalRouter.put("/:nro_animal", update);
+animalRouter.delete("/:nro_animal", deleteAnimal);

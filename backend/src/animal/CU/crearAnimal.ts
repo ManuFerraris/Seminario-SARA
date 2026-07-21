@@ -21,12 +21,15 @@ export class CrearAnimal {
         nuevoAnimal.especie = dto.especie;
         nuevoAnimal.raza = dto.raza;
         nuevoAnimal.edad_estimada = dto.edad_estimada;
-        nuevoAnimal.fecha_ingreso = dto.fecha_ingreso;
-        nuevoAnimal.fecha_defuncion = dto.fecha_defuncion;
         nuevoAnimal.estado = dto.estado;
         nuevoAnimal.sexo = dto.sexo;
         nuevoAnimal.peso = dto.peso;
         nuevoAnimal.descripcion = dto.descripcion;
+        // Parseo seguro de fechas provenientes del DTO (pueden venir en string)
+        nuevoAnimal.fecha_ingreso = new Date(dto.fecha_ingreso);
+        if (dto.fecha_defuncion) {
+            nuevoAnimal.fecha_defuncion = new Date(dto.fecha_defuncion);
+        }
 
         const animalCreado = await this.repo.create(nuevoAnimal);
         return {

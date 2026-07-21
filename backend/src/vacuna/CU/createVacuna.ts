@@ -3,10 +3,11 @@ import { ServiceResponse } from "../../types/service.response.js";
 import { VacunaRepository } from "../vacuna.repository.js";
 import { validarCreacionVacuna } from "../validarCreacionVacuna.js";
 
-export class CreateVacunas {
+export class CreateVacuna {
     constructor(private readonly vacunaRepository: VacunaRepository) {}
 
     async ejecutar(dto: any): Promise<ServiceResponse<Vacuna>> {
+        // 1. Validación Síncrona
         const errores = validarCreacionVacuna(dto);
         if (errores.length > 0) {
             return {
@@ -17,13 +18,25 @@ export class CreateVacunas {
             };
         }
 
+        const fechaIngreso = new Date(dto.fecha_ingreso);
+        const fechaVencimiento = new Date(dto.fecha_vencimiento);
+
+        // 2. Regla de Negocio: Cronología
+        if (fechaVencimiento.getTime() <= fechaIngreso.getTime()) {
+            return {
+                status: 400,
+                success: false,
+                messages: ["Conflicto cronológico: La fecha de vencimiento no puede ser igual o anterior a la fecha de ingreso."],
+                data: undefined
+            };
+        }
+
+        // 3. Mapeo y Persistencia
         const nuevaVacuna = new Vacuna();
-        nuevaVacuna.droga = dto.droga;
+        nuevaVacuna.droga = dto.droga.trim();
         nuevaVacuna.stock = dto.stock;
-        
-        // Convertimos los strings del JSON a objetos Date para MikroORM
-        nuevaVacuna.fecha_ingreso = new Date(dto.fecha_ingreso);
-        nuevaVacuna.fecha_vencimiento = new Date(dto.fecha_vencimiento);
+        nuevaVacuna.fecha_ingreso = fechaIngreso;
+        nuevaVacuna.fecha_vencimiento = fechaVencimiento;
 
         const vacunaCreada = await this.vacunaRepository.createVacuna(nuevaVacuna);
 

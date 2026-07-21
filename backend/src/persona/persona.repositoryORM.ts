@@ -9,8 +9,8 @@ export class PersonaRepositoryORM implements PersonaRepository {
         return await this.em.find(Persona, {});
     };
 
-    async findOne(numero: number): Promise<Persona | null> {
-        return await this.em.findOne(Persona, { numero });
+    async findOne(dni: string): Promise<Persona | null> {
+        return await this.em.findOne(Persona, { dni });
     };
 
     async findByEmail(email: string): Promise<Persona | null> {
@@ -33,8 +33,8 @@ export class PersonaRepositoryORM implements PersonaRepository {
         return persona;
     };
 
-    async delete(numero: number): Promise<void> {
-        const persona = await this.em.findOne(Persona, {numero});
+    async delete(dni: string): Promise<void> {
+        const persona = await this.em.findOne(Persona, {dni});
         if (persona) {
             this.em.remove(persona);
             await this.em.flush();

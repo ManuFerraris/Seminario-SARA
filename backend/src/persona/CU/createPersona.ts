@@ -4,62 +4,50 @@ import { PersonaRepository } from "../persona.repository.js";
 import { ServiceResponse } from "../../types/service.response.js";
 import { validarCreacionPersona } from "../validarCreacionPersona.js";
 
-export class CreatePersona{
-    constructor(private readonly repo:PersonaRepository){};
+export class CreatePersona {
+    constructor(private readonly repo: PersonaRepository) {}
 
-    async ejecutar(dto:PersonaDTO):Promise<ServiceResponse<Persona>>{
-
-        console.log('DTO recibido en CreatePersona:', dto);
+    async ejecutar(dto: PersonaDTO): Promise<ServiceResponse<Persona>> {
         const errores = validarCreacionPersona(dto);
-        if(errores.length > 0){
+        if (errores.length > 0) {
             return {
                 success: false,
                 status: 400,
                 messages: errores,
                 data: undefined
             };
-        };
+        }
 
-        if(dto.email){
-            const emailExistente = await this.repo.findByEmail(dto.email);
-            if(emailExistente){
-                return {
-                    success: false,
-                    status: 400,
-                    messages: ['El email ya está registrado'],
-                    data: emailExistente
-                };
+        // Validación de unicidad de DNI (PK)
+        const dniExistente = await this.repo.findOne(dto.dni);
+        if (dniExistente) {
+            return {
+                success: false,
+                status: 409, // 409 Conflict es más semántico para duplicados
+                messages: ['El DNI ya está registrado'],
+                data: undefined
             };
-        };
+        }
 
-        if(dto.dni){
-            const dniExistente = await this.repo.findByDNI(dto.dni);
-            if(dniExistente){
-                return {
-                    success: false,
-                    status: 400,
-                    messages: ['El DNI ya está registrado'],
-                    data: dniExistente
-                };
+        // Validación de unicidad de Email
+        const emailExistente = await this.repo.findByEmail(dto.email);
+        if (emailExistente) {
+            return {
+                success: false,
+                status: 409,
+                messages: ['El email ya está registrado'],
+                data: undefined
             };
-        };
+        }
 
-        const nuevaPersona = new Persona();
-        nuevaPersona.dni = dto.dni;
-        nuevaPersona.nombre = dto.nombre;
-        nuevaPersona.apellido = dto.apellido;
-        nuevaPersona.email = dto.email;
-        nuevaPersona.contrasenia = dto.contrasenia;
-        if(dto.telefono){
-            nuevaPersona.telefono = dto.telefono;
-        };
-
-        const personaCreada = await this.repo.create(nuevaPersona);
+        // Instanciación limpia utilizando MikroORM (asumiendo que repo.create hace em.create y em.persist)
+        const personaCreada = await this.repo.create(dto);
+        
         return {
             success: true,
             status: 201,
             messages: ['Persona creada exitosamente'],
             data: personaCreada
         };
-    };
+    }
 }

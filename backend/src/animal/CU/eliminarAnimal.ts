@@ -1,4 +1,3 @@
-import { Animal } from "../../entities/animal.entity.js";
 import { AnimalRepository } from "../animal.repository.js";
 import { ServiceResponse } from "../../types/service.response.js";
 

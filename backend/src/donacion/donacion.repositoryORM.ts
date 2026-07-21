@@ -7,7 +7,7 @@ export class DonacionRepositoryORM implements DonacionRepository {
     constructor(private em: EntityManager){};
 
     async buscarDonacionPorNumero(numero: number): Promise<Donacion | null> {
-        return await this.em.findOne(Donacion, { numero });
+        return await this.em.findOne(Donacion, { nro_donacion: numero });
     };
 
     async traerTodasDonaciones(): Promise<Donacion[]> {
@@ -19,14 +19,14 @@ export class DonacionRepositoryORM implements DonacionRepository {
         return this.em.flush().then(() => donacion);
     };
 
-    async actualizarDonacion(donacion: Donacion, dto:DonacionDTO): Promise<Donacion> {
+    async actualizarDonacion(donacion: Donacion, dto: Partial<Donacion>): Promise<Donacion> {
         this.em.assign(donacion, dto);
         await this.em.flush();
         return donacion;
     };
 
     async eliminarDonacion(numero: number): Promise<void> {
-        const donacionExistente = await this.em.findOne(Donacion, { numero });
+        const donacionExistente = await this.em.findOne(Donacion, { nro_donacion: numero });
         if (!donacionExistente) return;
         this.em.remove(donacionExistente);
         await this.em.flush();

@@ -9,4 +9,4 @@ export const audiovisualRouter = Router();
 
 // Ruta para crear un nuevo audiovisual (con subida de archivo)
 audiovisualRouter.post("/", uploadMiddleware, createAudiovisual);
-audiovisualRouter.delete("/:numero", deleteAudiovisual);
+audiovisualRouter.delete("/:id_audiovisual", deleteAudiovisual);

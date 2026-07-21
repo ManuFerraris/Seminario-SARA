@@ -1,12 +1,11 @@
-import { Persona } from "../../entities/persona.entity.js";
 import { PersonaRepository } from "../persona.repository.js";
 import { ServiceResponse } from "../../types/service.response.js";
 
 export class DeletePersona {
-    constructor(private repo: PersonaRepository){};
+    constructor(private repo: PersonaRepository) {}
 
-    async ejecutar(numero: number): Promise<ServiceResponse<null>> {
-        const persona = await this.repo.findOne(numero);
+    async ejecutar(dni: string): Promise<ServiceResponse<null>> {
+        const persona = await this.repo.findOne(dni);
 
         if (!persona) {
             return {
@@ -15,8 +14,9 @@ export class DeletePersona {
                 messages: ["Persona no encontrada"],
                 data: null
             };
-        };
-        await this.repo.delete(numero);
+        }
+        
+        await this.repo.delete(dni); // Elimina por DNI
 
         return {
             status: 200,
@@ -24,5 +24,5 @@ export class DeletePersona {
             messages: ["Persona eliminada exitosamente"],
             data: null
         };
-    };
-};
+    }
+}

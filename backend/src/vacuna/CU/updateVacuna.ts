@@ -3,11 +3,12 @@ import { ServiceResponse } from "../../types/service.response.js";
 import { VacunaRepository } from "../vacuna.repository.js";
 import { validarActualizacionVacuna } from "../validarActualizacionVacuna.js";
 
-export class UpdateVacunas {
+export class UpdateVacuna {
     constructor(private readonly vacunaRepository: VacunaRepository) {}
 
     async ejecutar(numero: number, dto: any): Promise<ServiceResponse<Vacuna | null>> {
         
+        // 1. Validación Síncrona
         const errores = validarActualizacionVacuna(dto);
         if (errores.length > 0) {
             return {
@@ -18,6 +19,7 @@ export class UpdateVacunas {
             };
         }
 
+        // 2. Búsqueda
         const vacuna = await this.vacunaRepository.getOneVacuna(numero);
         if (!vacuna) {
             return {
@@ -28,15 +30,11 @@ export class UpdateVacunas {
             };
         }
 
-        // Validación de Regla de Negocio (Cronología Parcial)
-        // Determinamos cómo quedarán las fechas simulando la actualización
-        console.log("Fecha vencimiento original:", vacuna.fecha_vencimiento);
-        const fechaIngresoFinal = new Date(dto.fecha_ingreso ? dto.fecha_ingreso : vacuna.fecha_ingreso);
-        const fechaVencimientoFinal = new Date(dto.fecha_vencimiento ? dto.fecha_vencimiento : vacuna.fecha_vencimiento);
-        console.log("Fecha vencimiento final simulada:", fechaVencimientoFinal);
+        // 3. Regla de Negocio: Cronología Parcial (Simulación)
+        const fechaIngresoFinal = dto.fecha_ingreso ? new Date(dto.fecha_ingreso) : new Date(vacuna.fecha_ingreso);
+        const fechaVencimientoFinal = dto.fecha_vencimiento ? new Date(dto.fecha_vencimiento) : new Date(vacuna.fecha_vencimiento);
 
         if (fechaVencimientoFinal.getTime() <= fechaIngresoFinal.getTime()) {
-            console.log("Error de cronología: fecha vencimiento final simulada es igual o anterior a fecha ingreso final simulada.");
             return {
                 status: 400,
                 success: false,
@@ -45,20 +43,22 @@ export class UpdateVacunas {
             };
         }
 
-        if (dto.droga !== undefined) vacuna.droga = dto.droga;
+        // 4. Actualización Selectiva
+        if (dto.droga !== undefined) vacuna.droga = dto.droga.trim();
         if (dto.stock !== undefined) vacuna.stock = dto.stock;
-        if (dto.fecha_ingreso) vacuna.fecha_ingreso = dto.fecha_ingreso.split('T')[0];
-        if (dto.fecha_vencimiento) vacuna.fecha_vencimiento = dto.fecha_vencimiento.split('T')[0];
+        
+        // ¡Bug solucionado: Instanciamos a Date en lugar de asignar el string .split('T')[0]!
+        if (dto.fecha_ingreso !== undefined) vacuna.fecha_ingreso = fechaIngresoFinal;
+        if (dto.fecha_vencimiento !== undefined) vacuna.fecha_vencimiento = fechaVencimientoFinal;
 
-        console.log("Vacuna actualizada por enviar:", vacuna);
+        // Si tu repositorio necesita el número como argumento, lo pasamos (aunque si la PK está en 'vacuna', solo el objeto debería bastar)
         const vacunaActualizada = await this.vacunaRepository.updateVacuna(numero, vacuna);
 
-        console.log("Vacuna actualizada en base de datos:", vacunaActualizada);
         return {
             status: 200,
             success: true,
             messages: [`Vacuna número ${numero} actualizada exitosamente.`],
             data: vacunaActualizada
         };
-    };
+    }
 }

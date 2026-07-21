@@ -1,7 +1,6 @@
 import { Animal } from "../entities/animal.entity.js";
 import { AnimalRepository } from "./animal.repository.js";
 import { EntityManager } from "@mikro-orm/core";
-import { AnimalDTO } from "./animalDTO.js";
 
 export class AnimalRepositoryORM implements AnimalRepository {
     constructor(private readonly em:EntityManager){};
@@ -11,7 +10,7 @@ export class AnimalRepositoryORM implements AnimalRepository {
     };
 
     async getOne(numero:number):Promise<Animal | null>{
-        return await this.em.findOne(Animal, {numero});
+        return await this.em.findOne(Animal, {nro_animal: numero});
     };
 
     async create(animal:Animal):Promise<Animal>{
@@ -27,7 +26,7 @@ export class AnimalRepositoryORM implements AnimalRepository {
     };
 
     async delete(numero:number):Promise<void>{
-        const animal = await this.em.findOne(Animal, {numero});
+        const animal = await this.em.findOne(Animal, {nro_animal: numero});
         if (animal) {
             this.em.remove(animal);
             await this.em.flush();

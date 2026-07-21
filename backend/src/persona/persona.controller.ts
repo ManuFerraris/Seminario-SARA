@@ -38,13 +38,17 @@ export const getOne = async (req:Request, res:Response):Promise<void> => {
         const repo = new PersonaRepositoryORM(em);
         const casouso = new GetOne(repo);
         
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de persona');
-        if (codError || codVal === undefined) {
-            res.status(400).json({ error: codError });
+        if (!req.params.dni) {
+            res.status(400).json({ error: "Falta el parámetro 'dni' en la solicitud" });
             return;
-        };
+        }
 
-        const resultado = await casouso.ejecutar(codVal);
+        if (typeof req.params.dni !== 'string') {
+            res.status(400).json({ error: "El parámetro 'dni' debe ser una cadena de texto" });
+            return;
+        }
+
+        const resultado = await casouso.ejecutar(req.params.dni);
     
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
@@ -92,15 +96,19 @@ export const update = async (req:Request, res:Response):Promise<void> => {
         const repo = new PersonaRepositoryORM(em);
         const casouso = new UpdatePersona(repo);
 
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de persona');
-        if (codError || codVal === undefined) {
-            res.status(400).json({ error: codError });
+        if (!req.params.dni) {
+            res.status(400).json({ error: "Falta el parámetro 'dni' en la solicitud" });
             return;
-        };
+        }
+
+        if (typeof req.params.dni !== 'string') {
+            res.status(400).json({ error: "El parámetro 'dni' debe ser una cadena de texto" });
+            return;
+        }
         
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
-        const resultado = await casouso.ejecutar(codVal, dto);
+        const resultado = await casouso.ejecutar(req.params.dni, dto);
     
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
@@ -123,13 +131,17 @@ export const deletePersona = async (req:Request, res:Response):Promise<void> => 
         const repo = new PersonaRepositoryORM(em);
         const casouso = new DeletePersona(repo);
         
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de persona');
-        if (codError || codVal === undefined) {
-            res.status(400).json({ error: codError });
+        if (!req.params.dni) {
+            res.status(400).json({ error: "Falta el parámetro 'dni' en la solicitud" });
             return;
-        };
+        }
 
-        const resultado = await casouso.ejecutar(codVal);
+        if (typeof req.params.dni !== 'string') {
+            res.status(400).json({ error: "El parámetro 'dni' debe ser una cadena de texto" });
+            return;
+        }
+
+        const resultado = await casouso.ejecutar(req.params.dni);
     
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;

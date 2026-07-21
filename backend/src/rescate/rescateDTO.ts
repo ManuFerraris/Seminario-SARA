@@ -1,6 +1,7 @@
 export interface RescateDTO {
-    numero_persona: number;
-    numero_animal: number;
-    fecha_hora: Date;
+    nro_rescate: number;
+    dni_persona: string;
+    nro_animal: number;
+    fecha_rescate: Date;
     lugar_rescate: string;
 }

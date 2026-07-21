@@ -10,12 +10,12 @@ export class AudiovisualRepositoryORM implements AudiovisualRepository {
     };
 
     async getOne(numero: number): Promise<Audiovisual | null> {
-        return await this.em.findOne(Audiovisual, { numero }, { populate: ['animal'] });
+        return await this.em.findOne(Audiovisual, { id_audiovisual: numero }, { populate: ['animal'] });
     };
 
     async findByAnimal(numero_animal: number): Promise<Audiovisual[]> {
         return await this.em.find(Audiovisual, { 
-            animal: { numero: numero_animal } 
+            animal: { nro_animal: numero_animal } 
         });
     };
 

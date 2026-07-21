@@ -1,17 +1,18 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
+import type { Rel } from '@mikro-orm/core';
 import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Audiovisual {
 
-    // Primera parte de la PK: la dependencia fuerte con el Animal
-    @ManyToOne(() => Animal, { joinColumn: 'numero_animal' })
-    animal!: Animal;
-
-    // Segunda parte de la PK: el identificador interno del material para ese animal
+    // PK Subrogada pura, autonumérica
     @PrimaryKey({ type: 'number', autoincrement: true })
-    numero!: number;
+    id_audiovisual!: number;
 
+    // Relación N a 1 con envoltura Rel para evitar dependencias circulares
+    @ManyToOne(() => Animal, { joinColumn: 'nro_animal' })
+    animal!: Rel<Animal>;
+    
     @Property({ type: 'string', length: 255 })
     url_material!: string;
 

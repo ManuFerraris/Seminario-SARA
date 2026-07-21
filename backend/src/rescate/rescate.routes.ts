@@ -9,6 +9,6 @@ updateRescate
 export const rescateRouter = Router();
 
 rescateRouter.get("/", findAllRescates);
-rescateRouter.get("/:numero_p/:numero_a/:fecha_hora", getOneRescate);
+rescateRouter.get("/:nro_rescate", getOneRescate);
 rescateRouter.post("/", createRescate);
-rescateRouter.put("/:numero_p/:numero_a/:fecha_hora", updateRescate);
+rescateRouter.put("/:nro_rescate", updateRescate);

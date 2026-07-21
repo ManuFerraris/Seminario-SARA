@@ -1,5 +1,6 @@
 export interface AudiovisualDTO {
-    numero_animal: number;
+    id_audiovisual: number;
+    nro_animal: number;
     url_material: string;
     descripcion?: string;
 }

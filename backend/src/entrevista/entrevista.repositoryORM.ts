@@ -1,15 +1,12 @@
 import { Entrevista } from "../entities/entrevista.entity.js";
-import { EntrevistaDTO } from "./entrevistaDTO.js";
 import { EntityManager } from "@mikro-orm/core";
 import { EntrevistaRepository } from "./entrevista.repository.js";
-import { Adoptante } from "../entities/adoptante.entity.js";
-import { Colaborador } from "../entities/colaborador.entity.js";
 
 export class EntrevistaRepositoryORM implements EntrevistaRepository {
     constructor(private em: EntityManager){};
     
-    async buscarEntrevista(adoptante: Adoptante, colaborador: Colaborador, fecha_ent: Date): Promise<Entrevista | null> {
-        return await this.em.findOne(Entrevista, { adoptante: adoptante, colaborador: colaborador, fecha_hora: fecha_ent });
+    async buscarEntrevista(nro_entrevista: number): Promise<Entrevista | null> {
+        return await this.em.findOne(Entrevista, { id_entrevista: nro_entrevista });
     };
 
     async traerTodasEntrevistas(): Promise<Entrevista[]> {
@@ -28,8 +25,8 @@ export class EntrevistaRepositoryORM implements EntrevistaRepository {
         return entrevista;
     }
 
-    async eliminarEntrevista(adoptante: Adoptante, colaborador: Colaborador, fecha_ent: Date): Promise<void> {
-        const entrevista = await this.buscarEntrevista(adoptante, colaborador, fecha_ent);
+    async eliminarEntrevista(nro_entrevista: number): Promise<void> {
+        const entrevista = await this.buscarEntrevista(nro_entrevista);
         if (entrevista) {
             this.em.remove(entrevista);
             await this.em.flush();

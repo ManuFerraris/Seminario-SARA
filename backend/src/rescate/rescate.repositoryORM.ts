@@ -10,17 +10,17 @@ export class RescateRepositoryORM implements RescateRepository {
         return await this.em.find(Rescate, {}, { populate: ['persona', 'animal'] });
     };
 
-    async getOneRescate(numero_p: number, numero_a: number, fecha_hora: Date): Promise<Rescate | null> {
+    async getOneRescate(nro_rescate: number): Promise<Rescate | null> {
         // MikroORM mapea los números directamente a las Foreign Keys
-        return await this.em.findOne(Rescate, { 
-            persona: { numero: numero_p }, 
-            animal: { numero: numero_a }, 
-            fecha_hora: fecha_hora 
-        }, { populate: ['persona', 'animal'] }); 
+        return await this.em.findOne(Rescate
+            , { nro_rescate }
+            , { populate: ['persona', 'animal'] 
+            }
+        ); 
     };
 
     async createRescate(rescate: Rescate): Promise<Rescate> {
-        await this.em.persist(rescate);
+        this.em.persist(rescate);
         this.em.flush();
         return rescate;
     };
@@ -31,8 +31,16 @@ export class RescateRepositoryORM implements RescateRepository {
     };
 
     async deleteRescate(rescate: Rescate): Promise<void> {
-        await this.em.remove(rescate);
+        this.em.remove(rescate);
         await this.em.flush();
         return;
     };
+
+    async buscarRescatePorRelaciones(persona: Persona, animal: Animal, fecha: Date): Promise<Rescate | null> {
+        return await this.em.findOne(Rescate, {
+            persona: persona,
+            animal: animal,
+            fecha_rescate: fecha
+        });
+    }
 }

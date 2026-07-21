@@ -11,7 +11,7 @@ export class VacunaRepositoryORM implements VacunaRepository {
     };
 
     async getOneVacuna(numero: number): Promise<Vacuna | null> {
-        return await this.em.findOne(Vacuna, { numero });
+        return await this.em.findOne(Vacuna, { nro_vacuna: numero });
     };
 
     async createVacuna(vacuna: Vacuna): Promise<Vacuna> {
@@ -21,7 +21,7 @@ export class VacunaRepositoryORM implements VacunaRepository {
     };
 
     async updateVacuna(numero: number, vacuna: Vacuna): Promise<Vacuna | null> {
-        const existingVacuna = await this.em.findOne(Vacuna, { numero });
+        const existingVacuna = await this.em.findOne(Vacuna, { nro_vacuna: numero });
         if (!existingVacuna) {
             return null;
         }

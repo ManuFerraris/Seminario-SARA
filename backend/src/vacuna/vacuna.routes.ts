@@ -10,7 +10,7 @@ deleteVacunas
 export const vacunaRouter = Router();
 
 vacunaRouter.get("/", findAllVacunas);
-vacunaRouter.get("/:numero", getOneVacunas);
+vacunaRouter.get("/:nro_vacuna", getOneVacunas);
 vacunaRouter.post("/", createVacunas);
-vacunaRouter.put("/:numero", updateVacunas);
-vacunaRouter.delete("/:numero", deleteVacunas);
+vacunaRouter.put("/:nro_vacuna", updateVacunas);
+vacunaRouter.delete("/:nro_vacuna", deleteVacunas);

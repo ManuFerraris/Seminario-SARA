@@ -1,29 +1,32 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
-import { Adoptante } from './adoptante.entity.js';
-import { Colaborador } from './colaborador.entity.js';
+import { Rel } from '@mikro-orm/core';
+import { Persona } from './persona.entity.js';
 
 @Entity()
 export class Entrevista {
 
-    // Primera parte de la Clave Primaria Compuesta
-    @ManyToOne(() => Adoptante, { primary: true, joinColumn: 'numero_adoptante' })
-    adoptante!: Adoptante;
+    // ID subrogado puro
+    @PrimaryKey({ type: 'number', autoincrement: true })
+    id_entrevista!: number;
 
-    // Segunda parte de la Clave Primaria Compuesta
-    @ManyToOne(() => Colaborador, { primary: true, joinColumn: 'numero_colaborador' })
-    colaborador!: Colaborador;
+    // Relación N a 1: Muchas entrevistas pueden ser realizadas por un mismo colaborador
+    @ManyToOne(() => Persona, { joinColumn: 'dni_colaborador' })
+    colaborador!: Rel<Persona>;
 
-    // Tercera parte de la Clave Primaria Compuesta
-    @PrimaryKey({ type: 'datetime' })
+    // Relación N a 1: Muchas entrevistas pueden tener al mismo adoptante (si aplicó varias veces)
+    @ManyToOne(() => Persona, { joinColumn: 'dni_adoptante' })
+    adoptante!: Rel<Persona>;
+
+    @Property({ type: 'datetime' })
     fecha_hora!: Date;
 
     @Property({ type: 'datetime' })
     fecha_hora_rep!: Date;
 
-    @Property({type: 'string', length: 15 })
+    @Property({ type: 'string', length: 20 })
     estado!: string;
 
-    @Property({type: 'string', length: 255, nullable: true })
+    @Property({ type: 'string', length: 255, nullable: true })
     descripcion?: string;
 
     @Property({ type: 'boolean', default: false })

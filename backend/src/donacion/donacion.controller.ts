@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { DonacionRepositoryORM } from "./donacion.repositoryORM.js";
+import { PersonaRepositoryORM } from "../persona/persona.repositoryORM.js";
 import { validarCodigo } from "../helpers/validarCodigo.js";
 import { FindAllDonaciones } from "./CU/findAllDonaciones.js";
 import { GetOneDonacion } from "./CU/getOneDonaciones.js";
@@ -65,7 +66,8 @@ export const createDonacion = async (req:Request, res:Response):Promise<void> =>
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new DonacionRepositoryORM(em);
-        const casouso = new CreateDonacion(repo);
+        const personaRepo = new PersonaRepositoryORM(em);
+        const casouso = new CreateDonacion(repo, personaRepo);
         
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);

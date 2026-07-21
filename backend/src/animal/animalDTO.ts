@@ -1,7 +1,7 @@
-export type estadosAnimal = 'Disponible' | 'No Disponible' | 'Adoptado' | 'No Adoptado' | 'Apto' | 'No Apto';
+export type estadosAnimal = "No Apto" | "Disponible" | "No Disponible" | "Reservado" | "Adoptado" | "Fallecido";
 
 export interface AnimalDTO {
-    numero: number;
+    nro_animal: number;
     especie: string;
     raza: string;
     edad_estimada: number;
@@ -10,5 +10,5 @@ export interface AnimalDTO {
     estado: estadosAnimal;
     sexo: 'Macho' | 'Hembra';
     peso: number;
-    descripcion: string;
+    descripcion?: string;
 }

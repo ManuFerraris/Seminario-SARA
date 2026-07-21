@@ -3,10 +3,10 @@ import { MikroORM } from "@mikro-orm/core";
 import { VacunaRepositoryORM } from "./vacuna.repositoryORM.js";
 import { validarCodigo } from "../helpers/validarCodigo.js";
 import { FindAllVacunas } from "./CU/findAllVacunas.js";
-import { UpdateVacunas } from "./CU/updateVacuna.js";
-import { CreateVacunas } from "./CU/createVacuna.js";
-import { GetOneVacunas } from "./CU/getOneVacuna.js";
-import { DeleteVacunas } from "./CU/deleteVacuna.js";
+import { UpdateVacuna } from "./CU/updateVacuna.js";
+import { CreateVacuna } from "./CU/createVacuna.js";
+import { GetOneVacuna } from "./CU/getOneVacuna.js";
+import { DeleteVacuna } from "./CU/deleteVacuna.js";
 
 export const findAllVacunas = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -36,9 +36,9 @@ export const getOneVacunas = async (req:Request, res:Response):Promise<void> => 
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new VacunaRepositoryORM(em);
-        const casouso = new GetOneVacunas(repo);
+        const casouso = new GetOneVacuna(repo);
         
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de vacuna');
+        const { valor:codVal, error: codError } = validarCodigo(req.params.nro_vacuna, 'numero de vacuna');
         if (codError || codVal === undefined) {
             res.status(400).json({ error: codError });
             return;
@@ -65,7 +65,7 @@ export const createVacunas = async (req:Request, res:Response):Promise<void> => 
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new VacunaRepositoryORM(em);
-        const casouso = new CreateVacunas(repo);
+        const casouso = new CreateVacuna(repo);
         
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
@@ -90,9 +90,9 @@ export const updateVacunas = async (req:Request, res:Response):Promise<void> => 
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new VacunaRepositoryORM(em);
-        const casouso = new UpdateVacunas(repo);
+        const casouso = new UpdateVacuna(repo);
 
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de vacuna');
+        const { valor:codVal, error: codError } = validarCodigo(req.params.nro_vacuna, 'numero de vacuna');
         if (codError || codVal === undefined) {
             res.status(400).json({ error: codError });
             return;
@@ -121,9 +121,9 @@ export const deleteVacunas = async (req:Request, res:Response):Promise<void> => 
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new VacunaRepositoryORM(em);
-        const casouso = new DeleteVacunas(repo);
+        const casouso = new DeleteVacuna(repo);
         
-        const { valor:codVal, error: codError } = validarCodigo(req.params.numero, 'numero de vacuna');
+        const { valor:codVal, error: codError } = validarCodigo(req.params.nro_vacuna, 'numero de vacuna');
         if (codError || codVal === undefined) {
             res.status(400).json({ error: codError });
             return;

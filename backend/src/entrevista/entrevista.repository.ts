@@ -1,15 +1,10 @@
 import { Entrevista } from "../entities/entrevista.entity.js";
-import { Adoptante } from "../entities/adoptante.entity.js";
-import { Colaborador } from "../entities/colaborador.entity.js";
+import {Persona} from "../entities/persona.entity.js";
 
 export interface EntrevistaRepository {
-    buscarEntrevista(adoptante: Adoptante,
-        colaborador: Colaborador,
-        fecha_ent: Date): Promise<Entrevista | null>;
+    buscarEntrevista(nro_entrevista: number): Promise<Entrevista | null>;
     traerTodasEntrevistas(): Promise<Entrevista[]>;
     crearEntrevista(entrevista: Entrevista): Promise<Entrevista>;
     actualizarEntrevista(entrevista:Entrevista): Promise<Entrevista>;
-    eliminarEntrevista(adoptante: Adoptante,
-        colaborador: Colaborador,
-        fecha_ent: Date): Promise<void>;
+    eliminarEntrevista(nro_entrevista: number): Promise<void>;
 }

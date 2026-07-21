@@ -3,11 +3,21 @@ import { DonacionDTO } from "./donacionDTO.js";
 export async function validarActualizacionDonacion(dto: DonacionDTO): Promise<string[]> {
     const errores: string[] = [];
 
-    // validar campos obligatorios
-    if(dto.cantidad && dto.cantidad < 0) errores.push("El campo 'cantidad' no puede ser negativa");
-    if(dto.descripcion && (dto.descripcion.length === 0 || dto.descripcion.length > 255)) errores.push("El campo 'descripcion' es obligatorio y no puede tener más de 255 caracteres`");
-    if(dto.tipo && (dto.tipo.length === 0 || dto.tipo.length > 20)) errores.push("El campo 'tipo' es obligatorio y no puede tener más de 20 caracteres`");
-    if(dto.fecha_vencimiento && dto.fecha_vencimiento < new Date()) errores.push("El campo 'fecha_vencimiento' no puede ser una fecha pasada");
+    if (dto.cantidad !== undefined && dto.cantidad <= 0) {
+        errores.push("La cantidad debe ser mayor a 0");
+    }
+    
+    if (dto.descripcion !== undefined && (dto.descripcion.trim().length === 0 || dto.descripcion.length > 255)) {
+        errores.push("El campo 'descripcion' no puede estar vacío ni tener más de 255 caracteres");
+    }
+    
+    if (dto.tipo !== undefined && (dto.tipo.trim().length === 0 || dto.tipo.length > 30)) {
+        errores.push("El campo 'tipo' no puede estar vacío ni tener más de 30 caracteres");
+    }
+    
+    if (dto.fecha_vencimiento && new Date(dto.fecha_vencimiento) < new Date()) {
+        errores.push("La fecha de vencimiento no puede ser una fecha pasada");
+    }
     
     return errores;
-};
+}

@@ -10,7 +10,7 @@ import {
 export const personaRouter = Router();
 
 personaRouter.get('/', findAll);
-personaRouter.get('/:numero', getOne);
+personaRouter.get('/:dni', getOne);
 personaRouter.post('/', create);
-personaRouter.put('/:numero', update);
-personaRouter.delete('/:numero', deletePersona);
+personaRouter.put('/:dni', update);
+personaRouter.delete('/:dni', deletePersona);

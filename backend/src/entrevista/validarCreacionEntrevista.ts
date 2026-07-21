@@ -1,22 +1,20 @@
-import { EntrevistaDTO } from "./entrevistaDTO.js";
-
 export function validarCreacionEntrevista(dto: any): string[] {
     const errores: string[] = [];
 
-    // 1. Validar Claves Foráneas (IDs)
-    if (!dto.numero_adoptante) {
-        errores.push('El número de adoptante es obligatorio.');
-    } else if (typeof dto.numero_adoptante !== 'number') {
-        errores.push('El número de adoptante debe ser un valor numérico.');
+    // 1. Validar Claves Foráneas (Actualizado a DNIs)
+    if (!dto.dni_adoptante) {
+        errores.push('El DNI del adoptante es obligatorio.');
+    } else if (typeof dto.dni_adoptante !== 'string') {
+        errores.push('El DNI del adoptante debe ser un texto (string).');
     }
 
-    if (!dto.id_colaborador) {
-        errores.push('El ID de colaborador es obligatorio.');
-    } else if (typeof dto.id_colaborador !== 'string') {
-        errores.push('El ID de colaborador debe ser un valor de tipo string.');
+    if (!dto.dni_colaborador) {
+        errores.push('El DNI del colaborador es obligatorio.');
+    } else if (typeof dto.dni_colaborador !== 'string') {
+        errores.push('El DNI del colaborador debe ser un texto (string).');
     }
 
-    // 2. Validar Fechas (Transformamos el string del JSON a Date para verificar que sea válido)
+    // 2. Validar Fechas
     if (!dto.fecha_hora) {
         errores.push('La fecha y hora de la entrevista es obligatoria.');
     } else if (isNaN(new Date(dto.fecha_hora).getTime())) {
@@ -29,11 +27,11 @@ export function validarCreacionEntrevista(dto: any): string[] {
         errores.push('La fecha y hora de reprogramación no tiene un formato válido.');
     }
 
-    // 3. Validar Strings y Longitudes (Basado en tu entidad)
+    // 3. Validar Strings y Longitudes (Sincronizado a 20 caracteres)
     if (!dto.estado) {
         errores.push('El estado de la entrevista es obligatorio.');
-    } else if (typeof dto.estado !== 'string' || dto.estado.length > 15) {
-        errores.push('El estado debe ser un texto de máximo 15 caracteres.');
+    } else if (typeof dto.estado !== 'string' || dto.estado.trim().length === 0 || dto.estado.length > 20) {
+        errores.push('El estado debe ser un texto válido de máximo 20 caracteres.');
     }
 
     if (dto.descripcion !== undefined && dto.descripcion !== null) {
@@ -42,11 +40,11 @@ export function validarCreacionEntrevista(dto: any): string[] {
         }
     }
 
-    // 4. Validar Booleanos
-    if (dto.aprobada === undefined || dto.aprobada === null) {
-        errores.push('El campo aprobada es obligatorio.');
-    } else if (typeof dto.aprobada !== 'boolean') {
-        errores.push('El campo aprobada debe ser estrictamente un valor booleano (true o false).');
+    // 4. Validar Booleanos (Ahora es opcional porque la BD tiene default: false)
+    if (dto.aprobada !== undefined && dto.aprobada !== null) {
+        if (typeof dto.aprobada !== 'boolean') {
+            errores.push('El campo aprobada debe ser estrictamente un valor booleano (true o false).');
+        }
     }
 
     return errores;

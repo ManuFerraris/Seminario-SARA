@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { EntrevistaRepositoryORM } from "./entrevista.repositoryORM.js";
-import { ColaboradorRepositoryORM } from "../persona/colaborador/colaborador.repositoryORM.js";
-import { AdoptanteRepositoryORM } from "../persona/adoptante/adoptante.repositotyORM.js";
+import { PersonaRepositoryORM } from "../persona/persona.repositoryORM.js";
 import { validarCodigo } from "../helpers/validarCodigo.js";
 import { GetOneEntrevista } from "./CU/getOneEntrevista.js";
 import { FindAllEntrevistas } from "./CU/findAllEntrevistas.js";
-import { DeleteEntrevista } from "./CU/deleteEntrevista.js";
 import { CreateEntrevista } from "./CU/createEntrevista.js";
 import { UpdateEntrevista } from "./CU/updateEntrevista.js";
 import { BajaLogicaEntrevista } from "./CU/bajaLogicaEntrevista.js";
@@ -17,8 +15,6 @@ export const findAllEntrevistas = async (req: Request, res: Response) => {
         const em = orm.em.fork();
         
         const entRepo = new EntrevistaRepositoryORM(em);
-        const colabRepo = new ColaboradorRepositoryORM(em);
-        const adoptRepo = new AdoptanteRepositoryORM(em);
         
         const casoUso = new FindAllEntrevistas(entRepo);
         const resultado = await casoUso.ejecutar();
@@ -41,32 +37,22 @@ export const getOneEntrevista = async (req: Request, res: Response) => {
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const entRepo = new EntrevistaRepositoryORM(em);
-        const colabRepo = new ColaboradorRepositoryORM(em);
-        const adoptRepo = new AdoptanteRepositoryORM(em);
         
-        const casoUso = new GetOneEntrevista(entRepo, colabRepo, adoptRepo);
+        const casoUso = new GetOneEntrevista(entRepo);
         
-        const fecha_hora_str = req.params.fecha_hora as string;
-        const fecha_hora = new Date(fecha_hora_str);
-        const id_colaborador = String(req.params.id_colaborador);
-        const {valor:codValA, error:codErrorA} = validarCodigo(req.params.numero_adoptante, "adoptante");
-        if (codErrorA || codValA === undefined) {
-            res.status(400).json({ error: codErrorA });
+        const {valor:codVaEnt, error:codErrorEnt} = validarCodigo(req.params.id_entrevista, "nro entrevista");
+        if (codErrorEnt || codVaEnt === undefined) {
+            res.status(400).json({ error: codErrorEnt });
             return;
         };
 
-        if (isNaN(fecha_hora.getTime())) {
-            res.status(400).json({ error: "Formato de fecha y hora inválido en la URL." });
-            return;
-        }
-
-        const resultado = await casoUso.ejecutar(id_colaborador, codValA, fecha_hora);
+        const resultado = await casoUso.ejecutar(codVaEnt);
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
 
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.error('Error al buscar la entrevista', error.message);
+            console.error('Error al buscar la entrevista:', error.message);
             res.status(500).json({ error: "Error al buscar la entrevista" });
             return;
         }
@@ -76,15 +62,15 @@ export const getOneEntrevista = async (req: Request, res: Response) => {
 };
 
 export const createEntrevista = async (req: Request, res: Response) => {
-try {
+    try {
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         
         const entRepo = new EntrevistaRepositoryORM(em);
-        const colabRepo = new ColaboradorRepositoryORM(em);
-        const adoptRepo = new AdoptanteRepositoryORM(em);
+        const personaRepo = new PersonaRepositoryORM(em); // Nuevo repo inyectado
         
-        const casoUso = new CreateEntrevista(entRepo, colabRepo, adoptRepo);
+        // El caso de uso ahora recibe ambos repositorios
+        const casoUso = new CreateEntrevista(entRepo, personaRepo);
         const dto = req.body;
 
         const resultado = await casoUso.ejecutar(dto);
@@ -104,35 +90,26 @@ try {
 };
 
 export const updateEntrevista = async (req: Request, res: Response) => {
-try {
+    try {
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         
         const entRepo = new EntrevistaRepositoryORM(em);
-        const colabRepo = new ColaboradorRepositoryORM(em);
-        const adoptRepo = new AdoptanteRepositoryORM(em);
         
-        const casoUso = new UpdateEntrevista(entRepo, colabRepo, adoptRepo);
-        
-        // Extraemos los identificadores de la URL
-
-        const id_colaborador = String(req.params.id_colaborador);
-        const fecha_hora_str = req.params.fecha_hora as string;
-        const fecha_hora = new Date(fecha_hora_str);
+        // Asumiendo que la actualización no cambia a las personas, 
+        // solo necesitas el repo de entrevista
+        const casoUso = new UpdateEntrevista(entRepo);
         const dto = req.body;
 
-        const {valor:codValA, error:codErrorA} = validarCodigo(req.params.numero_adoptante, "adoptante");
-        if (codErrorA || codValA === undefined) {
-            res.status(400).json({ error: codErrorA });
+        // Extraemos y validamos la única PK necesaria
+        const { valor: codVaEnt, error: codErrorEnt } = validarCodigo(req.params.id_entrevista, "nro entrevista");
+        
+        if (codErrorEnt || codVaEnt === undefined) {
+            res.status(400).json({ error: codErrorEnt });
             return;
-        };
+        }
 
-        if (isNaN(fecha_hora.getTime())) {
-            res.status(400).json({ error: "Formato de fecha y hora inválido en la URL." });
-            return;
-        };
-
-        const resultado = await casoUso.ejecutar(codValA, id_colaborador, fecha_hora, dto);
+        const resultado = await casoUso.ejecutar(codVaEnt, dto);
         
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
@@ -174,30 +151,18 @@ export const bajaLogicaEntrevista = async (req: Request, res: Response): Promise
         const em = orm.em.fork();
         
         const entRepo = new EntrevistaRepositoryORM(em);
-        const colabRepo = new ColaboradorRepositoryORM(em);
-        const adoptRepo = new AdoptanteRepositoryORM(em);
+        const casoUso = new BajaLogicaEntrevista(entRepo);
         
-        const casoUso = new BajaLogicaEntrevista(entRepo, colabRepo, adoptRepo);
+        // Validamos la PK única
+        const { valor: codVaEnt, error: codErrorEnt } = validarCodigo(req.params.id_entrevista, "nro entrevista");
         
-        // Extraemos y validamos los parámetros de la PK compuesta
-        const fecha_hora_str = req.params.fecha_hora as string;
-        const fecha_hora = new Date(fecha_hora_str);
-        
-        const id_colaborador = String(req.params.id_colaborador);
-
-        const { valor: codValA, error: codErrorA } = validarCodigo(req.params.numero_adoptante, "adoptante");
-        if (codErrorA || codValA === undefined) {
-            res.status(400).json({ error: codErrorA });
+        if (codErrorEnt || codVaEnt === undefined) {
+            res.status(400).json({ error: codErrorEnt });
             return;
         }
 
-        if (isNaN(fecha_hora.getTime())) {
-            res.status(400).json({ error: "Formato de fecha y hora inválido en la URL." });
-            return;
-        }
-
-        // Ejecutamos la baja lógica
-        const resultado = await casoUso.ejecutar(codValA, id_colaborador, fecha_hora);
+        // Ejecutamos la baja lógica enviando solo el ID
+        const resultado = await casoUso.ejecutar(codVaEnt);
         
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
