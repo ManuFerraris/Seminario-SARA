@@ -24,6 +24,5 @@ export class FichaMedica {
 
     @OneToMany(() => Colocacion, colocacion => colocacion.ficha)
     colocaciones = new Collection<Colocacion>(this);
-    
 
 }

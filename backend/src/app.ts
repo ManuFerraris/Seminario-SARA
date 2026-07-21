@@ -9,6 +9,9 @@ import { entrevistaRouter } from './entrevista/entrevista.router.js';
 import { rescateRouter } from './rescate/rescate.routes.js';
 import { audiovisualRouter } from './audiovisual/aud.routes.js';
 import { adopcionRouter } from './adopcion/adopcion.routes.js';
+import { fichaMedicaRouter } from './fichaMedica/fichaMedica.routes.js';
+import { colocacionRouter } from './colocacion/colocacion.routes.js';
+import { seguimientoRouter } from './seguimiento/seg.routes.js';
 
 const app = express();
 app.locals.orm = orm
@@ -25,6 +28,9 @@ app.use("/api/entrevista", entrevistaRouter);
 app.use("/api/rescate", rescateRouter);
 app.use("/api/audiovisual", audiovisualRouter);
 app.use("/api/adopcion", adopcionRouter);
+app.use("/api/ficha-medica", fichaMedicaRouter);
+app.use("/api/colocacion", colocacionRouter);
+app.use("/api/seguimiento", seguimientoRouter);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);

@@ -38,7 +38,7 @@ export const getOne = async (req:Request, res:Response):Promise<void> => {
         const repo = new AnimalRepositoryORM(em);
         const casouso = new GetOne(repo);
 
-        const {valor: codVal, error:codError} = validarCodigo(req.params, 'numero animal');
+        const {valor: codVal, error:codError} = validarCodigo(req.params.nro_animal, 'numero animal');
         if(codError || codVal === undefined){
             res.status(400).json({ message: codError , data: undefined });
             return;
@@ -93,7 +93,7 @@ export const update = async (req:Request, res:Response):Promise<void> => {
         const repo = new AnimalRepositoryORM(em);
         const casouso = new ActualizarAnimal(repo);
 
-        const {valor: codVal, error:codError} = validarCodigo(req.params.numero, 'numero animal');
+        const {valor: codVal, error:codError} = validarCodigo(req.params.nro_animal, 'numero animal');
         if(codError || codVal === undefined){
             res.status(400).json({ message: codError , data: undefined });
             return;
@@ -126,7 +126,7 @@ export const deleteAnimal = async (req:Request, res:Response):Promise<void> => {
         const repo = new AnimalRepositoryORM(em);
         const casouso = new EliminarAnimal(repo);
 
-        const {valor: codVal, error:codError} = validarCodigo(req.params.numero, 'numero animal');
+        const {valor: codVal, error:codError} = validarCodigo(req.params.nro_animal, 'numero animal');
         if(codError || codVal === undefined){
             res.status(400).json({ message: codError , data: undefined });
             return;
