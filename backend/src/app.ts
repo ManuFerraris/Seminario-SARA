@@ -8,6 +8,7 @@ import { vacunaRouter } from './vacuna/vacuna.routes.js';
 import { entrevistaRouter } from './entrevista/entrevista.router.js';
 import { rescateRouter } from './rescate/rescate.routes.js';
 import { audiovisualRouter } from './audiovisual/aud.routes.js';
+import { adopcionRouter } from './adopcion/adopcion.routes.js';
 
 const app = express();
 app.locals.orm = orm
@@ -23,6 +24,7 @@ app.use("/api/vacuna", vacunaRouter);
 app.use("/api/entrevista", entrevistaRouter);
 app.use("/api/rescate", rescateRouter);
 app.use("/api/audiovisual", audiovisualRouter);
+app.use("/api/adopcion", adopcionRouter);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);
