@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { Persona } from "../../entities/persona.entity.js";
 import { PersonaDTO } from "../personaDTO.js";
 import { PersonaRepository } from "../persona.repository.js";
@@ -45,7 +46,10 @@ export class CreatePersona {
         nuevaPersona.nombre = dto.nombre;
         nuevaPersona.apellido = dto.apellido;
         nuevaPersona.email = dto.email;
-        nuevaPersona.contrasenia = dto.contrasenia;
+
+        const SALT_ROUNDS = 10;
+        const hashedPassword = await bcrypt.hash(dto.contrasenia, SALT_ROUNDS);
+        nuevaPersona.contrasenia = hashedPassword;
 
         // Campos opcionales (roles)
         if (dto.telefono) nuevaPersona.telefono = dto.telefono;

@@ -12,6 +12,7 @@ import { adopcionRouter } from './adopcion/adopcion.routes.js';
 import { fichaMedicaRouter } from './fichaMedica/fichaMedica.routes.js';
 import { colocacionRouter } from './colocacion/colocacion.routes.js';
 import { seguimientoRouter } from './seguimiento/seg.routes.js';
+import { authRouter } from './login/auth.routes.js';
 
 const app = express();
 app.locals.orm = orm
@@ -31,6 +32,7 @@ app.use("/api/adopcion", adopcionRouter);
 app.use("/api/fichamedica", fichaMedicaRouter);
 app.use("/api/colocacion", colocacionRouter);
 app.use("/api/seguimiento", seguimientoRouter);
+app.use("/api/auth", authRouter);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificarToken } from "../login/auth.middleware.js";
 import {
 findAllRescates,
 getOneRescate,
@@ -9,8 +10,8 @@ deleteRescate
 
 export const rescateRouter = Router();
 
-rescateRouter.get("/", findAllRescates);
-rescateRouter.get("/:nro_rescate", getOneRescate);
-rescateRouter.post("/", createRescate);
-rescateRouter.put("/:nro_rescate", updateRescate);
-rescateRouter.delete("/:nro_rescate", deleteRescate);
+rescateRouter.get("/", verificarToken(["Colaborador", "Veterinario"]), findAllRescates);
+rescateRouter.get("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), getOneRescate);
+rescateRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), createRescate);
+rescateRouter.put("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), updateRescate);
+rescateRouter.delete("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), deleteRescate);

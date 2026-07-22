@@ -13,11 +13,11 @@ POST http://localhost:3000/api/persona
 Content-Type: application/json
 
 {
-    "dni": "11111111",
-    "nombre": "Roberto",
-    "apellido": "García",
-    "email": "roberto.donante@email.com",
-    "contrasenia": "password123",
+    "dni": "55555555",
+    "nombre": "Manuel",
+    "apellido": "Ferraris",
+    "email": "FMprueba5@email.com",
+    "contrasenia": "ab123456",
     "telefono": "3415550001"
 }
 
@@ -55,11 +55,11 @@ POST http://localhost:3000/api/persona
 Content-Type: application/json
 
 {
-    "dni": "44444444",
+    "dni": "12121212",
     "nombre": "Natalia",
     "apellido": "Romero",
-    "email": "naty.adopta@email.com",
-    "contrasenia": "password123",
+    "email": "natalia@email.com",
+    "contrasenia": "ab123456",
     "telefono": "3415550004",
     "id_adoptante": "ADO-102",
     "estado": "Apto",

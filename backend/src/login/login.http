@@ -1,0 +1,21 @@
+### Login de prueba
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "natalia@email.com",
+    "password": "ab123456"
+}
+
+//Prueba con token:
+### Crear un Rescate
+POST http://localhost:3000/api/rescate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkbmkiOiIxMjEyMTIxMiIsIm5vbWJyZSI6Ik5hdGFsaWEiLCJyb2xlcyI6WyJBZG9wdGFudGUiXSwiaWF0IjoxNzg0NzUwMTI5LCJleHAiOjE3ODQ3Nzg5Mjl9.ClF38J7IHMkI7ZFHDjDH7O_Ycr1aEwuofJ7mPwCoWEk
+Content-Type: application/json
+
+{
+    "dni_persona": "22222222",
+    "nro_animal": 1,
+    "fecha_rescate": "2026-09-20",
+    "lugar_rescate": "Av. Pellegrini"
+}
