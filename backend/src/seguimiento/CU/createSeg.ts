@@ -1,9 +1,9 @@
-import { AdopcionRepository } from "../../adopcion/adopcion.repository";
-import { Seguimiento } from "../../entities/seguimiento.entity";
-import { ServiceResponse } from "../../types/service.response";
-import { SeguimientoRepository } from "../seg.repository";
-import { SeguimientoDTO } from "../seguimientoDTO";
-import { validarCreacionSeguimiento } from "../validarCreacionSeguimiento";
+import { AdopcionRepository } from "../../adopcion/adopcion.repository.js";
+import { Seguimiento } from "../../entities/seguimiento.entity.js";
+import { ServiceResponse } from "../../types/service.response.js";
+import { SeguimientoRepository } from "../seg.repository.js";
+import { SeguimientoDTO } from "../seguimientoDTO.js";
+import { validarCreacionSeguimiento } from "../validarCreacionSeguimiento.js";
 
 export class CreateSeguimiento {
     constructor(
@@ -22,14 +22,19 @@ export class CreateSeguimiento {
             return { status: 404, success: false, messages: ["La adopción indicada no existe."], data: undefined };
         }
 
-        const fechaSeguimiento = new Date(dto.fecha_seguimiento);
-        if (fechaSeguimiento.getTime() < adopcion.fecha_adopcion.getTime()) {
+        // 1. Envolvemos ambas fechas en new Date() estrictamente para poder compararlas
+        const fechaSeguimientoCheck = new Date(dto.fecha_seguimiento);
+        const fechaAdopcionCheck = new Date(adopcion.fecha_adopcion);
+
+        if (fechaSeguimientoCheck.getTime() < fechaAdopcionCheck.getTime()) {
             return { status: 400, success: false, messages: ["La fecha del seguimiento no puede ser anterior a la fecha de adopción."], data: undefined };
         }
 
         const nuevoSeguimiento = new Seguimiento();
         nuevoSeguimiento.adopcion = adopcion;
-        nuevoSeguimiento.fecha_seguimiento = fechaSeguimiento;
+        
+        // 2. Le pasamos el valor crudo (string) para que MikroORM lo guarde sin quejarse
+        nuevoSeguimiento.fecha_seguimiento = dto.fecha_seguimiento as any; 
         nuevoSeguimiento.estado_animal = dto.estado_animal.trim();
         nuevoSeguimiento.entorno = dto.entorno.trim();
 

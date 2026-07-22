@@ -1,6 +1,6 @@
-import { Seguimiento } from "../../entities/seguimiento.entity";
-import { ServiceResponse } from "../../types/service.response";
-import { SeguimientoRepository } from "../seg.repository";
+import { Seguimiento } from "../../entities/seguimiento.entity.js";
+import { ServiceResponse } from "../../types/service.response.js";
+import { SeguimientoRepository } from "../seg.repository.js";
 
 export class GetOneSeguimiento {
     constructor(private readonly seguimientoRepository: SeguimientoRepository) {}

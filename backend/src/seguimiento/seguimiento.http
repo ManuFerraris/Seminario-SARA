@@ -1,0 +1,46 @@
+### findAll Seguimientos
+GET http://localhost:3000/api/seguimiento
+
+### getOne Seguimiento (Ejemplo con id_seguimiento = 1)
+GET http://localhost:3000/api/seguimiento/1
+
+### ----------------------------------------------------
+### CREACIÓN DE SEGUIMIENTOS
+### ----------------------------------------------------
+
+### create Seguimiento - Primer visita (Todo en orden)
+POST http://localhost:3000/api/seguimiento
+Content-Type: application/json
+
+{
+    "nro_adopcion": 1,
+    "fecha_seguimiento": "2026-08-10",
+    "estado_animal": "Bueno.",
+    "entorno": "Casa con patio cerrado, duerme adentro. Familia muy cariñosa."
+}
+
+### create Seguimiento - Segunda visita (Problemas detectados, justifica el retiro previo)
+POST http://localhost:3000/api/seguimiento
+Content-Type: application/json
+
+{
+    "nro_adopcion": 1,
+    "fecha_seguimiento": "2026-10-14",
+    "estado_animal": "Regular",
+    "entorno": "El portón estaba abierto. Vecinos reportan que el animal pasa horas en la calle."
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Seguimiento (Ejemplo: corregir un detalle del reporte)
+PUT http://localhost:3000/api/seguimiento/2
+Content-Type: application/json
+
+{
+    "estado_animal": "Malo."
+}
+
+### delete Seguimiento (Ejemplo: registro duplicado por error del voluntario)
+DELETE http://localhost:3000/api/seguimiento/3

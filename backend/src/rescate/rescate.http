@@ -1,28 +1,35 @@
-### 1. CREAR UN RESCATE
+### findAll Rescates
+GET http://localhost:3000/api/rescate
+
+### getOne Rescate (Ejemplo con nro_rescate = 1)
+GET http://localhost:3000/api/rescate/1
+
+### ----------------------------------------------------
+### CREACIÓN DE RESCATES
+### ----------------------------------------------------
+
+### create Rescate 
 POST http://localhost:3000/api/rescate
 Content-Type: application/json
 
 {
-    "numero_persona": 2,
-    "numero_animal": 3,
-    "fecha_hora": "2026-05-24T20:30:00.000Z",
-    "lugar_rescate": "Av. Pellegrini y Bv. Oroño, Rosario"
+    "dni_persona": "22222222",
+    "nro_animal": 1,
+    "fecha_rescate": "2026-08-20",
+    "lugar_rescate": "Av. Pellegrini e Italia, cerca del parque"
 }
 
-### Actualizar rescate
-PUT http://localhost:3000/api/rescate/2/3/2026-05-24T20:30:00.000Z
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Rescate (Ejemplo: Se corrige la dirección del rescate)
+PUT http://localhost:3000/api/rescate/1
 Content-Type: application/json
 
 {
-    "lugar_rescate": "Av. Pellegrini y Bv. Oroño, Rosario - Actualizado"
+    "lugar_rescate": "Av. Pellegrini y Dorrego (esquina de la plaza)"
 }
 
-### 2. OBTENER TODOS LOS RESCATES
-# Esto debería devolverte el rescate que acabas de crear arriba.
-GET http://localhost:3000/api/rescate
-
-
-### 3. OBTENER UN SOLO RESCATE POR SU CLAVE PRIMARIA COMPUESTA
-# La URL debe coincidir exactamente con los 3 datos que usaste en el POST.
-# Fíjate cómo la fecha viaja directamente en la URL como string.
-GET http://localhost:3000/api/rescate/1/9/2026-05-24T20:30:00.000Z
+### delete Rescate (Ejemplo: Se cargó un rescate por error) (no esta codeado el DELETE!!!)
+DELETE http://localhost:3000/api/rescate/2

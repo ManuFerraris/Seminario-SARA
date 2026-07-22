@@ -21,11 +21,11 @@ export function validarCreacionEntrevista(dto: any): string[] {
         errores.push('La fecha y hora no tiene un formato válido (use ISO 8601, ej: 2026-05-14T10:00:00).');
     }
 
-    if (!dto.fecha_hora_rep) {
+    /*if (!dto.fecha_hora_rep) {
         errores.push('La fecha y hora de reprogramación es obligatoria.');
     } else if (isNaN(new Date(dto.fecha_hora_rep).getTime())) {
         errores.push('La fecha y hora de reprogramación no tiene un formato válido.');
-    }
+    }*/
 
     // 3. Validar Strings y Longitudes (Sincronizado a 20 caracteres)
     if (!dto.estado) {

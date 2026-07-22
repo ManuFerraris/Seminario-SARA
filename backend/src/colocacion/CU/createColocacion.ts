@@ -37,6 +37,7 @@ export class CreateColocacion {
         nuevaColocacion.cantidad = dto.cantidad;
 
         await this.colocacionRepository.createColocacion(nuevaColocacion);
+        await this.vacunaRepository.actualizarStock(dto.cantidad, vacuna);
 
         return { status: 201, success: true, messages: ["Colocación registrada exitosamente."], data: nuevaColocacion };
     }

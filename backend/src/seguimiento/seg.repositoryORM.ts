@@ -1,5 +1,5 @@
-import { Seguimiento } from '../entities/seguimiento.entity';
-import { SeguimientoRepository } from './seg.repository';
+import { Seguimiento } from '../entities/seguimiento.entity.js';
+import { SeguimientoRepository } from './seg.repository.js';
 import { EntityManager } from '@mikro-orm/core';
 
 export class SeguimientoRepositoryORM implements SeguimientoRepository {

@@ -1,0 +1,36 @@
+### findAll Adopciones
+GET http://localhost:3000/api/adopcion
+
+### getOne Adopcion (Ejemplo con nro_adopcion = 1)
+GET http://localhost:3000/api/adopcion/1
+
+### ----------------------------------------------------
+### CREACIÓN DE ADOPCIONES
+### ----------------------------------------------------
+
+### create Adopcion - Adopción exitosa y normal
+POST http://localhost:3000/api/adopcion
+Content-Type: application/json
+
+{
+    "dni_adoptante": "44444444",
+    "nro_animal": 1,
+    "fecha_adopcion": "2026-07-22"
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Adopcion (Ejemplo: Se retira el animal por incumplimiento de contrato)
+PUT http://localhost:3000/api/adopcion/1
+Content-Type: application/json
+
+{
+    "fecha_retiro": "2026-10-15",
+    "motivos_retiro": "El animal se encontraba suelto en la vía pública repetidas veces",
+    "evidencia_maltrato": "Constatado por el equipo de rescatistas en la visita del 14/10"
+}
+
+### delete Adopcion (Ejemplo: Se cargó al adoptante equivocado)
+DELETE http://localhost:3000/api/adopcion/2

@@ -20,7 +20,7 @@ export class Entrevista {
     @Property({ type: 'datetime' })
     fecha_hora!: Date;
 
-    @Property({ type: 'datetime' })
+    @Property({ type: 'datetime', nullable: true })
     fecha_hora_rep!: Date;
 
     @Property({ type: 'string', length: 20 })

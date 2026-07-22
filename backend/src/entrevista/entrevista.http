@@ -1,38 +1,48 @@
-### Buscar todas las entrevistas
+### findAll Entrevistas
 GET http://localhost:3000/api/entrevista
 
-### 2. Traer una Entrevista específica (GET)
-# La URL debe coincidir exactamente con los 3 datos de la clave compuesta que enviaste en el POST.
-# Estructura: /api/entrevista/{numero_adoptante}/{id_colaborador}/{fecha_hora}
-GET http://localhost:3000/api/entrevista/3/COL-001/2026-05-25T10:00:00
+### getOne Entrevista (Ejemplo con id_entrevista = 1)
+GET http://localhost:3000/api/entrevista/1
 
-### Crear una nueva Entrevista
-# Reemplaza los números de adoptante y colaborador por IDs que existan en tu base de datos SARA.
+### ----------------------------------------------------
+### CREACIÓN DE ENTREVISTAS
+### ----------------------------------------------------
+
+### create Entrevista - Inicial
 POST http://localhost:3000/api/entrevista
 Content-Type: application/json
 
 {
-    "numero_adoptante": 3,
-    "id_colaborador": "COL-001",
-    "fecha_hora": "2026-05-25T10:00:00",
-    "fecha_hora_rep": "2026-05-25T10:00:00",
+    "dni_adoptante": "44444444",
+    "dni_colaborador": "22222222",
+    "fecha_hora": "2026-08-15T10:00:00Z",
     "estado": "Programada",
-    "descripcion": "Entrevista de evaluación inicial para la adopción.",
     "aprobada": false
 }
 
-### 3. Actualizar una Entrevista (PUT)
-# Estructura de la URL: /api/entrevista/{id_adoptante}/{id_colaborador}/{fecha_hora_original}
-PUT http://localhost:3000/api/entrevista/3/COL-001/2026-05-25T10:00:00
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Entrevista - Reprogramación (Adoptante no pudo asistir)
+PUT http://localhost:3000/api/entrevista/1
 Content-Type: application/json
 
 {
-    "estado": "Realizada",
-    "aprobada": true,
-    "fecha_hora_rep": "2026-05-26T11:30:00",
-    "descripcion": "Entrevista finalizada con éxito. El adoptante demostró tener el espacio y la disposición adecuada."
+    "fecha_hora_rep": "2026-08-20T16:30:00Z",
+    "estado": "Reprogramada",
+    "descripcion": "El adoptante avisó con antelación por temas laborales."
 }
 
-### 4. Baja logica de una Entrevista (DELETE)
-# Estructura de la URL: /api/entrevista/{id_adoptante}/{id_colaborador}/{fecha_hora}
-DELETE http://localhost:3000/api/entrevista/3/COL-001/2026-05-25T10:00:00
+### update Entrevista - Resolución Final (Aprobada)
+PUT http://localhost:3000/api/entrevista/1
+Content-Type: application/json
+
+{
+    "estado": "Finalizada",
+    "descripcion": "La familia cumple con todos los requisitos. Tienen patio cerrado y buena predisposición.",
+    "aprobada": true
+}
+
+### delete Entrevista (Ejemplo: Error de carga)
+DELETE http://localhost:3000/api/entrevista/2

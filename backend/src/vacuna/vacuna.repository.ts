@@ -5,6 +5,7 @@ export interface VacunaRepository {
     findAllVacunas(): Promise<Vacuna[]>;
     getOneVacuna(numero: number): Promise<Vacuna | null>;
     createVacuna(vacuna: VacunaDTO): Promise<Vacuna>;
-    updateVacuna(numero: number, vacuna: VacunaDTO): Promise<Vacuna | null>;
+    updateVacuna(dto: VacunaDTO, vacuna: Vacuna): Promise<Vacuna | null>;
     deleteVacuna(vacuna: Vacuna): Promise<void>;
+    actualizarStock(cantidad: number, vacuna: Vacuna): Promise<void>;
 }

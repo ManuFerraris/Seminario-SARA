@@ -1,5 +1,5 @@
-import { ServiceResponse } from "../../types/service.response";
-import { SeguimientoRepository } from "../seg.repository";
+import { ServiceResponse } from "../../types/service.response.js";
+import { SeguimientoRepository } from "../seg.repository.js";
 
 export class DeleteSeguimiento {
     constructor(private readonly seguimientoRepository: SeguimientoRepository) {}

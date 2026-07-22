@@ -1,0 +1,46 @@
+### findAll Fichas Medicas
+GET http://localhost:3000/api/fichamedica
+
+### getOne Ficha Medica (Ejemplo con nro_ficha = 1)
+GET http://localhost:3000/api/fichamedica/1
+
+### ----------------------------------------------------
+### CREACIÓN DE FICHAS MÉDICAS
+### ----------------------------------------------------
+
+### create Ficha Medica - Control general
+POST http://localhost:3000/api/fichamedica
+Content-Type: application/json
+
+{
+    "nro_animal": 1,
+    "dni_veterinario": "33333333",
+    "fecha": "2026-07-22",
+    "observaciones": "Control general de ingreso. Se observa leve desnutrición y dermatitis por pulgas. Se indica desparasitación."
+}
+
+### create Ficha Medica - Tratamiento
+POST http://localhost:3000/api/fichamedica
+Content-Type: application/json
+
+{
+    "nro_animal": 1,
+    "dni_veterinario": "33333333",
+    "fecha": "2026-07-25",
+    "observaciones": "Aplicación de pipeta y primera dosis de antibiótico para la dermatitis. Evolución favorable."
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Ficha Medica (Ejemplo: corregir/ampliar la observación)
+PUT http://localhost:3000/api/fichamedica/1
+Content-Type: application/json
+
+{
+    "observaciones": "Control general de ingreso. Se observa leve desnutrición y dermatitis por pulgas. Se indica desparasitación y baños medicados semanales."
+}
+
+### delete Ficha Medica
+DELETE http://localhost:3000/api/fichamedica/2

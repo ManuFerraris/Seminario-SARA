@@ -1,4 +1,5 @@
 import { Vacuna } from "../entities/vacuna.entity.js";
+import { VacunaDTO } from "./vacunaDTO.js";
 import { VacunaRepository } from "./vacuna.repository.js";
 import { EntityManager } from "@mikro-orm/core";
 
@@ -20,14 +21,11 @@ export class VacunaRepositoryORM implements VacunaRepository {
         return vacuna;
     };
 
-    async updateVacuna(numero: number, vacuna: Vacuna): Promise<Vacuna | null> {
-        const existingVacuna = await this.em.findOne(Vacuna, { nro_vacuna: numero });
-        if (!existingVacuna) {
-            return null;
-        }
-        this.em.assign(existingVacuna, vacuna);
+
+    async updateVacuna(dto: VacunaDTO, vacuna: Vacuna): Promise<Vacuna | null> {
+        this.em.assign(vacuna, dto);
         await this.em.flush();
-        return existingVacuna;
+        return vacuna;
     };
 
     async deleteVacuna(vacuna: Vacuna): Promise<void> {
@@ -35,5 +33,11 @@ export class VacunaRepositoryORM implements VacunaRepository {
             this.em.remove(vacuna);
             await this.em.flush();
         }
+    }
+
+    async actualizarStock(cantidad: number, vacuna: Vacuna): Promise<void> {
+        vacuna.stock -= cantidad;
+        await this.em.flush();
+        return;
     }
 }

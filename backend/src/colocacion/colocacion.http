@@ -1,0 +1,46 @@
+### findAll Colocaciones
+GET http://localhost:3000/api/colocacion
+
+### getOne Colocacion (Ejemplo con nro_colocacion = 1)
+GET http://localhost:3000/api/colocacion/1
+
+### ----------------------------------------------------
+### CREACIÓN DE COLOCACIONES
+### ----------------------------------------------------
+
+### create Colocacion - Dosis normal
+POST http://localhost:3000/api/colocacion
+Content-Type: application/json
+
+{
+    "nro_ficha": 1,
+    "nro_vacuna": 1,
+    "fecha_colocacion": "2026-07-22",
+    "cantidad": 1
+}
+
+### create Colocacion - Dosis doble o múltiple (para probar lógica de stock)
+POST http://localhost:3000/api/colocacion
+Content-Type: application/json
+
+{
+    "nro_ficha": 1,
+    "nro_vacuna": 1,
+    "fecha_colocacion": "2026-07-25",
+    "cantidad": 2
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Colocacion (Ejemplo: corrección de fecha)
+PUT http://localhost:3000/api/colocacion/1
+Content-Type: application/json
+
+{
+    "fecha_colocacion": "2026-07-23"
+}
+
+### delete Colocacion (Ejemplo: se cargó por error)
+DELETE http://localhost:3000/api/colocacion/2

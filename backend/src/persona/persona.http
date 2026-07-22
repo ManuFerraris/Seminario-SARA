@@ -1,29 +1,84 @@
-### findAll:
+### findAll Personas
 GET http://localhost:3000/api/persona
 
-### getOne:
-GET http://localhost:3000/api/persona/5
+### getOne Persona (Ejemplo buscando al Veterinario por DNI)
+GET http://localhost:3000/api/persona/33333333
 
-### create:
-POST http://localhost:3000/api/persona/9
+### ----------------------------------------------------
+### CREACIÓN DE ROLES
+### ----------------------------------------------------
+
+### create Persona Normal (Ej: Posible Donante)
+POST http://localhost:3000/api/persona
 Content-Type: application/json
 
 {
-    "dni": "88888888",
-    "nombre": "Carla",
-    "apellido": "Perez",
-    "email": "carlytaperez@gmail.com",
-    "contrasenia": "Ab123456!",
-    "telefono": "2698754125"
+    "dni": "11111111",
+    "nombre": "Roberto",
+    "apellido": "García",
+    "email": "roberto.donante@email.com",
+    "contrasenia": "password123",
+    "telefono": "3415550001"
 }
 
-### update:
-PUT http://localhost:3000/api/persona/9
+### create Persona Colaborador
+POST http://localhost:3000/api/persona
 Content-Type: application/json
 
 {
-    "email": "carlos.vet@sara.com"
+    "dni": "22222222",
+    "nombre": "Lucía",
+    "apellido": "Fernández",
+    "email": "lucia.colab@sara.org",
+    "contrasenia": "password123",
+    "telefono": "3415550002",
+    "id_colaborador": "COL-001"
 }
 
-### deletePersona:
-DELETE http://localhost:3000/api/persona/9
+### create Persona Veterinario
+POST http://localhost:3000/api/persona
+Content-Type: application/json
+
+{
+    "dni": "33333333",
+    "nombre": "Martín",
+    "apellido": "López",
+    "email": "martin.vet@clinicavet.com",
+    "contrasenia": "password123",
+    "telefono": "3415550003",
+    "matricula": "MP-9876",
+    "anios_experiencia": 8
+}
+
+### create Persona Adoptante
+POST http://localhost:3000/api/persona
+Content-Type: application/json
+
+{
+    "dni": "44444444",
+    "nombre": "Natalia",
+    "apellido": "Romero",
+    "email": "naty.adopta@email.com",
+    "contrasenia": "password123",
+    "telefono": "3415550004",
+    "id_adoptante": "ADO-102",
+    "estado": "Apto",
+    "domicilio": "Av. Pellegrini 1234, Rosario"
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Persona (Ejemplo: El donante normal decide volverse Adoptante)
+PUT http://localhost:3000/api/persona/11111111
+Content-Type: application/json
+
+{
+    "id_adoptante": "ADO-103",
+    "estado": "En evaluación",
+    "domicilio": "Bv. Oroño 456, Rosario"
+}
+
+### delete Persona
+DELETE http://localhost:3000/api/persona/11111111

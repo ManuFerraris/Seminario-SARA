@@ -1,28 +1,48 @@
-### findAll:
+### findAll Donaciones
 GET http://localhost:3000/api/donacion
 
-### getOne:
+### getOne Donacion (Ejemplo con nro_donacion = 1)
 GET http://localhost:3000/api/donacion/1
 
-### Crear una nueva donación:
+### ----------------------------------------------------
+### CREACIÓN DE DONACIONES (Usando el DNI de Roberto)
+### ----------------------------------------------------
+
+### create Donacion - Insumos (con fecha de vencimiento)
 POST http://localhost:3000/api/donacion
 Content-Type: application/json
 
 {
-    "tipo": "Alimento Balanceado",
-    "cantidad": 50,
-    "descripcion": "Bolsa de alimento marca X para perros adultso",
-    "fecha_vencimiento": "2026-10-15"
+    "tipo": "Alimento",
+    "cantidad": 10,
+    "descripcion": "Bolsas de alimento balanceado para perro adulto (15kg c/u)",
+    "fecha_vencimiento": "2027-05-10",
+    "dni_donante": "11111111"
 }
 
-### Actualizar una donación existente:
+### create Donacion - Monetaria (sin fecha de vencimiento)
+POST http://localhost:3000/api/donacion
+Content-Type: application/json
+
+{
+    "tipo": "Monetaria",
+    "cantidad": 50000,
+    "descripcion": "Transferencia bancaria para cubrir gastos de cirugías",
+    "dni_donante": "11111111"
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Donacion (Ejemplo: actualizar la cantidad ingresada)
 PUT http://localhost:3000/api/donacion/1
 Content-Type: application/json
 
 {
-    "cantidad": 20,
-    "descripcion": "Bolsa de alimento marca X para cachorros (Actualizado con más kilos)"
+    "cantidad": 12,
+    "descripcion": "Bolsas de alimento balanceado para perro adulto (15kg c/u) - Corregido por error de conteo"
 }
 
-### deleteDonacion:
+### delete Donacion
 DELETE http://localhost:3000/api/donacion/2

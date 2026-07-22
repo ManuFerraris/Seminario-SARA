@@ -101,7 +101,7 @@ export const updateVacunas = async (req:Request, res:Response):Promise<void> => 
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
         const resultado = await casouso.ejecutar(codVal, dto);
-    
+        console.log('Resultado del caso de uso:', resultado);
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
     }catch(error:unknown){

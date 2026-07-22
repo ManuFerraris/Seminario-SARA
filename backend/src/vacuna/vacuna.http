@@ -1,36 +1,46 @@
-### Obtener todas las vacunas
+### findAll Vacunas
 GET http://localhost:3000/api/vacuna
 
-### Obtener una vacuna por NUMERO
-GET http://localhost:3000/api/vacuna/6
+### getOne Vacuna (Ejemplo con nro_vacuna = 1)
+GET http://localhost:3000/api/vacuna/1
 
-### Ingresar una nueva vacuna
+### ----------------------------------------------------
+### CREACIÓN DE VACUNAS
+### ----------------------------------------------------
+
+### create Vacuna - Antirrábica
 POST http://localhost:3000/api/vacuna
 Content-Type: application/json
 
 {
-    "droga": "Antitetanica Lote C",
-    "stock": 30,
-    "fecha_ingreso": "2026-05-23T08:00:00",
-    "fecha_vencimiento": "2026-12-23T00:00:00"
+    "droga": "Antirrábica Canina",
+    "stock": 50,
+    "fecha_ingreso": "2026-07-20",
+    "fecha_vencimiento": "2027-07-20"
 }
 
-### Actualizar una vacuna por NUMERO
-###Actualizar solo el stock
+### create Vacuna - Sextuple
+POST http://localhost:3000/api/vacuna
+Content-Type: application/json
+
+{
+    "droga": "Séxtuple",
+    "stock": 25,
+    "fecha_ingreso": "2026-07-15",
+    "fecha_vencimiento": "2027-12-01"
+}
+
+### ----------------------------------------------------
+### ACTUALIZACIÓN Y BORRADO
+### ----------------------------------------------------
+
+### update Vacuna (Ejemplo: descontar stock por colocaciones del día)
 PUT http://localhost:3000/api/vacuna/1
 Content-Type: application/json
 
 {
-    "stock": 45
+    "stock": 38
 }
 
-### Actualizar una fecha (Si la pones anterior al ingreso original, el Caso de Uso la bloqueará)
-PUT http://localhost:3000/api/vacuna/5
-Content-Type: application/json
-
-{
-    "fecha_vencimiento": "2024-07-07T00:00:00"
-}
-
-### Eliminar una vacuna por NUMERO
-DELETE http://localhost:3000/api/vacuna/6
+### delete Vacuna (Ejemplo: lote vencido que se descarta)
+DELETE http://localhost:3000/api/vacuna/2

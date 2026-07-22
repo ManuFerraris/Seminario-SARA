@@ -1,5 +1,5 @@
-import { Adopcion } from "../entities/adopcion.entity";
-import { AdopcionRepository } from "./adopcion.repository";
+import { Adopcion } from "../entities/adopcion.entity.js";
+import { AdopcionRepository } from "./adopcion.repository.js";
 import { EntityManager } from "@mikro-orm/core";
 
 export class AdopcionRepositoryORM implements AdopcionRepository {

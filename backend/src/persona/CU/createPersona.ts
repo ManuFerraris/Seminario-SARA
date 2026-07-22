@@ -40,14 +40,30 @@ export class CreatePersona {
             };
         }
 
-        // Instanciación limpia utilizando MikroORM (asumiendo que repo.create hace em.create y em.persist)
-        const personaCreada = await this.repo.create(dto);
+        const nuevaPersona = new Persona(); // Creamos la instancia de la entidad
+        nuevaPersona.dni = dto.dni;
+        nuevaPersona.nombre = dto.nombre;
+        nuevaPersona.apellido = dto.apellido;
+        nuevaPersona.email = dto.email;
+        nuevaPersona.contrasenia = dto.contrasenia;
+
+        // Campos opcionales (roles)
+        if (dto.telefono) nuevaPersona.telefono = dto.telefono;
+        if (dto.matricula) nuevaPersona.matricula = dto.matricula;
+        if (dto.anios_experiencia) nuevaPersona.anios_experiencia = dto.anios_experiencia;
+        if (dto.id_colaborador) nuevaPersona.id_colaborador = dto.id_colaborador;
+        if (dto.id_adoptante) nuevaPersona.id_adoptante = dto.id_adoptante;
+        if (dto.estado) nuevaPersona.estado = dto.estado;
+        if (dto.domicilio) nuevaPersona.domicilio = dto.domicilio;
+
+        // Ahora sí, MikroORM reconoce qué es esto
+        await this.repo.create(nuevaPersona);
         
         return {
             success: true,
             status: 201,
             messages: ['Persona creada exitosamente'],
-            data: personaCreada
+            data: nuevaPersona
         };
     }
 }

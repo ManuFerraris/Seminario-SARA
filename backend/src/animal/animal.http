@@ -1,10 +1,10 @@
-### findAll:
+### findAll Animales
 GET http://localhost:3000/api/animal
 
-### getone:
-GET http://localhost:3000/api/animal
+### getOne Animal (Ejemplo con nro_animal = 1)
+GET http://localhost:3000/api/animal/1
 
-### create:
+### create Animal
 POST http://localhost:3000/api/animal
 Content-Type: application/json
 
@@ -12,20 +12,21 @@ Content-Type: application/json
     "especie": "Perro",
     "raza": "Labrador",
     "edad_estimada": 5,
-    "fecha_ingreso": "2024-01-01",
+    "fecha_ingreso": "2026-06-15",
     "estado": "Disponible",
     "sexo": "Macho",
-    "peso": 30,
+    "peso": 30.5,
     "descripcion": "Un perro amigable y juguetón."
 }
 
-### update:
+### update Animal (Ejemplo: actualizar estado y peso)
 PUT http://localhost:3000/api/animal/1
 Content-Type: application/json
 
 {
-    "estado": "Adoptado"
+    "estado": "Adoptado",
+    "peso": 31.2
 }
 
-### deleteAnimal:
+### delete Animal
 DELETE http://localhost:3000/api/animal/4

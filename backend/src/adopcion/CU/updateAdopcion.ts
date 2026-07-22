@@ -23,12 +23,11 @@ export class UpdateAdopcion {
         const datosActualizados: Partial<Adopcion> = {};
 
         if (dto.fecha_adopcion !== undefined) {
-            datosActualizados.fecha_adopcion = new Date(dto.fecha_adopcion);
+            datosActualizados.fecha_adopcion = dto.fecha_adopcion as any; // Pasamos el string
         }
 
         if (dto.fecha_retiro !== undefined) {
-            // Manejamos el null/undefined por si se anula un retiro
-            datosActualizados.fecha_retiro = dto.fecha_retiro ? new Date(dto.fecha_retiro) : undefined;
+            datosActualizados.fecha_retiro = dto.fecha_retiro as any; // Pasamos el string o undefined
         }
 
         if (dto.motivos_retiro !== undefined) {
@@ -40,11 +39,24 @@ export class UpdateAdopcion {
         }
 
         // Validación de regla de negocio: cronología (usando las fechas ya parseadas o las originales)
-        const fechaAdopcionCheck = datosActualizados.fecha_adopcion || adopcion.fecha_adopcion;
-        const fechaRetiroCheck = datosActualizados.fecha_retiro !== undefined ? datosActualizados.fecha_retiro : adopcion.fecha_retiro;
+        const valorAdopcion = datosActualizados.fecha_adopcion || adopcion.fecha_adopcion;
+        const fechaAdopcionCheck = new Date(valorAdopcion); // Forzamos a Date
 
-        if (fechaRetiroCheck && fechaRetiroCheck.getTime() < fechaAdopcionCheck.getTime()) {
-            return { status: 400, success: false, messages: ["La fecha de retiro no puede ser anterior a la de adopción."], data: undefined };
+        const valorRetiro = datosActualizados.fecha_retiro !== undefined 
+            ? datosActualizados.fecha_retiro 
+            : adopcion.fecha_retiro;
+
+        if (valorRetiro) {
+            const fechaRetiroCheck = new Date(valorRetiro); // Forzamos a Date
+            
+            if (fechaRetiroCheck.getTime() < fechaAdopcionCheck.getTime()) {
+                return { 
+                    status: 400, 
+                    success: false, 
+                    messages: ["La fecha de retiro no puede ser anterior a la de adopción."], 
+                    data: undefined 
+                };
+            }
         }
 
         // 3. Ejecutamos el update pasando la entidad y nuestro objeto Partial<Adopcion> tipado correctamente
