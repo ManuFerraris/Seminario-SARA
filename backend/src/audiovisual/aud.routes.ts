@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificarToken } from "../login/auth.middleware.js";
 import {
     createAudiovisual,
     uploadMiddleware,
@@ -8,5 +9,5 @@ import {
 export const audiovisualRouter = Router();
 
 // Ruta para crear un nuevo audiovisual (con subida de archivo)
-audiovisualRouter.post("/", uploadMiddleware, createAudiovisual);
-audiovisualRouter.delete("/:id_audiovisual", deleteAudiovisual);
+audiovisualRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), uploadMiddleware, createAudiovisual);
+audiovisualRouter.delete("/:id_audiovisual", verificarToken(["Colaborador", "Veterinario"]), deleteAudiovisual);

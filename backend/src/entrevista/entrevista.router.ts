@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificarToken } from "../login/auth.middleware.js";
 import {
 getOneEntrevista,
 findAllEntrevistas,
@@ -10,9 +11,9 @@ bajaLogicaEntrevista
 
 export const entrevistaRouter = Router();
 
-entrevistaRouter.get("/:id_entrevista", getOneEntrevista);
-entrevistaRouter.get("/", findAllEntrevistas);
-entrevistaRouter.post("/", createEntrevista);
-entrevistaRouter.put("/:id_entrevista", updateEntrevista);
-//entrevistaRouter.delete("/:id_entrevista", deleteEntrevista);
+entrevistaRouter.get("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), getOneEntrevista);
+entrevistaRouter.get("/", verificarToken(["Colaborador", "Veterinario"]), findAllEntrevistas);
+entrevistaRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), createEntrevista);
+entrevistaRouter.put("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), updateEntrevista);
+//entrevistaRouter.delete("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), deleteEntrevista);
 entrevistaRouter.delete("/:id_entrevista", bajaLogicaEntrevista);

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verificarToken } from "../login/auth.middleware.js";
 import {
     findAll,
     getOne,
@@ -9,8 +10,8 @@ import {
 
 export const animalRouter = Router();
 
-animalRouter.get("/", findAll);
-animalRouter.get("/:nro_animal", getOne);
-animalRouter.post("/", create);
-animalRouter.put("/:nro_animal", update);
-animalRouter.delete("/:nro_animal", deleteAnimal);
+animalRouter.get("/", verificarToken(["Colaborador", "Veterinario", "Adoptante"]), findAll);
+animalRouter.get("/:nro_animal", verificarToken(["Colaborador", "Veterinario"]), getOne);
+animalRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), create);
+animalRouter.put("/:nro_animal", verificarToken(["Colaborador", "Veterinario"]), update);
+animalRouter.delete("/:nro_animal", verificarToken(["Colaborador", "Veterinario"]), deleteAnimal);
