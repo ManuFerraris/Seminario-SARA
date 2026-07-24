@@ -5,7 +5,8 @@ findAllRescates,
 getOneRescate,
 createRescate,
 updateRescate,
-deleteRescate
+deleteRescate,
+registrarRescate
 } from "./rescate.controller.js";
 
 export const rescateRouter = Router();
@@ -15,3 +16,4 @@ rescateRouter.get("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]
 rescateRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), createRescate);
 rescateRouter.put("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), updateRescate);
 rescateRouter.delete("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), deleteRescate);
+rescateRouter.post("/registrar-rescate", verificarToken(["Colaborador", "Veterinario"]), registrarRescate);

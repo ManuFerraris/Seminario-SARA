@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express from 'express';
+import cors from 'cors';
 import { orm } from './shared/mikro-orm.config.js';
 import { animalRouter } from './animal/animal.routes.js';
 import { personaRouter } from './persona/persona.routes.js';
@@ -16,6 +17,8 @@ import { authRouter } from './login/auth.routes.js';
 
 const app = express();
 app.locals.orm = orm
+
+app.use(cors());
 
 // Este middleware le enseña a Express a leer e interpretar JSONs
 app.use(express.json());

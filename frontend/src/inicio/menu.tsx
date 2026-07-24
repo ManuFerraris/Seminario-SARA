@@ -24,34 +24,34 @@ export default function MenuPrincipal() {
 
       {/* Panel de botones principal usando CSS Grid */}
       <div style={styles.gridContainer}>
-        <button style={styles.actionButton} onClick={() => handleAction('Rescate Animal')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registro-rescate')}>
           REGISTRAR RESCATE ANIMAL
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Alta Animal')}>
+        <button style={styles.actionButton} onClick={() => navigate('/alta-animal')}>
           REGISTRAR ALTA ANIMAL
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Colocacion Vacunas')}>
+        <button style={styles.actionButton} onClick={() => navigate('/colocacion-vacunas')}>
           REGISTRAR COLOCACION DE VACUNAS
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Revision Medica')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registrar-revision')}>
           REGISTRAR REVISION MEDICA
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Alta Entrevista')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registrar-entrevista')}>
           REGISTRAR ALTA DE ENTREVISTA
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Adopcion')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registrar-adopcion')}>
           REGISTRAR ADOPCION
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Seguimiento')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registrar-seguimiento')}>
           REGISTRAR SEGUIMIENTO
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Retiro Maltrato')}>
+        <button style={styles.actionButton} onClick={() => navigate('/retiro-maltrato')}>
           REGISTAR RETIRO POR MALTRATO
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Fallecimiento Animal')}>
+        <button style={styles.actionButton} onClick={() => navigate('/baja-animal')}>
           REGISTRAR FALLECIMIENTO DE ANIMAL
         </button>
-        <button style={styles.actionButton} onClick={() => handleAction('Donaciones')}>
+        <button style={styles.actionButton} onClick={() => navigate('/registrar-donacion')}>
           REGISTRAR DONACIONES
         </button>
       </div>

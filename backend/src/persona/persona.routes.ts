@@ -12,6 +12,6 @@ export const personaRouter = Router();
 
 personaRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 personaRouter.get('/:dni', verificarToken(["Colaborador", "Veterinario"]), getOne);
-personaRouter.post('/', verificarToken(["Colaborador", "Veterinario"]), create);
+personaRouter.post('/', /*verificarToken(["Colaborador", "Veterinario"]),*/ create);
 personaRouter.put('/:dni', verificarToken(["Colaborador", "Veterinario"]), update);
 personaRouter.delete('/:dni', verificarToken(["Colaborador", "Veterinario"]), deletePersona);

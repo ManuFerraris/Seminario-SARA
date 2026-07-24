@@ -40,14 +40,14 @@ POST http://localhost:3000/api/persona
 Content-Type: application/json
 
 {
-    "dni": "33333333",
+    "dni": "45521369",
     "nombre": "Martín",
-    "apellido": "López",
-    "email": "martin.vet@clinicavet.com",
-    "contrasenia": "password123",
+    "apellido": "Quinteros",
+    "email": "marvet@clinicavet.com",
+    "contrasenia": "ab123456",
     "telefono": "3415550003",
-    "matricula": "MP-9876",
-    "anios_experiencia": 8
+    "matricula": "MP-0001",
+    "anios_experiencia": 3
 }
 
 ### create Persona Adoptante

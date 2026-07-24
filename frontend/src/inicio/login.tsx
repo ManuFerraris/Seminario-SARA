@@ -1,24 +1,53 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMensaje, setErrorMensaje] = useState('');
+
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); // Evita que la página se recargue al enviar el formulario
+    setErrorMensaje(''); // Resetea el mensaje de error antes de intentar iniciar sesión
     
-    // Acá se conectará el formulario con la API del backend de Protectora SARA 
-    // para validar los usuarios contra la base de datos MySQL alojada en Aiven usando Mikro-ORM.
-    console.log('Intentando ingresar con:', email);
-    
-    // Una vez validado, podés redirigir al usuario al Home:
-    // navigate('/');
+    try {
+      // 1. Petición POST al backend
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
+        email: email,
+        password: password
+      });
+
+      // 2. Si es exitoso, extraemos los datos
+      if (response.data.success) {
+        const { token, roles } = response.data.data;
+
+        // 3. Guardamos en el navegador
+        // Nota: localStorage solo guarda strings, por eso usamos JSON.stringify para los roles
+        localStorage.setItem('token', token);
+        localStorage.setItem('roles', JSON.stringify(roles));
+
+        // 4. Lógica de enrutamiento (RBAC en el frontend)
+        if (roles.includes('Colaborador') || roles.includes('Veterinario')) {
+          navigate('/menu'); // Los mandamos al dashboard interno
+        } else {
+          navigate('/home'); // Los adoptantes/usuarios van al catálogo público
+        }
+      }
+    } catch (error: any) {
+      console.error('Error durante el login:', error);
+      // Capturamos el 401 que configuramos en el backend
+      if (error.response && error.response.data && error.response.data.messages) {
+        setErrorMensaje(error.response.data.messages[0]);
+      } else {
+        setErrorMensaje('Error de conexión con el servidor.');
+      }
+    }
   };
 
   const handleRegister = () => {
-    // Redirige a pantalla de registro
     navigate('/registro'); 
   };
 
@@ -114,7 +143,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #BDC3C7',
     borderRadius: '8px',
     fontSize: '15px',
-    color: '#2C3E50',
+    color: '#eeeeee',
     outline: 'none',
   },
   button: {

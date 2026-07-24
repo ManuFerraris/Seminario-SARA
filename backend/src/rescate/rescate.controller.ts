@@ -9,6 +9,7 @@ import { CreateRescate } from "./CU/createRescate.js";
 import { UpdateRescate } from "./CU/updateRescate.js";
 import { GetOneRescates } from "./CU/getOneRescate.js";
 import { DeleteRescate } from "./CU/deleteRescate.js";
+import { RegistrarRescate } from "./CU/registrarRescate.js";
 
 export const findAllRescates = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -146,6 +147,34 @@ export const deleteRescate = async (req: Request, res: Response): Promise<void> 
             return;
         }
         res.status(500).json({ error: "Error desconocido al eliminar el rescate" });
+        return;
+    }
+};
+
+// CU-Registrar Rescate
+export const registrarRescate = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        
+        const repoRes = new RescateRepositoryORM(em);
+        const repoAni = new AnimalRepositoryORM(em);
+        const repoPer = new PersonaRepositoryORM(em);
+        
+        const casoUso = new RegistrarRescate(repoRes, repoAni, repoPer);
+        const dto = req.body;
+        
+        const resultado = await casoUso.ejecutar(dto);
+    
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        return;
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error al crear el rescate:', error.message);
+            res.status(500).json({ error: "Error al crear el rescate" });
+            return;
+        }
+        res.status(500).json({ error: "Error desconocido al crear el rescate" });
         return;
     }
 };

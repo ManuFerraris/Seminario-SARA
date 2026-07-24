@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 type ViewState = 'MAIN_FORM' | 'ALTA_RESCATISTA' | 'SUCCESS';
 
@@ -9,6 +10,9 @@ export default function RegistroRescate() {
 
     const [currentView, setCurrentView] = useState<ViewState>('MAIN_FORM');
     const [isRescatistaNotFound, setIsRescatistaNotFound] = useState(false);
+    
+    // Estado para guardar los IDs generados y mostrarlos en la pantalla de éxito
+    const [rescateExitoso, setRescateExitoso] = useState({ nro_rescate: '', nro_animal: '' });
 
     // Estados del formulario principal
     const [dniBusqueda, setDniBusqueda] = useState('');
@@ -16,7 +20,7 @@ export default function RegistroRescate() {
     const [sexo, setSexo] = useState('');
     const [raza, setRaza] = useState('');
     const [peso, setPeso] = useState('');
-    const [estadoAnimal] = useState('No apto'); 
+    const [estadoAnimal] = useState('No Apto'); // Ojo: lo puse igual que tu backend
     const [edad, setEdad] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [lugar, setLugar] = useState('');
@@ -29,44 +33,120 @@ export default function RegistroRescate() {
     const [emailResc, setEmailResc] = useState('');
     const [telefonoResc, setTelefonoResc] = useState('');
 
-    const handleBuscarDNI = () => {
-        if (dniBusqueda === '11222333') {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            text: `No se encontro el rescatista con el numero de DNI '${dniBusqueda}'`,
-            confirmButtonColor: '#F39C12',
-        });
-        setIsRescatistaNotFound(true);
-        } else if (dniBusqueda.trim() !== '') {
-        Swal.fire({
-            icon: 'success',
-            title: 'Rescatista encontrado',
-            text: 'Puede continuar con el registro del rescate.',
-            timer: 1500,
-            showConfirmButton: false,
-        });
-        setIsRescatistaNotFound(false);
+    const handleBuscarDNI = async () => {
+        if (!dniBusqueda.trim()) return;
+
+        try {
+            // Hacemos una petición real para ver si la persona existe
+            // NOTA: Asegurate de tener este endpoint GET en tu backend
+            await api.get(`/persona/${dniBusqueda}`); 
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Rescatista encontrado',
+                text: 'Puede continuar con el registro del rescate.',
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            setIsRescatistaNotFound(false);
+        } catch (error: any) {
+            // Si el backend devuelve 404, habilitamos el alta
+            if (error.response && error.response.status === 404) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: `No se encontró el rescatista con el DNI '${dniBusqueda}'`,
+                    confirmButtonColor: '#F39C12',
+                });
+                setIsRescatistaNotFound(true);
+            } else {
+                Swal.fire('Error', 'Hubo un problema de conexión al buscar el DNI', 'error');
+            }
         }
     };
 
-    const handleRegistrarRescatista = (e: React.FormEvent) => {
+    const handleRegistrarRescatista = async (e: React.FormEvent) => {
         e.preventDefault();
-        Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: 'Rescatista dado de alta correctamente.',
-        timer: 1500,
-        showConfirmButton: false,
-        });
-        setCurrentView('MAIN_FORM');
-        setIsRescatistaNotFound(false);
+        try {
+            // Acá conectarías con el endpoint de crear persona
+            const payload = {
+                dni: dniBusqueda,
+                nombre: nombreResc,
+                apellido: apellidoResc,
+                email: emailResc,
+                telefono: telefonoResc
+            };
+            
+            await api.post('/persona', payload); // Ajustar según tu endpoint
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Rescatista dado de alta correctamente.',
+                timer: 1500,
+                showConfirmButton: false,
+            });
+            setCurrentView('MAIN_FORM');
+            setIsRescatistaNotFound(false);
+        } catch (error) {
+            Swal.fire('Error', 'No se pudo registrar el rescatista', 'error');
+        }
     };
 
-    const handleRegistrarRescate = (e: React.FormEvent) => {
+    const handleRegistrarRescate = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Registrando rescate con DNI:', dniBusqueda);
-        setCurrentView('SUCCESS');
+        
+        try {
+            // 1. Armamos el objeto con EXACTAMENTE los nombres que espera tu DTO
+            const payload = {
+                dni_rescatista: dniBusqueda,
+                animal_especie: especie,
+                animal_sexo: sexo, 
+                animal_raza: raza,
+                animal_peso: parseFloat(peso), // Convertimos a número
+                animal_estado: estadoAnimal, 
+                animal_edad_estimada: parseInt(edad, 10), // Convertimos a número
+                animal_descripcion: descripcion,
+                lugar_rescate_descripcion: lugar,
+                fecha_rescate: fechaRescate,
+                fecha_ingreso_animal: fechaIngreso
+                // fotos: Por ahora lo omitimos hasta que configuremos Multer en el back
+            };
+
+            // 2. Enviamos al endpoint que armamos en el paso anterior
+            const response = await api.post('/rescate/registrar-rescate', payload);
+
+            if (response.data.success) {
+                const rescateCreado = response.data.data;
+                
+                // 1. Disparamos la notificación de éxito VERIFICAR MENSAJE SEGUN BOSQUEJO!!!
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Rescate registrado!',
+                    text: 'El animal y el rescate se guardaron correctamente.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                // 2. Guardamos los IDs reales
+                setRescateExitoso({
+                    nro_rescate: rescateCreado.nro_rescate, 
+                    nro_animal: rescateCreado.animal.nro_animal 
+                });
+                
+                // 3. Pasamos a la vista de resumen (SUCCESS)
+                setCurrentView('SUCCESS');
+            }
+
+        } catch (error: any) {
+            // Mostramos el error exacto que mandó tu middleware o tu validación
+            const mensajeError = error.response?.data?.messages?.[0] || 'Ocurrió un error inesperado al registrar';
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo registrar',
+                text: mensajeError,
+            });
+        }
     };
 
     const handleNuevoRescate = () => {
@@ -86,37 +166,37 @@ export default function RegistroRescate() {
 
     const handleVolver = () => {
         if (currentView === 'ALTA_RESCATISTA') {
-        setCurrentView('MAIN_FORM');
+            setCurrentView('MAIN_FORM');
         } else {
-        navigate(-1);
+            navigate(-1);
         }
     };
 
     if (currentView === 'SUCCESS') {
         return (
-        <div style={styles.container}>
-            <button style={styles.volverHeaderBtn} onClick={() => navigate(-1)}>Volver</button>
-            <div style={styles.successCard}>
-            <h2 style={styles.successTitle}>Registro de rescate realizado con exito</h2>
-            <div style={styles.successGrid}>
-                <div style={styles.successBox}>
-                <span style={styles.successLabel}>Nro. de rescate</span>
-                <div style={styles.successValueBox}>128</div>
-                </div>
-                <div style={styles.successBox}>
-                <span style={styles.successLabel}>Nro. de documento del rescatista</span>
-                <div style={styles.successValueBox}>{dniBusqueda || '11222333'}</div>
-                </div>
-                <div style={styles.successBox}>
-                <span style={styles.successLabel}>Nro. del Animal</span>
-                <div style={styles.successValueBox}>326</div>
+            <div style={styles.container}>
+                <button style={styles.volverHeaderBtn} onClick={() => navigate(-1)}>Volver</button>
+                <div style={styles.successCard}>
+                    <h2 style={styles.successTitle}>Registro de rescate realizado con éxito</h2>
+                    <div style={styles.successGrid}>
+                        <div style={styles.successBox}>
+                            <span style={styles.successLabel}>Nro. de rescate</span>
+                            <div style={styles.successValueBox}>{rescateExitoso.nro_rescate}</div>
+                        </div>
+                        <div style={styles.successBox}>
+                            <span style={styles.successLabel}>Nro. de documento del rescatista</span>
+                            <div style={styles.successValueBox}>{dniBusqueda}</div>
+                        </div>
+                        <div style={styles.successBox}>
+                            <span style={styles.successLabel}>Nro. del Animal</span>
+                            <div style={styles.successValueBox}>{rescateExitoso.nro_animal}</div>
+                        </div>
+                    </div>
+                    <button style={styles.buttonSubmit} onClick={handleNuevoRescate}>
+                        Dar de alta otro rescate
+                    </button>
                 </div>
             </div>
-            <button style={styles.buttonSubmit} onClick={handleNuevoRescate}>
-                Dar de alta otro rescate
-            </button>
-            </div>
-        </div>
         );
     }
 
