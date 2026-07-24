@@ -32,6 +32,9 @@ export default function RegistroRescate() {
     const [apellidoResc, setApellidoResc] = useState('');
     const [emailResc, setEmailResc] = useState('');
     const [telefonoResc, setTelefonoResc] = useState('');
+    const [contraseniaResc, setContraseniaResc] = useState('');
+    const [contraseniaRescConfirm, setContraseniaRescConfirm] = useState('');
+    const [direccionResc, setDireccionResc] = useState('');
 
     const handleBuscarDNI = async () => {
         if (!dniBusqueda.trim()) return;
@@ -74,10 +77,13 @@ export default function RegistroRescate() {
                 nombre: nombreResc,
                 apellido: apellidoResc,
                 email: emailResc,
+                contrasenia: contraseniaResc,
+                contraseniaConfirm: contraseniaRescConfirm,
+                domicilio: direccionResc,
                 telefono: telefonoResc
             };
             
-            await api.post('/persona', payload); // Ajustar según tu endpoint
+            await api.post('/persona/crear-persona', payload);
 
             Swal.fire({
                 icon: 'success',
@@ -218,7 +224,16 @@ export default function RegistroRescate() {
             <input style={styles.input} type="email" value={emailResc} onChange={e => setEmailResc(e.target.value)} required />
             <label style={styles.labelCentered}>Ingrese su telefono</label>
             <input style={styles.input} type="tel" value={telefonoResc} onChange={e => setTelefonoResc(e.target.value.replace(/\D/g, ''))} required />
-            <button type="submit" style={styles.buttonSubmit}>Registrar rescatista</button>
+            <label style={styles.labelCentered}>Ingrese su direccion</label>
+            <input style={styles.input} type="text" value={direccionResc} onChange={e => setDireccionResc(e.target.value)} required />
+            <label style={styles.labelCentered}>Ingrese su contraseña</label>
+            <input style={styles.input} type="password" value={contraseniaResc} onChange={e => setContraseniaResc(e.target.value)} required />
+            <label style={styles.labelCentered}>Confirme su contraseña</label>
+            <input style={styles.input} type="password" value={contraseniaRescConfirm} onChange={e => setContraseniaRescConfirm(e.target.value)} required />
+            
+            <button type="submit" style={styles.buttonSubmit}>
+                Registrar Rescatista
+            </button>
             </form>
         </div>
         );
