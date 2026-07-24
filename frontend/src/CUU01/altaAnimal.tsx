@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; 
 
-// Definimos una interfaz para los datos del animal encontrado
 interface AnimalData {
   especie: string;
   edad: string;
@@ -13,46 +13,68 @@ interface AnimalData {
 export default function AltaAnimal() {
   const navigate = useNavigate();
   
-  // Estados para manejar la lógica de la vista
   const [numeroBusqueda, setNumeroBusqueda] = useState('');
   const [animalData, setAnimalData] = useState<AnimalData | null>(null);
   const [nuevoEstado, setNuevoEstado] = useState('Disponible');
-  const [isSuccess, setIsSuccess] = useState(false); // Controla qué pantalla se muestra
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleBuscar = () => {
-    // SIMULACIÓN: Solo el animal 156 existe en la base de datos para este ejemplo
-    if (numeroBusqueda === '156') {
+  const handleBuscar = async () => {
+    if (!numeroBusqueda.trim()) return;
+
+    try {
+      // 1. Petición GET al backend para buscar el animal por su número
+      const response = await api.get(`/animal/${numeroBusqueda}`);
+      
+      // Asumimos que tu backend devuelve { success: true, data: { ...animal } }
+      const animal = response.data.data;
+
+      // 2. Mapeamos los datos reales al estado
       setAnimalData({
-        especie: 'PERRO',
-        edad: '3',
-        raza: 'DOGO ARGENTINO',
-        estado: 'NO APTO',
+        especie: animal.especie,
+        edad: animal.edad_estimada.toString(), // Lo pasamos a string para el input
+        raza: animal.raza,
+        estado: animal.estado,
       });
-    } else {
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Animal encontrado',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+    } catch (error: any) {
       setAnimalData(null);
-      // Alerta de error si no se encuentra
+      // Si el backend devuelve 404 u otro error
       Swal.fire({
         icon: 'warning',
-        title: 'Atencion',
-        text: `No se encontro el animal con el numero ${numeroBusqueda} para dar de alta en el catalogo`,
+        title: 'Atención',
+        text: `No se encontró el animal con el número ${numeroBusqueda}`,
         confirmButtonColor: '#E67E22',
       });
     }
   };
 
-  const handleDarDeAlta = (e: React.FormEvent) => {
+  const handleDarDeAlta = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!animalData) return;
 
-    // Aquí conectarías con tu backend (TypeScript/Mikro-ORM) para actualizar el estado a "Disponible"
-    console.log(`Guardando animal ${numeroBusqueda} con estado: ${nuevoEstado}`);
-    
-    // Cambiamos a la "Pantalla 2" de éxito
-    setIsSuccess(true);
+    try {
+      // 1. Petición PATCH (o PUT) para actualizar específicamente el estado
+      await api.put(`/animal/${numeroBusqueda}/cambiar-estado`, {
+        estado: nuevoEstado
+      });
+      
+      // 2. Cambiamos a la "Pantalla 2" de éxito
+      setIsSuccess(true);
+
+    } catch (error: any) {
+      const mensajeError = error.response?.data?.messages?.[0] || 'Ocurrió un error al intentar cambiar el estado.';
+      Swal.fire('Error', mensajeError, 'error');
+    }
   };
 
   const handleAltaOtro = () => {
-    // Reseteamos todos los estados para volver a la Pantalla 1 limpia
     setIsSuccess(false);
     setNumeroBusqueda('');
     setAnimalData(null);
@@ -60,7 +82,7 @@ export default function AltaAnimal() {
   };
 
   const handleVolverMenu = () => {
-    navigate(-1); // O navigate('/') dependiendo de tu ruteo
+    navigate(-1); 
   };
 
   // ==========================================
@@ -71,7 +93,7 @@ export default function AltaAnimal() {
       <div style={styles.container}>
         <div style={styles.successCard}>
           <div style={styles.checkIcon}>✅</div>
-          <h1 style={styles.successTitle}>Animal publicado con exito</h1>
+          <h1 style={styles.successTitle}>Animal publicado con éxito</h1>
           
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Nro. del Animal:</span>
@@ -87,7 +109,7 @@ export default function AltaAnimal() {
               Dar de alta otro animal
             </button>
             <button style={styles.buttonBack} onClick={handleVolverMenu}>
-              Regresar al menu principal
+              Regresar al menú principal
             </button>
           </div>
         </div>
@@ -101,11 +123,11 @@ export default function AltaAnimal() {
   return (
     <div style={styles.container}>
       <div style={styles.headerContainer}>
-        <h1 style={styles.title}>Alta de animal para adopcion</h1>
+        <h1 style={styles.title}>Alta de animal para adopción</h1>
       </div>
 
       <div style={styles.formContainer}>
-        <label style={styles.label}>Ingrese el numero del animal</label>
+        <label style={styles.label}>Ingrese el número del animal</label>
         
         <div style={styles.searchGroup}>
           <input
@@ -224,7 +246,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #BDC3C7',
     borderRadius: '8px',
     fontSize: '15px',
-    color: '#2C3E50',
+    color: '#fbfbfb',
     outline: 'none',
   },
   inputReadOnly: {

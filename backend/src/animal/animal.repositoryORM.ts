@@ -32,4 +32,10 @@ export class AnimalRepositoryORM implements AnimalRepository {
             await this.em.flush();
         }
     }
-}
+
+    async cambiarEstadoDisponible(animal:Animal):Promise<null>{
+        animal.estado = "Disponible";
+        await this.em.flush();
+        return null;
+    }
+};

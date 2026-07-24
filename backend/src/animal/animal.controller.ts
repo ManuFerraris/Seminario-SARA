@@ -7,6 +7,7 @@ import { GetOne } from "./CU/getOne.js";
 import { CrearAnimal } from "./CU/crearAnimal.js";
 import { ActualizarAnimal } from "./CU/actualizarAnimal.js";
 import { EliminarAnimal } from "./CU/eliminarAnimal.js";
+import { CambiarEstadoDisponible } from "./CU/cambiarEstado.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -145,6 +146,33 @@ export const deleteAnimal = async (req:Request, res:Response):Promise<void> => {
         };
         console.error('Error desconocido al eliminar el animal', error);
         res.status(500).json({ error: "Error desconocido al eliminar el animal" });
+        return;
+    }
+};
+
+export const cambiarEstadoDisponible = async (req:Request, res:Response):Promise<void> => {
+    try{
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const repo = new AnimalRepositoryORM(em);
+        const casouso = new CambiarEstadoDisponible(repo);
+
+        const {valor: codVal, error:codError} = validarCodigo(req.params.nro_animal, 'numero animal');
+        if(codError || codVal === undefined){
+            res.status(400).json({ message: codError , data: undefined });
+            return;
+        }
+        const resultado = await casouso.ejecutar(codVal);
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        return;
+    }catch(error:unknown){
+        if (error instanceof Error) {
+            console.error('Error al cambiar el estado del animal', error.message);
+            res.status(500).json({ error: "Error al cambiar el estado del animal" });
+            return;
+        };
+        console.error('Error desconocido al cambiar el estado del animal', error);
+        res.status(500).json({ error: "Error desconocido al cambiar el estado del animal" });
         return;
     }
 };

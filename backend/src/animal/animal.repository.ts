@@ -6,4 +6,5 @@ export interface AnimalRepository {
     create(animal:Animal):Promise<Animal>;
     update(animal:Animal, dto:Partial<Animal>):Promise<Animal>;
     delete(numero:number):Promise<void>;
+    cambiarEstadoDisponible(animal:Animal):Promise<null>;
 }
