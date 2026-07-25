@@ -32,7 +32,7 @@ app.use("/api/entrevista", entrevistaRouter);
 app.use("/api/rescate", rescateRouter);
 app.use("/api/audiovisual", audiovisualRouter);
 app.use("/api/adopcion", adopcionRouter);
-app.use("/api/fichamedica", fichaMedicaRouter);
+app.use("/api/ficha-medica", fichaMedicaRouter);
 app.use("/api/colocacion", colocacionRouter);
 app.use("/api/seguimiento", seguimientoRouter);
 app.use("/api/auth", authRouter);

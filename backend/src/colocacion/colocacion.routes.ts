@@ -5,7 +5,8 @@ findAll,
 getOne, 
 create, 
 update, 
-deleteColocacion 
+deleteColocacion,
+registrarMasivas
 } from './colocacion.controller.js';
 
 export const colocacionRouter = Router();
@@ -14,3 +15,4 @@ colocacionRouter.get('/:nro_colocacion', verificarToken(["Colaborador", "Veterin
 colocacionRouter.post('/', verificarToken(["Colaborador", "Veterinario"]), create);
 colocacionRouter.put('/:nro_colocacion', verificarToken(["Colaborador", "Veterinario"]), update);
 colocacionRouter.delete('/:nro_colocacion', verificarToken(["Colaborador", "Veterinario"]), deleteColocacion);
+colocacionRouter.post('/registrar', verificarToken(["Colaborador", "Veterinario"]), registrarMasivas);

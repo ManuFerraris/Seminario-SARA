@@ -24,7 +24,7 @@ POST http://localhost:3000/api/vacuna
 Content-Type: application/json
 
 {
-    "droga": "Séxtuple",
+    "droga": "Antitetanica y Difteria",
     "stock": 25,
     "fecha_ingreso": "2026-07-15",
     "fecha_vencimiento": "2027-12-01"

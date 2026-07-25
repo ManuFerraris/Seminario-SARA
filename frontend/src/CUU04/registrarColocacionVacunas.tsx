@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; // <-- IMPORTAMOS LA INSTANCIA DE AXIOS
 
 type ViewState = 'SEARCH_FICHA' | 'REGISTER_VACCINES' | 'SUCCESS';
 
@@ -28,31 +29,47 @@ export default function ColocacionVacunas() {
   const [nroFicha, setNroFicha] = useState('');
   const [fichaData, setFichaData] = useState<FichaData | null>(null);
 
-  // Estados - Registro de Vacunas (Corregido con Lazy Initialization)
+  // Estados - Registro de Vacunas
   const [vacunas, setVacunas] = useState<VacunaRow[]>(() => [
     { id: Date.now(), nroVacuna: '', cantidad: '' }
   ]);
+  
+  // Estado para la fecha real de éxito
+  const [fechaColocacionExito, setFechaColocacionExito] = useState('');
 
   // -------------------------------------------------------------------------
   // MÉTODOS DE ACCIÓN
   // -------------------------------------------------------------------------
 
-  const handleBuscarFicha = () => {
-    if (nroFicha === '25') {
+  const handleBuscarFicha = async () => {
+    if (!nroFicha.trim()) return;
+
+    try {
+      // 1. Petición GET al backend
+      const response = await api.get(`/ficha-medica/${nroFicha}`);
+      const ficha = response.data.data;
+
+      // 2. Mapeamos los datos. Ajustá "ficha.animal.nro_animal" según cómo venga tu JSON real
       setFichaData({
-        nroAnimal: '5',
-        matricula: '11-45521084',
-        fechaCreacion: '24/02/2026',
-        observaciones: 'No se registran observaciones relevantes'
+        nroAnimal: ficha.nro_animal?.toString() || 'N/A', 
+        matricula: ficha.matricula_veterinario || 'N/A', 
+        // Formateamos la fecha que viene de la BD a formato local
+        fechaCreacion: new Date(ficha.fecha_creacion).toLocaleDateString('es-AR'),
+        observaciones: ficha.observaciones || 'Sin observaciones relevantes'
       });
-    } else if (nroFicha.trim() !== '') {
+
+    } catch (error: any) {
       setFichaData(null);
-      Swal.fire({
-        icon: 'error',
-        title: 'Ficha no encontrada',
-        text: `No existe la ficha médica número ${nroFicha}`,
-        confirmButtonColor: '#E74C3C',
-      });
+      if (error.response && error.response.status === 404) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Ficha no encontrada',
+          text: `No existe la ficha médica número ${nroFicha}`,
+          confirmButtonColor: '#E74C3C',
+        });
+      } else {
+        Swal.fire('Error', 'Hubo un problema de conexión', 'error');
+      }
     }
   };
 
@@ -76,7 +93,7 @@ export default function ColocacionVacunas() {
     }
   };
 
-  const handleRegistrarVacunacion = (e: React.FormEvent) => {
+  const handleRegistrarVacunacion = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const vacunasValidas = vacunas.filter(v => v.nroVacuna.trim() !== '' && v.cantidad.trim() !== '');
@@ -86,25 +103,48 @@ export default function ColocacionVacunas() {
       return;
     }
 
-    const stockProblem = vacunasValidas.find(v => v.nroVacuna === '2' && parseInt(v.cantidad) > 1);
-    
-    if (stockProblem) {
+    try {
+      // 1. Armamos el payload respetando los tipos (convertimos a números)
+      const payload = {
+        nro_ficha: parseInt(nroFicha, 10),
+        // Adaptá los nombres de las claves de este array al DTO de tu backend
+        vacunas_colocadas: vacunasValidas.map(v => ({
+          nro_vacuna: parseInt(v.nroVacuna, 10),
+          cantidad: parseInt(v.cantidad, 10)
+        }))
+      };
+      console.log('Payload enviado al backend:', payload);
+
+      // 2. Enviamos todo al backend de forma transaccional
+      const response = await api.post('/colocacion/registrar', payload);
+
+      // 3. Asumimos que el backend nos devuelve el detalle con el stock actualizado
+      // Ej: response.data.data.vacunas_actualizadas
+      const vacunasActualizadasBack = response.data.data.vacunas_actualizadas || [];
+
+      // Cruzamos los datos ingresados con el nuevo stock devuelto por el servidor
+      const vacunasExito = vacunasValidas.map(v => {
+        const dataBack = vacunasActualizadasBack.find((vb: any) => vb.nro_vacuna.toString() === v.nroVacuna);
+        return {
+          ...v,
+          stockActualizado: dataBack ? dataBack.stock_actualizado : 'N/A'
+        };
+      });
+      
+      setVacunas(vacunasExito);
+      setFechaColocacionExito(new Date().toLocaleDateString('es-AR')); // Guardamos la fecha de hoy
+      setCurrentView('SUCCESS');
+
+    } catch (error: any) {
+      // Atrapamos el error del backend (ej: "Stock insuficiente para la vacuna 2")
+      const mensajeError = error.response?.data?.messages?.[0] || 'Ocurrió un error al registrar las vacunas.';
       Swal.fire({
         icon: 'warning',
-        title: 'Atencion',
-        html: `<b>Stock insuficiente</b><br/>Stock insuficiente para la vacuna '${stockProblem.nroVacuna}'.`,
+        title: 'Atención',
+        text: mensajeError,
         confirmButtonColor: '#F39C12',
       });
-      return;
     }
-
-    const vacunasExito = vacunasValidas.map(v => ({
-      ...v,
-      stockActualizado: Math.floor(Math.random() * 10) + 1 
-    }));
-    
-    setVacunas(vacunasExito);
-    setCurrentView('SUCCESS');
   };
 
   const handleRegistrarMasColocaciones = () => {
@@ -126,8 +166,6 @@ export default function ColocacionVacunas() {
   // VISTA 3: ÉXITO
   // -------------------------------------------------------------------------
   if (currentView === 'SUCCESS') {
-    const fechaColocacion = '15/02/2026'; 
-
     return (
       <div style={styles.container}>
         <div style={styles.headerRow}>
@@ -138,8 +176,9 @@ export default function ColocacionVacunas() {
         <div style={styles.successCard}>
           <div style={styles.gridRowCentered}>
             <div style={styles.columnGroup}>
-              <label style={styles.labelCentered}>Fecha de colocacion</label>
-              <div style={styles.readOnlyBox}>{fechaColocacion}</div>
+              <label style={styles.labelCentered}>Fecha de colocación</label>
+              {/* Ahora usamos la fecha real del estado */}
+              <div style={styles.readOnlyBox}>{fechaColocacionExito}</div>
             </div>
           </div>
           
@@ -156,7 +195,6 @@ export default function ColocacionVacunas() {
             <span style={styles.columnTitle}>Stock actualizado</span>
           </div>
 
-          {/* Corregido: Se eliminó el parámetro index */}
           {vacunas.map(v => (
             <div key={v.id} style={styles.tableRow}>
               <div style={styles.readOnlyBoxSmall}>{v.nroVacuna}</div>
@@ -166,7 +204,7 @@ export default function ColocacionVacunas() {
           ))}
 
           <button style={styles.buttonSubmit} onClick={handleRegistrarMasColocaciones}>
-            Registrar mas colocaciones
+            Registrar más colocaciones
           </button>
         </div>
       </div>

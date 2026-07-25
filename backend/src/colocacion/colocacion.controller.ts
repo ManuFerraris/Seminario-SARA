@@ -9,6 +9,7 @@ import { GetOneColocacion } from "./CU/getOneColocacion.js";
 import { CreateColocacion } from "./CU/createColocacion.js";
 import { UpdateColocacion } from "./CU/updateColocacion.js";
 import { DeleteColocacion } from "./CU/deleteColocacion.js";
+import { RegistrarColocacionesMasivas } from "./CU/regColocMult.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -152,6 +153,51 @@ export const deleteColocacion = async (req:Request, res:Response):Promise<void> 
         };
         console.error('Error desconocido al eliminar la colocacion', error);
         res.status(500).json({ error: "Error desconocido al eliminar la colocacion" });
+        return;
+    }
+};
+
+export const registrarMasivas = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork(); 
+        
+        const colocacionRepo = new ColocacionRepositoryORM(em);
+        const vacunaRepo = new VacunaRepositoryORM(em);
+        const fichaRepo = new FichaMedicaRepositoryORM(em);
+
+        const casoUso = new RegistrarColocacionesMasivas(
+            colocacionRepo, 
+            fichaRepo, 
+            vacunaRepo, 
+            em
+        );
+
+        const dto = req.body;
+        console.log('DTO recibido en el controlador para registro masivo:', dto);
+        const resultado = await casoUso.ejecutar(dto);
+        console.log('Resultado del registro masivo:', resultado);
+        res.status(resultado.status).json({ 
+            success: resultado.success, 
+            messages: resultado.messages, 
+            data: resultado.data 
+        });
+        return;
+
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error al registrar colocaciones masivas:', error.message);
+            res.status(500).json({ 
+                success: false, 
+                messages: ["Error interno del servidor al registrar las vacunas."] 
+            });
+            return;
+        }
+        console.error('Error desconocido al registrar colocaciones masivas:', error);
+        res.status(500).json({ 
+            success: false, 
+            messages: ["Error desconocido en el servidor."] 
+        });
         return;
     }
 };
