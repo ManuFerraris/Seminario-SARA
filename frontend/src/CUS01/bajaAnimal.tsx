@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 export default function BajaAnimal() {
   const [numeroAnimal, setNumeroAnimal] = useState('');
@@ -8,87 +9,98 @@ export default function BajaAnimal() {
   const navigate = useNavigate();
 
   const handleVolver = () => {
-    // Redirige a la pantalla anterior (ej: al menú principal)
     navigate(-1);
   };
 
-  const handleConfirmarBaja = (e: React.FormEvent) => {
+  const handleConfirmarBaja = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // -------------------------------------------------------------------------
-    // SIMULACIÓN DE LÓGICA DE NEGOCIO PARA DISPARAR LAS DISTINTAS ALERTAS
-    // -------------------------------------------------------------------------
+    try {
+      // 1. Armamos el payload (la fecha del input type="date" viene en formato YYYY-MM-DD)
+      const payload = {
+        fecha_defuncion: fechaDefuncion
+      };
 
-    // 1. Simulación: Caso de Error - Animal no encontrado
-    if (numeroAnimal === '999') {
+      // 2. Disparamos la petición al backend
+      await api.put(`/animal/${numeroAnimal}/cambiar-estado-fallecido`, payload);
+
+      // Formateamos la fecha a DD/MM/YYYY solo para que se vea linda en el HTML del alert
+      const [anio, mes, dia] = fechaDefuncion.split('-');
+      const fechaFormateada = `${dia}/${mes}/${anio}`;
+
+      // 3. Caso de Éxito - Baja exitosa
       Swal.fire({
-        icon: 'error',
-        title: 'Error de busqueda',
-        text: 'El numero del animal ingresado no existe',
-        confirmButtonColor: '#E74C3C',
+        icon: 'success',
+        title: 'Baja exitosa',
+        html: `
+          <div style="text-align: left; margin-top: 20px;">
+            <p><strong>Número de animal dado de baja:</strong> ${numeroAnimal}</p>
+            <p><strong>Fecha de defunción:</strong> ${fechaFormateada}</p>
+            <p><strong>Estado final:</strong> Fallecido</p>
+          </div>
+        `,
+        confirmButtonText: 'Regresar a la pantalla anterior',
+        confirmButtonColor: '#27AE60',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(-1);
+        }
       });
-      return;
-    }
 
-    // 2. Simulación: Caso Informativo - Animal ya dado de baja
-    if (numeroAnimal === '236') {
-      Swal.fire({
-        icon: 'info',
-        title: 'Animal ya dado de baja',
-        text: 'El animal ya se encuentra registrado como fallecido',
-        confirmButtonColor: '#3498DB',
-      });
-      return;
-    }
+    } catch (error: any) {
+      // 4. Manejo de Errores (404, 400, etc.)
+      const status = error.response?.status;
 
-    // 3. Simulación: Caso de Éxito - Baja exitosa
-    // Aquí construiríamos el HTML personalizado para mostrar los datos del bosquejo
-    Swal.fire({
-      icon: 'success',
-      title: 'Baja exitosa',
-      html: `
-        <div style="text-align: left; margin-top: 20px;">
-          <p><strong>Numero de animal dado de baja:</strong> ${numeroAnimal}</p>
-          <p><strong>Fecha de defuncion:</strong> ${fechaDefuncion}</p>
-          <p><strong>Estado final:</strong> Fallecido</p>
-        </div>
-      `,
-      confirmButtonText: 'Regresar a la pantalla anterior',
-      confirmButtonColor: '#27AE60',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Redirige al usuario al menú principal o a la pantalla anterior al cerrar el modal
-        navigate(-1);
+      if (status === 404) {
+        // Animal no encontrado
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de búsqueda',
+          text: "El numero ingresado del animal no existe",
+          confirmButtonColor: '#E74C3C',
+        });
+      } else if (status === 400 || status === 409) {
+        // Animal ya fallecido o error de reglas de negocio
+        Swal.fire({
+          icon: 'info',
+          title: 'Atención',
+          text: "El animal ya se encuentra registrado como fallecido",
+          confirmButtonColor: '#3498DB',
+        });
+      } else {
+        // Error genérico del servidor
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un problema de conexión con el servidor.',
+          confirmButtonColor: '#E74C3C',
+        });
       }
-    });
+    }
   };
 
   return (
     <div style={styles.container}>
-      {/* Encabezado */}
       <div style={styles.headerContainer}>
         <h1 style={styles.title}>Baja de animal en el sistema</h1>
       </div>
 
-      {/* Formulario */}
       <form style={styles.formContainer} onSubmit={handleConfirmarBaja}>
-        
-        <label style={styles.label}>Ingrese el numero del animal</label>
+        <label style={styles.label}>Ingrese el número del animal</label>
         <input
           style={styles.input}
           type="text"
           inputMode="numeric"
           placeholder="Ej: 236"
           value={numeroAnimal}
-          onChange={(e) => setNumeroAnimal(e.target.value.replace(/\D/g, ''))} // Solo números
+          onChange={(e) => setNumeroAnimal(e.target.value.replace(/\D/g, ''))}
           required
         />
 
-        <label style={styles.label}>Seleccione la fecha de defuncion</label>
+        <label style={styles.label}>Seleccione la fecha de defunción</label>
         <input
           style={styles.input}
           type="date"
-          placeholder="05/03/2026"
           value={fechaDefuncion}
           onChange={(e) => setFechaDefuncion(e.target.value)}
           required
@@ -98,11 +110,9 @@ export default function BajaAnimal() {
           Confirmar Baja
         </button>
         
-        {/* Botón de Volver */}
         <button type="button" style={styles.buttonBack} onClick={handleVolver}>
           Volver
         </button>
-
       </form>
     </div>
   );
@@ -152,7 +162,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #BDC3C7',
     borderRadius: '8px',
     fontSize: '15px',
-    color: '#2C3E50',
+    color: '#e8eaec',
     outline: 'none',
   },
   buttonSubmit: {

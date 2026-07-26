@@ -6,7 +6,8 @@ import {
     create,
     update,
     deleteAnimal,
-    cambiarEstadoDisponible
+    cambiarEstadoDisponible,
+    cambiarEstadoFallecido
 } from "./animal.controller.js";
 
 export const animalRouter = Router();
@@ -17,3 +18,4 @@ animalRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), create);
 animalRouter.put("/:nro_animal", verificarToken(["Colaborador", "Veterinario"]), update);
 animalRouter.delete("/:nro_animal", verificarToken(["Colaborador", "Veterinario"]), deleteAnimal);
 animalRouter.put("/:nro_animal/cambiar-estado", verificarToken(["Colaborador", "Veterinario"]), cambiarEstadoDisponible);
+animalRouter.put("/:nro_animal/cambiar-estado-fallecido", verificarToken(["Colaborador", "Veterinario"]), cambiarEstadoFallecido);

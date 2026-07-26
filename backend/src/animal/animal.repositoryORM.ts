@@ -38,4 +38,11 @@ export class AnimalRepositoryORM implements AnimalRepository {
         await this.em.flush();
         return null;
     }
+
+    async cambiarEstadoFallecido(animal:Animal, dto:Partial<Animal>):Promise<null>{
+        animal.estado = "Fallecido";
+        animal.fecha_defuncion = dto.fecha_defuncion;
+        await this.em.flush();
+        return null;
+    }
 };
