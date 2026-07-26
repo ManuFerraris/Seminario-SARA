@@ -1,13 +1,22 @@
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
 
-cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET 
-});
-
 export class CloudinaryService {
+
+    constructor() {
+        //console.log("--- DEBUG CLOUDINARY ---");
+        //console.log("CLOUD NAME:", process.env.CLOUDINARY_CLOUD_NAME);
+        //console.log("API KEY:", process.env.CLOUDINARY_API_KEY);
+        // No imprimimos el secreto entero por seguridad, solo vemos si existe y su longitud
+        //console.log("API SECRET:", process.env.CLOUDINARY_API_SECRET ? `Cargado (Largo: ${process.env.CLOUDINARY_API_SECRET.length})` : "UNDEFINED O VACIO!");
+        //console.log("------------------------");
+        cloudinary.config({ 
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+            api_key: process.env.CLOUDINARY_API_KEY, 
+            api_secret: process.env.CLOUDINARY_API_SECRET 
+        });
+    }
+
     async uploadBuffer(buffer: Buffer, folder: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(

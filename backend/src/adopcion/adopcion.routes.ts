@@ -1,14 +1,24 @@
+import multer from 'multer';
 import { Router } from 'express';
 import { verificarToken } from '../login/auth.middleware.js';
+import { registrarRetiro } from '../retiro/retiroController.js';
 import {
     findAll,
     getOne,
     create,
     update
  } from './adopcion.controller.js';
+
+const upload = multer({ storage: multer.memoryStorage() });
+
 export const adopcionRouter = Router();
 
 adopcionRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 adopcionRouter.get('/:nro_adopcion', verificarToken(["Colaborador", "Veterinario"]), getOne);
-adopcionRouter.post('/', verificarToken(["Colaborador", "Veterinario"]), create);
+adopcionRouter.post('/', /*verificarToken(["Colaborador", "Veterinario"]),*/ create);
 adopcionRouter.put('/:nro_adopcion', verificarToken(["Colaborador", "Veterinario"]), update);
+adopcionRouter.put(
+    '/:nro_adopcion/retiro', 
+    verificarToken(["Colaborador", "Veterinario"]),
+    upload.array('archivos'),
+    registrarRetiro);

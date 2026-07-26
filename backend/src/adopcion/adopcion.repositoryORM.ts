@@ -10,7 +10,7 @@ export class AdopcionRepositoryORM implements AdopcionRepository {
     };
 
     async getOneAdopcion(nro_adopcion: number): Promise<Adopcion | null> {
-        return await this.em.findOne(Adopcion, { nro_adopcion });
+        return await this.em.findOne(Adopcion, { nro_adopcion }, { populate: ['animal', 'adoptante'] });
     };
 
     async createAdopcion(adopcion: Adopcion): Promise<Adopcion> {

@@ -1,258 +1,293 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 type ViewState = 'SEARCH_ADOPTION' | 'REGISTER_WITHDRAWAL' | 'SUCCESS';
 
 interface AdopcionData {
-    nombreAdoptante: string;
-    apellidoAdoptante: string;
-    numeroAnimal: string;
-    especieAnimal: string;
-    razaAnimal: string;
-    fechaAdopcion: string;
+  nombreAdoptante: string;
+  apellidoAdoptante: string;
+  numeroAnimal: string;
+  especieAnimal: string;
+  razaAnimal: string;
+  fechaAdopcion: string;
+}
+
+export default function RetiroMaltrato() {
+  const navigate = useNavigate();
+
+  // Control de vistas
+  const [currentView, setCurrentView] = useState<ViewState>('SEARCH_ADOPTION');
+
+  // Estados - Vista de Búsqueda
+  const [numeroAdopcion, setNumeroAdopcion] = useState('');
+  const [adopcionData, setAdopcionData] = useState<AdopcionData | null>(null);
+
+  // Estados - Vista de Registro de Retiro
+  const [motivosRetiro, setMotivosRetiro] = useState('');
+  const [evidenciaMaltrato, setEvidenciaMaltrato] = useState('');
+  const [fechaRetiro, setFechaRetiro] = useState('');
+  
+  // ESTADO: Para guardar los archivos seleccionados
+  const [archivosEvidencia, setArchivosEvidencia] = useState<File[]>([]);
+
+  // -------------------------------------------------------------------------
+  // MÉTODOS DE ACCIÓN
+  // -------------------------------------------------------------------------
+
+  const handleBuscarAdopcion = async () => {
+    if (!numeroAdopcion.trim()) return;
+
+    try {
+      const response = await api.get(`/adopcion/${numeroAdopcion}`);
+      const adopcion = response.data.data;
+
+      setAdopcionData({
+        nombreAdoptante: adopcion.adoptante?.nombre || 'N/A',
+        apellidoAdoptante: adopcion.adoptante?.apellido || 'N/A',
+        numeroAnimal: adopcion.animal?.nro_animal?.toString() || 'N/A',
+        especieAnimal: adopcion.animal?.especie || 'N/A',
+        razaAnimal: adopcion.animal?.raza || 'N/A',
+        fechaAdopcion: new Date(adopcion.fecha_adopcion).toLocaleDateString('es-AR')
+      });
+
+    } catch (error: any) {
+      setAdopcionData(null);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de búsqueda',
+        html: `<b>Adopción no encontrada</b><br/>Número de adopción no encontrado`,
+        confirmButtonColor: '#E74C3C',
+      });
     }
+  };
 
-    export default function RetiroMaltrato() {
-    const navigate = useNavigate();
-
-    // Control de vistas
-    const [currentView, setCurrentView] = useState<ViewState>('SEARCH_ADOPTION');
-
-    // Estados - Vista de Búsqueda
-    const [numeroAdopcion, setNumeroAdopcion] = useState('');
-    const [adopcionData, setAdopcionData] = useState<AdopcionData | null>(null);
-
-    // Estados - Vista de Registro de Retiro
-    const [motivosRetiro, setMotivosRetiro] = useState('');
-    const [evidenciaMaltrato, setEvidenciaMaltrato] = useState('');
-    const [fechaRetiro, setFechaRetiro] = useState('');
-
-    // -------------------------------------------------------------------------
-    // MÉTODOS DE ACCIÓN
-    // -------------------------------------------------------------------------
-
-    const handleBuscarAdopcion = () => {
-        // Simulación: Solo la adopción 57 existe y devuelve datos
-        if (numeroAdopcion === '57') {
-        setAdopcionData({
-            nombreAdoptante: 'MACIEL',
-            apellidoAdoptante: 'GARCIA FERNANDEZ',
-            numeroAnimal: '78',
-            especieAnimal: 'PERRO',
-            razaAnimal: 'DOGO ARGENTINO',
-            fechaAdopcion: '14/07/2025',
-        });
-        } else {
-        setAdopcionData(null);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error de busqueda',
-            html: `<b>Adopcion no encontrada</b><br/>Numero de adopcion no encontrado`,
-            confirmButtonColor: '#E74C3C',
-        });
-        }
-    };
-
-    const handleRealizarRetiro = () => {
-        if (adopcionData) {
-        setCurrentView('REGISTER_WITHDRAWAL');
-        }
-    };
-
-    const handleConfirmarRetiro = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Aquí se enviaría la información al backend (TypeScript / Mikro-ORM)
-        console.log('Confirmando retiro de adopción nro:', numeroAdopcion);
-        setCurrentView('SUCCESS');
-    };
-
-    const handleRegresar = () => {
-        if (currentView === 'REGISTER_WITHDRAWAL') {
-        setCurrentView('SEARCH_ADOPTION');
-        } else if (currentView === 'SUCCESS') {
-        // Limpiamos datos y volvemos a la pantalla de búsqueda
-        setNumeroAdopcion('');
-        setAdopcionData(null);
-        setMotivosRetiro('');
-        setEvidenciaMaltrato('');
-        setFechaRetiro('');
-        setCurrentView('SEARCH_ADOPTION');
-        } else {
-        navigate(-1);
-        }
-    };
-
-    // -------------------------------------------------------------------------
-    // VISTA 3: ÉXITO (4-FS-retiro_completado)
-    // -------------------------------------------------------------------------
-    if (currentView === 'SUCCESS') {
-        return (
-        <div style={styles.container}>
-            <div style={styles.successCard}>
-            <div style={styles.checkIcon}>✅</div>
-            <h2 style={styles.successTitle}>Retiro registrado con exito</h2>
-            
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. de adopcion:</span>
-                <span style={styles.infoValue}>{numeroAdopcion}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado adoptante</span>
-                <span style={styles.infoValueDanger}>No apto</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado animal</span>
-                <span style={styles.infoValueWarning}>No disponible</span>
-            </div>
-
-            <button style={styles.buttonBackLarge} onClick={handleRegresar}>
-                Regresar
-            </button>
-            </div>
-        </div>
-        );
+  const handleRealizarRetiro = () => {
+    if (adopcionData) {
+      setCurrentView('REGISTER_WITHDRAWAL');
     }
+  };
 
-    // -------------------------------------------------------------------------
-    // VISTA 2: REGISTRAR RETIRO (3-FE-registro_retiro)
-    // -------------------------------------------------------------------------
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setArchivosEvidencia(Array.from(e.target.files));
+    }
+  };
+
+  const handleConfirmarRetiro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const formData = new FormData();
+      
+      formData.append('motivos', motivosRetiro);
+      formData.append('descripcion_evidencia', evidenciaMaltrato);
+      formData.append('fecha_retiro', fechaRetiro);
+      
+      archivosEvidencia.forEach((archivo) => {
+        formData.append('archivos', archivo); 
+      });
+
+      await api.put(`/adopcion/${numeroAdopcion}/retiro`, formData);
+      setCurrentView('SUCCESS');
+
+    } catch (error: any) {
+      const mensajeBack = error.response?.data?.messages?.[0] || 'Error al procesar el retiro.';
+      Swal.fire({
+        icon: 'error',
+        title: 'Atención',
+        text: mensajeBack,
+      });
+    }
+  };
+
+  const handleRegresar = () => {
     if (currentView === 'REGISTER_WITHDRAWAL') {
-        return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar retiro</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleRegresar}>Volver</button>
-            </div>
-
-            <form style={styles.formContainer} onSubmit={handleConfirmarRetiro}>
-            <label style={styles.labelCentered}>Motivos de retiro</label>
-            <input 
-                style={styles.input} 
-                type="text" 
-                value={motivosRetiro} 
-                onChange={e => setMotivosRetiro(e.target.value)} 
-                required 
-            />
-
-            <label style={styles.labelCentered}>Evidencia de maltrato</label>
-            <input 
-                style={styles.input} 
-                type="text" 
-                value={evidenciaMaltrato} 
-                onChange={e => setEvidenciaMaltrato(e.target.value)} 
-                required 
-            />
-
-            <label style={styles.labelCentered}>Fecha de retiro</label>
-            <input 
-                style={styles.input} 
-                type="date" 
-                value={fechaRetiro} 
-                onChange={e => setFechaRetiro(e.target.value)} 
-                required 
-            />
-
-            <label style={styles.labelCentered}>Ingresar fotografia/s y video/s</label>
-            <input 
-                style={{...styles.input, padding: '10px'}} 
-                type="file" 
-                multiple 
-                accept="image/*,video/*" 
-            />
-
-            <button type="submit" style={styles.buttonSubmit}>
-                Confirmar retiro
-            </button>
-            </form>
-        </div>
-        );
+      setCurrentView('SEARCH_ADOPTION');
+    } else if (currentView === 'SUCCESS') {
+      setNumeroAdopcion('');
+      setAdopcionData(null);
+      setMotivosRetiro('');
+      setEvidenciaMaltrato('');
+      setFechaRetiro('');
+      setArchivosEvidencia([]);
+      setCurrentView('SEARCH_ADOPTION');
+    } else {
+      navigate(-1);
     }
+  };
 
-    // -------------------------------------------------------------------------
-    // VISTA 1: BUSCAR ADOPCION (1-FE-ingreso_adopcion / 2-FS-datos_adopcion)
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // VISTA 3: ÉXITO (4-FS-retiro_completado)
+  // -------------------------------------------------------------------------
+  if (currentView === 'SUCCESS') {
     return (
-        <div style={styles.container}>
-        <div style={styles.headerRow}>
-            <h1 style={styles.title}>Buscar adopcion</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleRegresar}>Volver</button>
+      <div style={styles.container}>
+        <div style={styles.successCard}>
+          <div style={styles.checkIcon}>✅</div>
+          <h2 style={styles.successTitle}>Retiro registrado con éxito</h2>
+          
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Nro. de adopción:</span>
+            <span style={styles.infoValue}>{numeroAdopcion}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Estado adoptante</span>
+            <span style={styles.infoValueDanger}>No apto</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Estado animal</span>
+            <span style={styles.infoValueWarning}>No disponible</span>
+          </div>
+
+          <button style={styles.buttonBackLarge} onClick={handleRegresar}>
+            Regresar
+          </button>
         </div>
-
-        <div style={styles.formContainer}>
-            <label style={styles.labelCentered}>Ingrese el numero de adopcion</label>
-            
-            {/* BUSCADOR GARANTIZADO */}
-            <div style={{ display: 'flex', width: '100%', marginBottom: '25px' }}>
-            <input 
-                style={{
-                flex: 1,
-                padding: '12px',
-                border: '2px solid #3498DB',
-                borderRight: 'none',
-                borderRadius: '5px 0 0 5px',
-                fontSize: '14px',
-                textAlign: 'center',
-                color: '#2C3E50',
-                outline: 'none',
-                backgroundColor: '#FFFFFF'
-                }}
-                type="text" 
-                placeholder="Ej: 57" 
-                value={numeroAdopcion} 
-                onChange={e => setNumeroAdopcion(e.target.value.replace(/\D/g, ''))} 
-            />
-            <button 
-                type="button" 
-                style={{
-                backgroundColor: '#FFFFFF',
-                color: '#3498DB',
-                border: '2px solid #3498DB',
-                borderLeft: 'none',
-                borderRadius: '0 5px 5px 0',
-                padding: '0 20px',
-                cursor: 'pointer',
-                fontSize: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-                }} 
-                onClick={handleBuscarAdopcion}
-            >
-                🔍
-            </button>
-            </div>
-
-            {/* DATOS DE LA ADOPCIÓN (Solo visibles si se encuentra) */}
-            {adopcionData && (
-            <div style={styles.dataContainer}>
-                <label style={styles.labelCentered}>Nombre del Adoptante</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.nombreAdoptante} readOnly />
-
-                <label style={styles.labelCentered}>Apellido del adoptante</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.apellidoAdoptante} readOnly />
-
-                <label style={styles.labelCentered}>Numero del animal</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.numeroAnimal} readOnly />
-
-                <label style={styles.labelCentered}>Especie del animal</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.especieAnimal} readOnly />
-
-                <label style={styles.labelCentered}>Raza del animal</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.razaAnimal} readOnly />
-
-                <label style={styles.labelCentered}>Fecha de Adopcion</label>
-                <input style={styles.inputReadOnly} type="text" value={adopcionData.fechaAdopcion} readOnly />
-
-                <button type="button" style={styles.buttonSubmit} onClick={handleRealizarRetiro}>
-                Realizar retiro
-                </button>
-            </div>
-            )}
-        </div>
-        </div>
+      </div>
     );
-    }
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA 2: REGISTRAR RETIRO (3-FE-registro_retiro)
+  // -------------------------------------------------------------------------
+  if (currentView === 'REGISTER_WITHDRAWAL') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.headerRow}>
+          <h1 style={styles.title}>Registrar retiro</h1>
+          <button style={styles.volverHeaderBtn} onClick={handleRegresar}>Volver</button>
+        </div>
+
+        <form style={styles.formContainer} onSubmit={handleConfirmarRetiro}>
+          {/* AQUÍ ESTÁN LOS CAMPOS RESTAURADOS */}
+          <label style={styles.labelCentered}>Motivos de retiro</label>
+          <input 
+            style={styles.input} 
+            type="text" 
+            value={motivosRetiro} 
+            onChange={e => setMotivosRetiro(e.target.value)} 
+            required 
+          />
+
+          <label style={styles.labelCentered}>Evidencia de maltrato</label>
+          <input 
+            style={styles.input} 
+            type="text" 
+            value={evidenciaMaltrato} 
+            onChange={e => setEvidenciaMaltrato(e.target.value)} 
+            required 
+          />
+
+          <label style={styles.labelCentered}>Fecha de retiro</label>
+          <input 
+            style={styles.input} 
+            type="date" 
+            value={fechaRetiro} 
+            onChange={e => setFechaRetiro(e.target.value)} 
+            required 
+          />
+
+          <label style={styles.labelCentered}>Ingresar fotografía/s y video/s</label>
+          <input 
+            style={{...styles.input, padding: '10px'}} 
+            type="file" 
+            multiple 
+            accept="image/*,video/*"
+            onChange={handleFileChange} 
+          />
+
+          <button type="submit" style={styles.buttonSubmit}>
+            Confirmar retiro
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA 1: BUSCAR ADOPCION (1-FE-ingreso_adopcion / 2-FS-datos_adopcion)
+  // -------------------------------------------------------------------------
+  return (
+    <div style={styles.container}>
+      <div style={styles.headerRow}>
+        <h1 style={styles.title}>Buscar adopción</h1>
+        <button style={styles.volverHeaderBtn} onClick={handleRegresar}>Volver</button>
+      </div>
+
+      <div style={styles.formContainer}>
+        <label style={styles.labelCentered}>Ingrese el número de adopción</label>
+        
+        <div style={{ display: 'flex', width: '100%', marginBottom: '25px' }}>
+          <input 
+            style={{
+              flex: 1,
+              padding: '12px',
+              border: '2px solid #3498DB',
+              borderRight: 'none',
+              borderRadius: '5px 0 0 5px',
+              fontSize: '14px',
+              textAlign: 'center',
+              color: '#2C3E50',
+              outline: 'none',
+              backgroundColor: '#FFFFFF'
+            }}
+            type="text" 
+            placeholder="Ej: 57" 
+            value={numeroAdopcion} 
+            onChange={e => setNumeroAdopcion(e.target.value.replace(/\D/g, ''))} 
+          />
+          <button 
+            type="button" 
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: '#3498DB',
+              border: '2px solid #3498DB',
+              borderLeft: 'none',
+              borderRadius: '0 5px 5px 0',
+              padding: '0 20px',
+              cursor: 'pointer',
+              fontSize: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }} 
+            onClick={handleBuscarAdopcion}
+          >
+            🔍
+          </button>
+        </div>
+
+        {adopcionData && (
+          <div style={styles.dataContainer}>
+            <label style={styles.labelCentered}>Nombre del Adoptante</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.nombreAdoptante} readOnly />
+
+            <label style={styles.labelCentered}>Apellido del adoptante</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.apellidoAdoptante} readOnly />
+
+            <label style={styles.labelCentered}>Número del animal</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.numeroAnimal} readOnly />
+
+            <label style={styles.labelCentered}>Especie del animal</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.especieAnimal} readOnly />
+
+            <label style={styles.labelCentered}>Raza del animal</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.razaAnimal} readOnly />
+
+            <label style={styles.labelCentered}>Fecha de Adopción</label>
+            <input style={styles.inputReadOnly} type="text" value={adopcionData.fechaAdopcion} readOnly />
+
+            <button type="button" style={styles.buttonSubmit} onClick={handleRealizarRetiro}>
+              Realizar retiro
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
     // -------------------------------------------------------------------------
     // ESTILOS

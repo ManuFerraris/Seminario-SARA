@@ -13,8 +13,8 @@ POST http://localhost:3000/api/adopcion
 Content-Type: application/json
 
 {
-    "dni_adoptante": "44444444",
-    "nro_animal": 1,
+    "dni_adoptante": "11111111",
+    "nro_animal": 2,
     "fecha_adopcion": "2026-07-22"
 }
 
