@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; // ¡Importante!
 
 type ViewState = 'SEARCH_ADOPCION' | 'REGISTER_SEGUIMIENTO' | 'SUCCESS';
 
@@ -10,41 +11,108 @@ interface AdopcionData {
     especieAnimal: string;
 }
 
+// Agregamos esta interfaz para guardar lo que responde el backend al final
+interface SeguimientoExitoso {
+    nro_seguimiento: number;
+    fecha: string;
+    entorno: string;
+    estado_animal: string;
+}
+
+// Reutilizamos la función para sacar el DNI de quien está logueado (el Colaborador)
+const obtenerDniDelToken = (): string | null => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const payloadBase64 = token.split('.')[1];
+        const payloadDecodificado = atob(payloadBase64);
+        return JSON.parse(payloadDecodificado).dni;
+    } catch (error) {
+        return null;
+    }
+};
+
 export default function RegistrarSeguimiento() {
     const navigate = useNavigate();
 
-    // Control de vistas
     const [currentView, setCurrentView] = useState<ViewState>('SEARCH_ADOPCION');
-
-    // Estados - Búsqueda
     const [nroAdopcion, setNroAdopcion] = useState('');
     const [adopcionData, setAdopcionData] = useState<AdopcionData | null>(null);
-
-    // Estados - Formulario de Seguimiento
     const [fecha, setFecha] = useState('');
     const [descripcionEntorno, setDescripcionEntorno] = useState('');
     const [estadoAnimal, setEstadoAnimal] = useState('');
+    
+    // NUEVO ESTADO: Para mostrar el Nro de Seguimiento real en la última pantalla
+    const [datosExito, setDatosExito] = useState<SeguimientoExitoso | null>(null);
 
     // -------------------------------------------------------------------------
     // MÉTODOS DE ACCIÓN
     // -------------------------------------------------------------------------
 
-    const handleBuscarAdopcion = () => {
-        // Simulación: Solo la adopción 84 devuelve resultados
-        if (nroAdopcion === '84') {
-        setAdopcionData({
-            nombreAdoptante: 'MAURICIO',
-            apellidoAdoptante: 'FERNANDEZ',
-            especieAnimal: 'GATO',
-        });
-        } else {
-        setAdopcionData(null);
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            text: 'Numero de adopcion no encontrado',
-            confirmButtonColor: '#F39C12',
-        });
+    const handleBuscarAdopcion = async () => {
+        if (!nroAdopcion) return;
+
+        try {
+            // Hacemos el GET a tu backend. Ajustá la URL según tus rutas.
+            const response = await api.get(`/adopcion/${nroAdopcion}`);
+            
+            // Asumiendo que el backend devuelve { data: { adoptante: { nombre... }, animal: { especie... } } }
+            const datosAdopcion = response.data.data;
+
+            setAdopcionData({
+                nombreAdoptante: datosAdopcion.adoptante.nombre,
+                apellidoAdoptante: datosAdopcion.adoptante.apellido,
+                especieAnimal: datosAdopcion.animal.especie,
+            });
+        } catch (error) {
+            setAdopcionData(null);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Número de adopción no encontrado o no existe.',
+                confirmButtonColor: '#F39C12',
+            });
+        }
+    };
+
+    const handleConfirmarSeguimiento = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!fecha || !descripcionEntorno || !estadoAnimal) {
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos requeridos.' });
+            return;
+        }
+
+        // Sacamos el DNI del colaborador que está usando el sistema
+        const dni_colaborador = obtenerDniDelToken();
+        if (!dni_colaborador) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Sesión inválida. Vuelva a iniciar sesión.' });
+            return;
+        }
+
+        try {
+            // Armamos el payload para el controlador (ajustá los nombres según tu DTO)
+            const payload = {
+                nro_adopcion: parseInt(nroAdopcion, 10),
+                fecha_seguimiento: fecha, 
+                entorno: descripcionEntorno,
+                estado_animal: estadoAnimal,
+                dni_colaborador: dni_colaborador
+            };
+
+            // Hacemos el POST al backend. Ajustá la URL según tus rutas.
+            const response = await api.post('/seguimiento/registrar', payload);
+            console.log('Respuesta del backend al registrar seguimiento:', response.data);
+            // Guardamos la respuesta exitosa para la vista 3
+            setDatosExito({
+                nro_seguimiento: response.data.data.id_seguimiento, // ACÁ ESTABA EL BUG
+                fecha: response.data.data.fecha_seguimiento,        // Usamos la fecha del backend
+                entorno: response.data.data.entorno,                // "Mal estado del patio"
+                estado_animal: response.data.data.estado_animal     // "No apto"
+            });
+
+            setCurrentView('SUCCESS');
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un problema al registrar el seguimiento.' });
         }
     };
 
@@ -52,18 +120,6 @@ export default function RegistrarSeguimiento() {
         if (adopcionData) {
         setCurrentView('REGISTER_SEGUIMIENTO');
         }
-    };
-
-    const handleConfirmarSeguimiento = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!fecha || !descripcionEntorno || !estadoAnimal) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos requeridos.' });
-        return;
-        }
-        
-        // Aquí enviarías los datos a la base de datos MySQL usando tu backend TypeScript
-        console.log('Registrando seguimiento:', { nroAdopcion, fecha, descripcionEntorno, estadoAnimal });
-        setCurrentView('SUCCESS');
     };
 
     const handleOtroSeguimiento = () => {
@@ -87,44 +143,37 @@ export default function RegistrarSeguimiento() {
     // -------------------------------------------------------------------------
     // VISTA 3: ÉXITO (3-FS-seguimiento-registrado)
     // -------------------------------------------------------------------------
-    if (currentView === 'SUCCESS') {
-        // Evaluamos si el entorno escrito por el usuario contiene la palabra "apto" para simular la vista
-        const entornoResumen = descripcionEntorno.toLowerCase().includes('no') ? 'No apto' : 'Apto';
+    if (currentView === 'SUCCESS' && datosExito) {
 
         return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Confirmar seguimiento</h1>
-            <button style={styles.volverHeaderBtn} onClick={() => navigate(-1)}>Volver</button>
-            </div>
-
+            // ... (tu contenedor y header) ...
             <div style={styles.successCard}>
-            <h2 style={styles.successTitle}>Seguimiento registrado con exito</h2>
-            
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. Seguimiento</span>
-                <span style={styles.infoValue}>3</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Fecha realizado</span>
-                <span style={styles.infoValue}>{fecha.split('-').reverse().join('/') || '24/07/2026'}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Entorno</span>
-                <span style={styles.infoValue}>{entornoResumen}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado animal</span>
-                <span style={estadoAnimal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
-                {estadoAnimal}
-                </span>
-            </div>
+                <h2 style={styles.successTitle}>Seguimiento registrado con éxito</h2>
+                
+                <div style={styles.infoRow}>
+                    <span style={styles.infoLabel}>Nro. Seguimiento</span>
+                    {/* Renderizamos el número real de la BD */}
+                    <span style={styles.infoValue}>{datosExito.nro_seguimiento}</span>
+                </div>
+                <div style={styles.infoRow}>
+                    <span style={styles.infoLabel}>Fecha realizado</span>
+                    <span style={styles.infoValue}>{datosExito.fecha.split('-').reverse().join('/')}</span>
+                </div>
+                <div style={styles.infoRow}>
+                    <span style={styles.infoLabel}>Entorno</span>
+                    <span style={styles.infoValue}>{datosExito.entorno}</span>
+                </div>
+                <div style={styles.infoRow}>
+                    <span style={styles.infoLabel}>Estado animal</span>
+                    <span style={datosExito.estado_animal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
+                        {datosExito.estado_animal}
+                    </span>
+                </div>
 
-            <button style={styles.buttonBackLarge} onClick={handleOtroSeguimiento}>
-                Realizar otro seguimiento
-            </button>
+                <button style={styles.buttonBackLarge} onClick={handleOtroSeguimiento}>
+                    Realizar otro seguimiento
+                </button>
             </div>
-        </div>
         );
     }
 
@@ -261,11 +310,12 @@ export default function RegistrarSeguimiento() {
     container: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#FFFFFF',
-        fontFamily: 'Arial, sans-serif',
-        padding: '40px 20px',
+        alignItems: 'center',       // Centra el contenido horizontalmente
+        minHeight: '100vh',         // CLAVE: Obliga al contenedor a ocupar el 100% del alto de la pantalla
+        width: '100%',              // Obliga a ocupar el 100% del ancho
+        backgroundColor: '#FFFFFF', // CLAVE: Fuerza el fondo blanco para tapar cualquier fondo negro del body
+        padding: '20px',
+        boxSizing: 'border-box' as const,
     },
     headerRow: {
         display: 'flex',
@@ -376,11 +426,14 @@ export default function RegistrarSeguimiento() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        width: '100%',
-        maxWidth: '500px',
         backgroundColor: '#FFFFFF',
-        padding: '30px',
-        marginTop: '10px',
+        border: '1px solid #E0E0E0', // Un bordecito sutil
+        borderRadius: '10px',
+        padding: '40px',
+        marginTop: '10vh',          // Lo empuja un poco hacia abajo para que quede en el centro óptico de la pantalla
+        boxShadow: '0px 5px 15px rgba(0,0,0,0.1)', // Sombra para que la tarjeta resalte sobre el fondo blanco
+        width: '100%',
+        maxWidth: '500px',          // Evita que la tarjeta se estire infinitamente en monitores grandes
     },
     successTitle: {
         fontSize: '22px',
