@@ -9,6 +9,7 @@ import { ActualizarAnimal } from "./CU/actualizarAnimal.js";
 import { EliminarAnimal } from "./CU/eliminarAnimal.js";
 import { CambiarEstadoDisponible } from "./CU/cambiarEstado.js";
 import { CambiarEstadoFallecido } from "./CU/defuncionAnimal.js";
+import { GetAnimalEstDisponible } from "./CU/getAnimalEstDisp.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -207,6 +208,31 @@ export const cambiarEstadoFallecido = async (req:Request, res:Response):Promise<
         };
         console.error('Error desconocido al cambiar el estado del animal', error);
         res.status(500).json({ error: "Error desconocido al cambiar el estado del animal" });
+        return;
+    }
+};
+
+export const getAnimalEstDisponible = async (req:Request, res:Response):Promise<void> => {
+    try{
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const repo = new AnimalRepositoryORM(em);
+        const casouso = new GetAnimalEstDisponible(repo);
+
+        console.log('Ejecutando caso de uso GetAnimalEstDisponible...');
+        const resultado = await casouso.ejecutar();
+        console.log('Resultado del caso de uso GetAnimalEstDisponible:', resultado);
+        
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        return;
+    }catch(error:unknown){
+        if (error instanceof Error) {
+            console.error('Error al buscar los animales disponibles', error.message);
+            res.status(500).json({ error: "Error al buscar los animales disponibles" });
+            return;
+        };
+        console.error('Error desconocido al buscar los animales disponibles', error);
+        res.status(500).json({ error: "Error desconocido al buscar los animales disponibles" });
         return;
     }
 };

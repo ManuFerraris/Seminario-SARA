@@ -11,7 +11,7 @@ export class Entrevista {
 
     // Relación N a 1: Muchas entrevistas pueden ser realizadas por un mismo colaborador
     @ManyToOne(() => Persona, { joinColumn: 'dni_colaborador' })
-    colaborador!: Rel<Persona>;
+    colaborador?: Rel<Persona>;
 
     // Relación N a 1: Muchas entrevistas pueden tener al mismo adoptante (si aplicó varias veces)
     @ManyToOne(() => Persona, { joinColumn: 'dni_adoptante' })
@@ -21,7 +21,7 @@ export class Entrevista {
     fecha_hora!: Date;
 
     @Property({ type: 'datetime', nullable: true })
-    fecha_hora_rep!: Date;
+    fecha_hora_rep?: Date | null;
 
     @Property({ type: 'string', length: 20 })
     estado!: string;

@@ -6,11 +6,13 @@ findAllEntrevistas,
 createEntrevista,
 updateEntrevista,
 deleteEntrevista,
-bajaLogicaEntrevista
+bajaLogicaEntrevista,
+registrarEntrevista
 } from "./entrevista.controller.js";
 
 export const entrevistaRouter = Router();
 
+entrevistaRouter.post("/registrar", registrarEntrevista);
 entrevistaRouter.get("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), getOneEntrevista);
 entrevistaRouter.get("/", verificarToken(["Colaborador", "Veterinario"]), findAllEntrevistas);
 entrevistaRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), createEntrevista);

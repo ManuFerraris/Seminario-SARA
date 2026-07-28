@@ -9,14 +9,14 @@ POST http://localhost:3000/api/animal
 Content-Type: application/json
 
 {
-    "especie": "Perro",
-    "raza": "Labrador",
+    "especie": "Gato",
+    "raza": "cusco",
     "edad_estimada": 5,
     "fecha_ingreso": "2026-06-15",
     "estado": "Disponible",
-    "sexo": "Macho",
-    "peso": 30.5,
-    "descripcion": "Un perro amigable y juguetón."
+    "sexo": "Hembra",
+    "peso": 3.5,
+    "descripcion": "Un gato amigable y juguetón."
 }
 
 ### update Animal (Ejemplo: actualizar estado y peso)

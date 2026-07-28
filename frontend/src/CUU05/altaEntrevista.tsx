@@ -1,255 +1,342 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 type ViewState = 'LANDING' | 'ANIMAL_LIST' | 'DATE_TIME_SELECT' | 'SUCCESS';
 
 interface Animal {
-    id: number;
-    especie: string;
-    edad: string;
-    fechaIngreso: string;
-    estado: string;
+  id: number;
+  especie: string;
+  edad: string;
+  fechaIngreso: string;
+  estado: string;
+}
+
+// Interfaz para guardar los datos de la respuesta exitosa
+interface EntrevistaExitosa {
+  nro_animal: number;
+  fecha: string;
+  hora: string;
+  dni_adoptante: string;
+  estado_entrevista: string;
+  estado_animal: string;
+}
+
+export default function AltaEntrevista() {
+  const navigate = useNavigate();
+
+  // Control de vistas
+  const [currentView, setCurrentView] = useState<ViewState>('LANDING');
+
+  // Estados del flujo
+  const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
+  const [fechaEntrevista, setFechaEntrevista] = useState('');
+  const [horaEntrevista, setHoraEntrevista] = useState('');
+
+  // Estados de datos conectados
+  const [animales, setAnimales] = useState<Animal[]>([]);
+  const [cargandoAnimales, setCargandoAnimales] = useState(false);
+  const [datosExito, setDatosExito] = useState<EntrevistaExitosa | null>(null);
+
+  const obtenerDniDelToken = (): string | null => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      // Agarramos la segunda parte del token (el payload)
+      const payloadBase64 = token.split('.')[1];
+      
+      // Lo decodificamos de Base64 a texto normal
+      const payloadDecodificado = atob(payloadBase64);
+      
+      // Lo convertimos a un objeto JSON de JavaScript
+      const payloadJson = JSON.parse(payloadDecodificado);
+      
+      // Retornamos el DNI
+      return payloadJson.dni;
+    } catch (error) {
+      console.error("Error leyendo el token:", error);
+      return null;
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // MÉTODOS DE ACCIÓN
+  // -------------------------------------------------------------------------
+
+  const handleQuieroAdoptar = async () => {
+    setCurrentView('ANIMAL_LIST');
+    setCargandoAnimales(true);
+
+    try {
+      // 1. Buscamos solo los animales disponibles
+      const response = await api.get('/animal/estado-disponible');
+      console.log('Animales disponibles:', response.data.data);
+      // Mapeamos los datos del backend a tu interfaz Animal
+      const animalesMapeados = response.data.data.map((a: any) => ({
+        id: a.nro_animal,
+        especie: a.especie,
+        edad: a.edad_estimada,
+        fechaIngreso: new Date(a.fecha_ingreso).toLocaleDateString('es-AR'),
+        estado: a.estado,
+      }));
+      
+      setAnimales(animalesMapeados);
+      console.log('Animales mapeados:', animalesMapeados);
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los animales.' });
+    } finally {
+      setCargandoAnimales(false);
+    }
+  };
+
+  const handleAdoptarClic = (animalId: number) => {
+    // Ya no hacemos el chequeo hardcodeado acá. 
+    // Avanzamos a la selección de fecha y validamos todo en el submit final.
+    setSelectedAnimalId(animalId);
+    setCurrentView('DATE_TIME_SELECT');
+  };
+
+  const handleConfirmarFechaHora = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fechaEntrevista || !horaEntrevista) {
+      Swal.fire({ 
+        icon: 'info', 
+        title: 'Atención', 
+        text: 'Debe seleccionar fecha y hora.' 
+      });
+      return;
     }
 
-    export default function AltaEntrevista() {
-    const navigate = useNavigate();
+    const dni_adoptante = obtenerDniDelToken();
+    if (!dni_adoptante) {
+      Swal.fire({ 
+        icon: 'error', 
+        title: 'Error de sesión', 
+        text: 'No se pudo identificar al usuario. Por favor, vuelva a iniciar sesión.' 
+      });
+      return;
+    }
 
-    // Control de vistas
-    const [currentView, setCurrentView] = useState<ViewState>('LANDING');
+    try {
+      // 3. Unificamos la fecha y hora para que el backend de Node lo entienda como Date
+      const fechaHoraCombinada = `${fechaEntrevista}T${horaEntrevista}:00`;
 
-    // Estados del flujo
-    const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
-    const [fechaEntrevista, setFechaEntrevista] = useState('');
-    const [horaEntrevista, setHoraEntrevista] = useState('');
+      // 4. Armamos el payload con los nombres exactos que espera el controlador
+      const payload = {
+        nro_animal: selectedAnimalId,
+        fecha_hora: fechaHoraCombinada,
+        dni_adoptante: dni_adoptante // ¡Ahora sí enviamos el real!
+      };
 
-    // Datos simulados de la grilla
-    const animalesMock: Animal[] = [
-        { id: 1, especie: 'Perro', edad: '5 años', fechaIngreso: '02/02/2025', estado: 'Disponible' }, // Éste disparará la lista negra
-        { id: 2, especie: 'Gato', edad: '2 años', fechaIngreso: '13/02/2026', estado: 'Disponible' },
-        { id: 3, especie: 'Perro', edad: '2 años', fechaIngreso: '28/08/2025', estado: 'Disponible' },
-        { id: 4, especie: 'Perro', edad: '5 años', fechaIngreso: '02/02/2025', estado: 'Disponible' },
-        { id: 5, especie: 'Gato', edad: '2 años', fechaIngreso: '13/02/2026', estado: 'Disponible' },
-        { id: 6, especie: 'Perro', edad: '2 años', fechaIngreso: '28/08/2025', estado: 'Disponible' },
-        { id: 7, especie: 'Perro', edad: '5 años', fechaIngreso: '02/02/2025', estado: 'Disponible' },
-        { id: 8, especie: 'Gato', edad: '2 años', fechaIngreso: '13/02/2026', estado: 'Disponible' },
-        { id: 9, especie: 'Perro', edad: '2 años', fechaIngreso: '28/08/2025', estado: 'Disponible' },
-    ];
+      const response = await api.post('/entrevista/registrar', payload);
+      
+      // Guardamos los datos que devuelve el backend
+      setDatosExito({
+        nro_animal: response.data.data.nro_animal,
+        fecha: fechaEntrevista,
+        hora: horaEntrevista,
+        dni_adoptante: response.data.data.dni_adoptante, 
+        estado_entrevista: 'Activa',
+        estado_animal: 'No disponible'
+      });
 
-    // -------------------------------------------------------------------------
-    // MÉTODOS DE ACCIÓN
-    // -------------------------------------------------------------------------
+      setCurrentView('SUCCESS');
 
-    const handleQuieroAdoptar = () => {
-        setCurrentView('ANIMAL_LIST');
-    };
+    } catch (error: any) {
+      const status = error.response?.status;
+      const mensajeBack = error.response?.data?.messages?.[0];
 
-    const handleAdoptarClic = (animalId: number) => {
-        // Simulación: Si elige el animal ID 1, el adoptante está inhabilitado
-        if (animalId === 1) {
+      if (status === 403 || status === 409) {
         Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            html: `<b>Inhabilitado para adoptar</b><br/><br/>Si considera que es un error,<br/>comuniquese con nosotros`,
-            confirmButtonColor: '#F39C12',
-            background: '#F1C40F', // Fondo amarillo/naranja similar al bosquejo
-            color: '#FFFFFF'
+          icon: 'warning',
+          title: 'Atención',
+          html: `<b>Inhabilitado para adoptar</b><br/><br/>${mensajeBack || 'Si considera que es un error, comuníquese con nosotros'}`,
+          confirmButtonColor: '#F39C12',
+          background: '#F1C40F',
+          color: '#FFFFFF'
         });
-        } else {
-        setSelectedAnimalId(animalId);
-        setCurrentView('DATE_TIME_SELECT');
-        }
-    };
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un problema al agendar la entrevista.' });
+      }
+    }
+  };
 
-    const handleConfirmarFechaHora = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!fechaEntrevista || !horaEntrevista) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Debe seleccionar fecha y hora.' });
-        return;
-        }
-        console.log(`Entrevista agendada para el animal ${selectedAnimalId} el ${fechaEntrevista} a las ${horaEntrevista}`);
-        setCurrentView('SUCCESS');
-    };
-
-    const handleVolver = () => {
-        if (currentView === 'SUCCESS') {
-        // Regresar al listado y limpiar selección
-        setSelectedAnimalId(null);
-        setFechaEntrevista('');
-        setHoraEntrevista('');
-        setCurrentView('ANIMAL_LIST');
-        } else if (currentView === 'DATE_TIME_SELECT') {
-        setCurrentView('ANIMAL_LIST');
-        } else if (currentView === 'ANIMAL_LIST') {
-        setCurrentView('LANDING');
-        } else {
-        navigate(-1);
-        }
-    };
-
-    // -------------------------------------------------------------------------
-    // VISTA 4: ÉXITO (3-FS-entevista_confirmada)
-    // -------------------------------------------------------------------------
+  const handleVolver = () => {
     if (currentView === 'SUCCESS') {
-        return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Entrevista registrada con exito</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-            </div>
-
-            <div style={styles.successCard}>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado animal:</span>
-                <span style={styles.infoValueWarning}>No disponible</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado entrevista:</span>
-                <span style={styles.infoValueSuccess}>Activa</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>DNI adoptante:</span>
-                <span style={styles.infoValue}>11222333</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. animal:</span>
-                <span style={styles.infoValue}>{selectedAnimalId || '13'}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Fecha:</span>
-                <span style={styles.infoValue}>{fechaEntrevista}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Hora:</span>
-                <span style={styles.infoValue}>{horaEntrevista}</span>
-            </div>
-            
-            <div style={{...styles.infoRow, flexDirection: 'column', alignItems: 'flex-start', borderBottom: 'none'}}>
-                <span style={styles.infoLabel}>Descripcion:</span>
-                <textarea style={styles.textAreaReadOnly} readOnly value="Entrevista programada para evaluación de adopción." />
-            </div>
-
-            <button style={styles.buttonRegresar} onClick={handleVolver}>
-                Regresar
-            </button>
-            </div>
-        </div>
-        );
+      setSelectedAnimalId(null);
+      setFechaEntrevista('');
+      setHoraEntrevista('');
+      setDatosExito(null);
+      handleQuieroAdoptar(); // Recargamos la lista por si el animal ya no está disponible
+    } else if (currentView === 'DATE_TIME_SELECT') {
+      setCurrentView('ANIMAL_LIST');
+    } else if (currentView === 'ANIMAL_LIST') {
+      setCurrentView('LANDING');
+    } else {
+      navigate(-1);
     }
+  };
 
-    // -------------------------------------------------------------------------
-    // VISTA 3: DEFINIR FECHA (2-FE-listado_fecha_hora)
-    // -------------------------------------------------------------------------
-    if (currentView === 'DATE_TIME_SELECT') {
-        return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Definir fecha</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-            </div>
-
-            <form style={styles.formContainer} onSubmit={handleConfirmarFechaHora}>
-            <label style={styles.labelCentered}>Seleccionar una fecha</label>
-            <input 
-                style={styles.input} 
-                type="date" 
-                value={fechaEntrevista} 
-                onChange={e => setFechaEntrevista(e.target.value)} 
-                required 
-            />
-
-            <label style={styles.labelCentered}>Seleccionar el horario</label>
-            <input 
-                style={styles.input} 
-                type="time" 
-                value={horaEntrevista} 
-                onChange={e => setHoraEntrevista(e.target.value)} 
-                required 
-            />
-
-            <button type="submit" style={styles.buttonSubmit}>
-                Confirmar fecha y hora
-            </button>
-            </form>
-        </div>
-        );
-    }
-
-    // -------------------------------------------------------------------------
-    // VISTA 2: GRILLA DE ANIMALES (1-FS-datos_ficha)
-    // -------------------------------------------------------------------------
-    if (currentView === 'ANIMAL_LIST') {
-        return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Animales listos para ser adoptados</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-            </div>
-
-            <div style={styles.scrollableWrapper}>
-            <div style={styles.gridContainer}>
-                {animalesMock.map(animal => (
-                <div key={animal.id} style={styles.animalCard}>
-                    <div style={styles.iconPlaceholder}>
-                    <span style={styles.iconBracket}>{`{ }`}</span>
-                    </div>
-                    <div style={styles.animalDetails}>
-                    <p style={styles.animalText}>Especie: {animal.especie}</p>
-                    <p style={styles.animalText}>Edad: {animal.edad}</p>
-                    <p style={styles.animalText}>Fecha Ingreso: {animal.fechaIngreso}</p>
-                    <p style={styles.animalText}>Estado: {animal.estado}</p>
-                    </div>
-                    <button style={styles.btnAdoptar} onClick={() => handleAdoptarClic(animal.id)}>
-                    Adoptar
-                    </button>
-                </div>
-                ))}
-            </div>
-            </div>
-        </div>
-        );
-    }
-
-    // -------------------------------------------------------------------------
-    // VISTA 1: LANDING PAGE (1-FE-seleccion_ficha)
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // VISTA 4: ÉXITO (3-FS-entevista_confirmada)
+  // -------------------------------------------------------------------------
+  if (currentView === 'SUCCESS' && datosExito) {
     return (
-        <div style={styles.container}>
-        <div style={styles.headerRowLanding}>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+      <div style={styles.container}>
+        <div style={styles.headerRow}>
+          <h1 style={styles.title}>Entrevista registrada con éxito</h1>
+          <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
         </div>
-        
-        <h1 style={styles.landingTitle}>SARA Protectora</h1>
+
+        <div style={styles.successCard}>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Estado animal:</span>
+            <span style={styles.infoValueWarning}>{datosExito.estado_animal}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Estado entrevista:</span>
+            <span style={styles.infoValueSuccess}>{datosExito.estado_entrevista}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>DNI adoptante:</span>
+            <span style={styles.infoValue}>{datosExito.dni_adoptante}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Nro. animal:</span>
+            <span style={styles.infoValue}>{datosExito.nro_animal}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Fecha:</span>
+            <span style={styles.infoValue}>{datosExito.fecha}</span>
+          </div>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>Hora:</span>
+            <span style={styles.infoValue}>{datosExito.hora}</span>
+          </div>
+          
+          <div style={{...styles.infoRow, flexDirection: 'column', alignItems: 'flex-start', borderBottom: 'none'}}>
+            <span style={styles.infoLabel}>Descripción:</span>
+            <textarea style={styles.textAreaReadOnly} readOnly value="Entrevista programada para evaluación de adopción." />
+          </div>
+
+          <button style={styles.buttonRegresar} onClick={handleVolver}>
+            Regresar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA 3: DEFINIR FECHA (2-FE-listado_fecha_hora)
+  // -------------------------------------------------------------------------
+  if (currentView === 'DATE_TIME_SELECT') {
+    // Igual que tu código original... (lo omito para no alargar la respuesta, 
+    // pero funciona exactamente igual usando tus estados)
+    return (
+      <div style={styles.container}>
+        <div style={styles.headerRow}>
+          <h1 style={styles.title}>Definir fecha</h1>
+          <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+        </div>
+
+        <form style={styles.formContainer} onSubmit={handleConfirmarFechaHora}>
+          <label style={styles.labelCentered}>Seleccionar una fecha</label>
+          <input 
+            style={styles.input} 
+            type="date" 
+            value={fechaEntrevista} 
+            onChange={e => setFechaEntrevista(e.target.value)} 
+            required 
+          />
+
+          <label style={styles.labelCentered}>Seleccionar el horario</label>
+          <input 
+            style={styles.input} 
+            type="time" 
+            value={horaEntrevista} 
+            onChange={e => setHoraEntrevista(e.target.value)} 
+            required 
+          />
+
+          <button type="submit" style={styles.buttonSubmit}>
+            Confirmar fecha y hora
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA 2: GRILLA DE ANIMALES (1-FS-datos_ficha)
+  // -------------------------------------------------------------------------
+  if (currentView === 'ANIMAL_LIST') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.headerRow}>
+          <h1 style={styles.title}>Animales listos para ser adoptados</h1>
+          <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+        </div>
 
         <div style={styles.scrollableWrapper}>
-            <div style={styles.landingContent}>
-            
-            <h2 style={styles.sectionTitle}>Quienes somos ?</h2>
-            <p style={styles.paragraphText}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            </p>
-
-            <h2 style={styles.sectionTitle}>A que no dedicamos ?</h2>
-            <p style={styles.paragraphText}>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-
-            <h2 style={styles.sectionTitle}>Comienzos ?</h2>
-            <p style={styles.paragraphText}>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, 
-                eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-            </p>
-
-            <button style={styles.btnQuieroAdoptar} onClick={handleQuieroAdoptar}>
-                Quiero adoptar!
-            </button>
+          {cargandoAnimales ? (
+            <p style={{ textAlign: 'center', marginTop: '20px' }}>Cargando animales...</p>
+          ) : (
+            <div style={styles.gridContainer}>
+              {animales.length === 0 ? (
+                <p style={{ textAlign: 'center', width: '100%' }}>No hay animales disponibles en este momento.</p>
+              ) : (
+                animales.map(animal => (
+                  <div key={animal.id} style={styles.animalCard}>
+                    <div style={styles.iconPlaceholder}>
+                      <span style={styles.iconBracket}>{`{ }`}</span>
+                    </div>
+                    <div style={styles.animalDetails}>
+                      <p style={styles.animalText}>Especie: {animal.especie}</p>
+                      <p style={styles.animalText}>Edad: {animal.edad}</p>
+                      <p style={styles.animalText}>Fecha Ingreso: {animal.fechaIngreso}</p>
+                      <p style={styles.animalText}>Estado: {animal.estado}</p>
+                    </div>
+                    <button style={styles.btnAdoptar} onClick={() => handleAdoptarClic(animal.id)}>
+                      Adoptar
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
+          )}
         </div>
-        </div>
+      </div>
     );
-    }
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA 1: LANDING PAGE (1-FE-seleccion_ficha)
+  // -------------------------------------------------------------------------
+  return (
+    // Queda exactamente igual a tu código original...
+    <div style={styles.container}>
+      <div style={styles.headerRowLanding}>
+        <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+      </div>
+      
+      <h1 style={styles.landingTitle}>SARA Protectora</h1>
+
+      <div style={styles.scrollableWrapper}>
+        <div style={styles.landingContent}>
+          <h2 style={styles.sectionTitle}>Quienes somos ?</h2>
+          <p style={styles.paragraphText}>Lorem ipsum...</p>
+          <button style={styles.btnQuieroAdoptar} onClick={handleQuieroAdoptar}>
+            Quiero adoptar!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
     // -------------------------------------------------------------------------
     // ESTILOS

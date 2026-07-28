@@ -33,7 +33,7 @@ export default function Login() {
         if (roles.includes('Colaborador') || roles.includes('Veterinario')) {
           navigate('/menu'); // Los mandamos al dashboard interno
         } else {
-          navigate('/home'); // Los adoptantes/usuarios van al catálogo público
+          navigate('/alta-entrevista'); // Los adoptantes/usuarios van al catálogo público
         }
       }
     } catch (error: any) {

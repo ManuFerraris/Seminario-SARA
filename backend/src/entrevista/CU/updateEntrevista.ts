@@ -31,9 +31,24 @@ export class UpdateEntrevista {
         }
 
         // 3. Lógica de Negocio: Validar cronología de reposición
-        const fechaRepActual = new Date(entrevista.fecha_hora_rep);
-        const fechaRepNueva = dto.fecha_hora_rep ? new Date(dto.fecha_hora_rep) : fechaRepActual;
+        let fechaRepActual: Date | null = null;
+        let fechaRepNueva: Date | null = null;
+        if( dto.fecha_hora_rep && entrevista.fecha_hora_rep) {
+            fechaRepActual = new Date(entrevista.fecha_hora_rep);
+            fechaRepNueva = new Date(dto.fecha_hora_rep);
+        }
+        //const fechaRepActual = new Date(entrevista.fecha_hora_rep);
+        //const fechaRepNueva = dto.fecha_hora_rep ? new Date(dto.fecha_hora_rep) : fechaRepActual;
         
+        if (!fechaRepNueva || !fechaRepActual) {
+            return {
+                status: 400,
+                success: false,
+                messages: ["Conflicto cronológico: No se puede asignar una fecha de reposición a una entrevista que no tiene fecha de reposición previa."],
+                data: undefined
+            };
+        }
+
         if (dto.fecha_hora_rep && fechaRepNueva.getTime() <= fechaRepActual.getTime()) {
             return {
                 status: 400,
