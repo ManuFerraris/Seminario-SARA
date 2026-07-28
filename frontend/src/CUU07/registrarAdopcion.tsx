@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; // ¡Asegurate de importar tu instancia de axios!
 
 type ViewState = 'MAIN_FORM' | 'SUCCESS';
+
+// Agregamos la interfaz para los datos de respuesta
+interface AdopcionExitosa {
+    nro_adopcion: number;
+    fecha_adopcion: string;
+    nro_animal: string;
+    dni_adoptante: string;
+}
 
 export default function RegistrarAdopcion() {
     const navigate = useNavigate();
@@ -13,82 +22,136 @@ export default function RegistrarAdopcion() {
     // Estados del formulario
     const [dni, setDni] = useState('');
     const [nroAnimal, setNroAnimal] = useState('');
+    
+    // Estado para guardar la respuesta del backend
+    const [datosExito, setDatosExito] = useState<AdopcionExitosa | null>(null);
 
     // -------------------------------------------------------------------------
     // MÉTODOS DE ACCIÓN
     // -------------------------------------------------------------------------
 
-    const handleRegistrarAdopcion = (e: React.FormEvent) => {
+    const handleRegistrarAdopcion = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Simulación: El animal número 5 no tiene las vacunas al día
-        if (nroAnimal === '5') {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            text: 'Adopcion bloqueda. El animal no posee las vacunas al dia',
-            confirmButtonColor: '#F39C12',
-        });
-        return;
+        if (!dni || !nroAnimal) {
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos.' });
+            return;
         }
 
-        // Si pasa la validación, procedemos a la vista de éxito
-        console.log(`Registrando adopción para DNI: ${dni}, Animal: ${nroAnimal}`);
-        setCurrentView('SUCCESS');
+        try {
+            // Armamos el payload con los nombres que suele esperar tu backend
+            const payload = {
+                dni_adoptante: dni,
+                nro_animal: parseInt(nroAnimal, 10)
+            };
+
+            // Hacemos el POST al backend (ajustá la ruta exacta si es distinta)
+            const response = await api.post('/adopcion/registrar', payload);
+            
+            console.log('Respuesta del backend:', response.data);
+
+            // Guardamos los datos reales para mostrarlos en la pantalla de éxito
+            setDatosExito({
+                nro_adopcion: response.data.data.nro_adopcion,
+                fecha_adopcion: response.data.data.fecha_adopcion, 
+                nro_animal: nroAnimal,
+                dni_adoptante: dni
+            });
+
+            setCurrentView('SUCCESS');
+
+        } catch (error: any) {
+            // 1. Logueamos la respuesta cruda para ver qué estructura mandó Express
+            console.log('Estructura del error en el front:', error.response?.data);
+
+            // 2. Definimos el mensaje por defecto
+            let mensajeBack = 'Ocurrió un error al registrar la adopción.';
+
+            // 3. Buscamos el mensaje real en las rutas más comunes
+            if (error.response && error.response.data) {
+                const data = error.response.data;
+                
+                if (data.messages && data.messages.length > 0) {
+                    // Si llega como { messages: ["..."] }
+                    mensajeBack = data.messages[0];
+                } else if (data.message) {
+                    // Si llega como { message: "..." } (muy común si usas manejadores de errores genéricos)
+                    mensajeBack = data.message;
+                } else if (data.error && typeof data.error === 'string') {
+                    // Si llega como { error: "..." }
+                    mensajeBack = data.error;
+                }
+            }
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: mensajeBack,
+                confirmButtonColor: '#F39C12',
+            });
+        }
     };
 
     const handleOtraAdopcion = () => {
-        // Reseteamos el estado para una nueva adopción
         setDni('');
         setNroAnimal('');
+        setDatosExito(null);
         setCurrentView('MAIN_FORM');
     };
 
     const handleVolver = () => {
         if (currentView === 'SUCCESS') {
-        setCurrentView('MAIN_FORM');
+            handleOtraAdopcion();
         } else {
-        navigate(-1); // Regresa a la ruta anterior en React Router
+            navigate(-1); 
         }
+    };
+
+    // Formateador de fecha auxiliar para que se vea como DD/MM/YYYY
+    const formatearFecha = (fechaString: string) => {
+        if (!fechaString) return '';
+        const soloFecha = fechaString.split('T')[0]; // Corta en la T y se queda con "2026-07-28"
+        const [year, month, day] = soloFecha.split('-'); // Separa por guiones
+        return `${day}/${month}/${year}`; // Arma "28/07/2026"
     };
 
     // -------------------------------------------------------------------------
     // VISTA 2: ÉXITO (3-FS-adopcion-creada)
     // -------------------------------------------------------------------------
-    if (currentView === 'SUCCESS') {
+    if (currentView === 'SUCCESS' && datosExito) {
         return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar adopcion</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-            </div>
+            <div style={styles.container}>
+                <div style={styles.headerRow}>
+                    <h1 style={styles.title}>Registrar adopcion</h1>
+                    <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+                </div>
 
-            <div style={styles.successCard}>
-            {/* Mantenemos el texto tal cual figura en el bosquejo */}
-            <h2 style={styles.successTitle}>Adopcion registrada con exito</h2>
-            
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. de adopcion</span>
-                <span style={styles.infoValue}>15</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Fecha adopcion</span>
-                <span style={styles.infoValue}>19/07/2026</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. Animal</span>
-                <span style={styles.infoValue}>{nroAnimal || '69'}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. DNI</span>
-                <span style={styles.infoValue}>{dni || '11222333'}</span>
-            </div>
+                <div style={styles.successCard}>
+                    <h2 style={styles.successTitle}>Adopción registrada con éxito</h2>
+                    
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Nro. de adopción</span>
+                        <span style={styles.infoValue}>{datosExito.nro_adopcion}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Fecha adopción</span>
+                        {/* Asumiendo que el backend devuelve '2026-07-19' */}
+                        <span style={styles.infoValue}>{formatearFecha(datosExito.fecha_adopcion)}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Nro. Animal</span>
+                        <span style={styles.infoValue}>{datosExito.nro_animal}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Nro. DNI</span>
+                        <span style={styles.infoValue}>{datosExito.dni_adoptante}</span>
+                    </div>
 
-            <button style={styles.buttonBackLarge} onClick={handleOtraAdopcion}>
-                Realizar otra adopcion
-            </button>
+                    <button style={styles.buttonBackLarge} onClick={handleOtraAdopcion}>
+                        Realizar otra adopción
+                    </button>
+                </div>
             </div>
-        </div>
         );
     }
 
@@ -97,40 +160,39 @@ export default function RegistrarAdopcion() {
     // -------------------------------------------------------------------------
     return (
         <div style={styles.container}>
-        <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar adopcion</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-        </div>
+            <div style={styles.headerRow}>
+                <h1 style={styles.title}>Registrar adopcion</h1>
+                <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+            </div>
 
-        <form style={styles.formContainer} onSubmit={handleRegistrarAdopcion}>
-            
-            <label style={styles.labelCentered}>Ingrese el numero de DNI</label>
-            <input 
-            style={styles.input} 
-            type="text" 
-            placeholder="Ej: 11222333" 
-            value={dni} 
-            onChange={e => setDni(e.target.value.replace(/\D/g, ''))} 
-            required 
-            />
+            <form style={styles.formContainer} onSubmit={handleRegistrarAdopcion}>
+                <label style={styles.labelCentered}>Ingrese el numero de DNI</label>
+                <input 
+                    style={styles.input} 
+                    type="text" 
+                    placeholder="Ej: 11222333" 
+                    value={dni} 
+                    onChange={e => setDni(e.target.value.replace(/\D/g, ''))} 
+                    required 
+                />
 
-            <label style={styles.labelCentered}>Ingrese el numero del animal</label>
-            <input 
-            style={styles.input} 
-            type="text" 
-            placeholder="Ej: 5" 
-            value={nroAnimal} 
-            onChange={e => setNroAnimal(e.target.value.replace(/\D/g, ''))} 
-            required 
-            />
+                <label style={styles.labelCentered}>Ingrese el numero del animal</label>
+                <input 
+                    style={styles.input} 
+                    type="text" 
+                    placeholder="Ej: 5" 
+                    value={nroAnimal} 
+                    onChange={e => setNroAnimal(e.target.value.replace(/\D/g, ''))} 
+                    required 
+                />
 
-            <button type="submit" style={styles.buttonSubmit}>
-            Registrar adopcion
-            </button>
-        </form>
+                <button type="submit" style={styles.buttonSubmit}>
+                    Registrar adopcion
+                </button>
+            </form>
         </div>
     );
-    }
+}
 
     // -------------------------------------------------------------------------
     // ESTILOS

@@ -71,7 +71,9 @@ export const create = async (req: Request, res: Response): Promise<void> => {
         
         const casouso = new CreateAdopcion(adopcionRepo, personaRepo, animalRepo);
 
+        console.log('Datos recibidos para crear adopción:', req.body);
         const resultado = await casouso.ejecutar(req.body);
+        console.log('Resultado del caso de uso CreateAdopcion:', resultado);
 
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;

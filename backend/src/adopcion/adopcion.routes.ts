@@ -15,7 +15,7 @@ export const adopcionRouter = Router();
 
 adopcionRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 adopcionRouter.get('/:nro_adopcion', verificarToken(["Colaborador", "Veterinario"]), getOne);
-adopcionRouter.post('/', /*verificarToken(["Colaborador", "Veterinario"]),*/ create);
+adopcionRouter.post('/registrar', /*verificarToken(["Colaborador", "Veterinario"]),*/ create);
 adopcionRouter.put('/:nro_adopcion', verificarToken(["Colaborador", "Veterinario"]), update);
 adopcionRouter.put(
     '/:nro_adopcion/retiro', 
