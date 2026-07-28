@@ -14,6 +14,7 @@ export class CreateFichaMedica {
     ) {}
 
     async ejecutar(dto: FichaMedicaDTO): Promise<ServiceResponse<FichaMedica>> {
+        dto.fecha = new Date();
         const errores = validarCreacionFichaMedica(dto);
         if (errores.length > 0) {
             return { status: 400, success: false, messages: errores, data: undefined };

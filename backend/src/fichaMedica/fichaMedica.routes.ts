@@ -12,6 +12,6 @@ export const fichaMedicaRouter = Router();
 
 fichaMedicaRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 fichaMedicaRouter.get('/:nro_ficha', verificarToken(["Colaborador", "Veterinario"]), getOne);
-fichaMedicaRouter.post('/', verificarToken(["Colaborador", "Veterinario"]), create);
+fichaMedicaRouter.post('/registrar', verificarToken(["Colaborador", "Veterinario"]), create);
 fichaMedicaRouter.put('/:nro_ficha', verificarToken(["Colaborador", "Veterinario"]), update);
 fichaMedicaRouter.delete('/:nro_ficha', verificarToken(["Colaborador", "Veterinario"]), deleteFichaMedica);

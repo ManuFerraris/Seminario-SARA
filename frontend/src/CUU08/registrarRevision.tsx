@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; // ¡Acordate de importar tu instancia de axios!
 
 type ViewState = 'MAIN_FORM' | 'SUCCESS';
 
@@ -11,6 +12,14 @@ interface AnimalData {
     sexo: string;
     peso: string;
     descripcion: string;
+}
+
+// Interfaz para la respuesta de éxito
+interface FichaExito {
+    nro_ficha: string | number;
+    fecha: string;
+    estado_animal: string;
+    observaciones: string;
 }
 
 export default function RegistrarRevision() {
@@ -26,106 +35,196 @@ export default function RegistrarRevision() {
     // Estados - Formulario de Revisión
     const [observaciones, setObservaciones] = useState('');
     const [estadoAnimal, setEstadoAnimal] = useState('');
+    
+    // Estado - Resultado exitoso
+    const [datosExito, setDatosExito] = useState<FichaExito | null>(null);
+
+    // -------------------------------------------------------------------------
+    // FORMATEADOR DE FECHA
+    // -------------------------------------------------------------------------
+    const formatearFecha = (fechaString: string) => {
+        if (!fechaString) return '';
+        const soloFecha = fechaString.split('T')[0]; 
+        const [year, month, day] = soloFecha.split('-');
+        return `${day}/${month}/${year}`;
+    };
 
     // -------------------------------------------------------------------------
     // MÉTODOS DE ACCIÓN
     // -------------------------------------------------------------------------
 
-    const handleBuscarAnimal = () => {
-        // Simulación: El animal número 15 no está registrado
-        if (nroAnimal === '15') {
-        setAnimalData(null);
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            html: `Animal con numero ${nroAnimal} no se<br/>encuentra registrado`,
-            confirmButtonColor: '#F39C12',
-        });
-        } else if (nroAnimal.trim() !== '') {
-        // Simulación de carga de datos exitosa
-        setAnimalData({
-            especie: 'PERRO',
-            raza: 'CUSCO',
-            edad: '5',
-            sexo: 'HEMBRA',
-            peso: '15',
-            descripcion: 'Docil y Juguetona, le tiene miedo a la tormenta'
-        });
+    const obtenerDniDelToken = (): string | null => {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        try {
+        // Agarramos la segunda parte del token (el payload)
+        const payloadBase64 = token.split('.')[1];
+        
+        // Lo decodificamos de Base64 a texto normal
+        const payloadDecodificado = atob(payloadBase64);
+        
+        // Lo convertimos a un objeto JSON de JavaScript
+        const payloadJson = JSON.parse(payloadDecodificado);
+        
+        // Retornamos el DNI
+        return payloadJson.dni;
+        } catch (error) {
+        console.error("Error leyendo el token:", error);
+        return null;
         }
     };
 
-    const handleRegistrarRevision = (e: React.FormEvent) => {
+    const handleBuscarAnimal = async () => {
+        if (!nroAnimal.trim()) return;
+
+        try {
+            // Hacemos el GET al backend para traer los datos reales del animal
+            // Ajustá la ruta según tu Controlador
+            const response = await api.get(`/animal/${nroAnimal}`);
+            const data = response.data.data; // Asumiendo que tu backend devuelve { data: {...} }
+
+            setAnimalData({
+                especie: data.especie || '-',
+                raza: data.raza || '-',
+                edad: data.edad_estimada?.toString() || '-', // Ajustá el nombre del campo si es distinto
+                sexo: data.sexo || '-',
+                peso: data.peso?.toString() || '-',
+                descripcion: data.descripcion || '-'
+            });
+
+        } catch (error: any) {
+            // Si el animal no existe (ej: 404), limpiamos los datos y mostramos error
+            setAnimalData(null);
+            
+            console.log('Error al buscar animal:', error.response?.data);
+            
+            let mensajeBack = `Animal con número ${nroAnimal} no se encuentra registrado.`;
+            if (error.response && error.response.data) {
+                const dataError = error.response.data;
+                if (dataError.messages && dataError.messages.length > 0) mensajeBack = dataError.messages[0];
+                else if (dataError.message) mensajeBack = dataError.message;
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: mensajeBack,
+                confirmButtonColor: '#F39C12',
+            });
+        }
+    };
+
+    const handleRegistrarRevision = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!observaciones || !estadoAnimal) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete las observaciones y el estado del animal.' });
-        return;
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete las observaciones y el estado del animal.' });
+            return;
         }
 
-        // Si todo está correcto, pasamos a la pantalla de éxito
-        console.log('Registrando revisión:', { nroAnimal, observaciones, estadoAnimal });
-        setCurrentView('SUCCESS');
+        try {
+            // Armamos el payload
+            const payload = {
+                nro_animal: parseInt(nroAnimal, 10),
+                observaciones: observaciones,
+                estado: estadoAnimal,
+                dni_veterinario: obtenerDniDelToken()
+            };
+
+            // Ajustá la ruta según tu Controlador
+            const response = await api.post('/fichamedica/registrar', payload);
+            console.log('Respuesta del backend:', response.data);
+
+            // Guardamos los datos reales devueltos por la BD
+            setDatosExito({
+                nro_ficha: response.data.data.nro_ficha || response.data.data.id_ficha, // Ajustá según cómo se llame el ID de la ficha en tu BD
+                fecha: response.data.data.fecha, // La fecha que guardó el servidor
+                estado_animal: estadoAnimal,
+                observaciones: observaciones
+            });
+
+            setCurrentView('SUCCESS');
+
+        } catch (error: any) {
+            console.log('Estructura del error en el front:', error.response?.data);
+            
+            let mensajeBack = 'Ocurrió un error al registrar la revisión médica.';
+            if (error.response && error.response.data) {
+                const data = error.response.data;
+                if (data.messages && data.messages.length > 0) mensajeBack = data.messages[0];
+                else if (data.message) mensajeBack = data.message;
+                else if (data.error && typeof data.error === 'string') mensajeBack = data.error;
+            }
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: mensajeBack,
+                confirmButtonColor: '#F39C12',
+            });
+        }
     };
 
     const handleOtraFicha = () => {
-        // Limpiamos los estados para registrar una nueva revisión
         setNroAnimal('');
         setAnimalData(null);
         setObservaciones('');
         setEstadoAnimal('');
+        setDatosExito(null);
         setCurrentView('MAIN_FORM');
     };
 
     const handleVolver = () => {
         if (currentView === 'SUCCESS') {
-        setCurrentView('MAIN_FORM');
+            handleOtraFicha();
         } else {
-        navigate(-1);
+            navigate(-1);
         }
     };
 
     // -------------------------------------------------------------------------
     // VISTA 2: ÉXITO (3-FS-registro-ficha)
     // -------------------------------------------------------------------------
-    if (currentView === 'SUCCESS') {
+    if (currentView === 'SUCCESS' && datosExito) {
         return (
-        <div style={styles.container}>
-            <div style={styles.headerRow}>
-            {/* Mantenemos el título vacío a la izquierda para centrar o usamos el botón Volver */}
-            <div style={{ flex: 1 }}></div>
-            <button style={styles.volverHeaderBtn} onClick={() => navigate(-1)}>Volver</button>
-            </div>
+            <div style={styles.container}>
+                <div style={styles.headerRow}>
+                    <div style={{ flex: 1 }}></div>
+                    <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+                </div>
 
-            <div style={styles.successCard}>
-            <h2 style={styles.successTitle}>Ficha medica registrada</h2>
-            
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Nro. de ficha</span>
-                <span style={styles.infoValue}>{nroAnimal || '15'}</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Fecha de registro</span>
-                <span style={styles.infoValue}>19/07/2026</span>
-            </div>
-            <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Estado animal</span>
-                <span style={estadoAnimal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
-                {estadoAnimal}
-                </span>
-            </div>
-            
-            <div style={styles.infoColumn}>
-                <span style={styles.infoLabel}>Observaciones</span>
-                <div style={styles.readOnlyTextAreaBox}>
-                {observaciones}
+                <div style={styles.successCard}>
+                    <h2 style={styles.successTitle}>Ficha médica registrada</h2>
+                    
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Nro. de ficha</span>
+                        <span style={styles.infoValue}>{datosExito.nro_ficha}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Fecha de registro</span>
+                        {/* Usamos el formateador de fechas ISO */}
+                        <span style={styles.infoValue}>{formatearFecha(datosExito.fecha)}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Estado animal</span>
+                        <span style={datosExito.estado_animal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
+                            {datosExito.estado_animal}
+                        </span>
+                    </div>
+                    
+                    <div style={styles.infoColumn}>
+                        <span style={styles.infoLabel}>Observaciones</span>
+                        <div style={styles.readOnlyTextAreaBox}>
+                            {datosExito.observaciones}
+                        </div>
+                    </div>
+
+                    <button style={styles.buttonBackLarge} onClick={handleOtraFicha}>
+                        Registrar otra ficha
+                    </button>
                 </div>
             </div>
-
-            <button style={styles.buttonBackLarge} onClick={handleOtraFicha}>
-                Registrar otra ficha
-            </button>
-            </div>
-        </div>
         );
     }
 
@@ -134,126 +233,125 @@ export default function RegistrarRevision() {
     // -------------------------------------------------------------------------
     return (
         <div style={styles.container}>
-        <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar revision medica</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
-        </div>
-
-        <div style={styles.scrollableFormWrapper}>
-            <div style={styles.formContainer}>
-            <label style={styles.labelCentered}>Ingrese el numero del animal</label>
-            
-            {/* BUSCADOR */}
-            <div style={{ display: 'flex', width: '100%', marginBottom: '25px' }}>
-                <input 
-                style={{
-                    flex: 1,
-                    padding: '12px',
-                    border: '2px solid #3498DB',
-                    borderRight: 'none',
-                    borderRadius: '5px 0 0 5px',
-                    fontSize: '14px',
-                    textAlign: 'center',
-                    color: '#2C3E50',
-                    outline: 'none',
-                    backgroundColor: '#ECF0F1'
-                }}
-                type="text" 
-                placeholder="Ej: 15" 
-                value={nroAnimal} 
-                onChange={e => setNroAnimal(e.target.value.replace(/\D/g, ''))} 
-                />
-                <button 
-                type="button" 
-                style={{
-                    backgroundColor: '#ECF0F1',
-                    color: '#3498DB',
-                    border: '2px solid #3498DB',
-                    borderLeft: 'none',
-                    borderRadius: '0 5px 5px 0',
-                    padding: '0 20px',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }} 
-                onClick={handleBuscarAnimal}
-                >
-                🔍
-                </button>
+            <div style={styles.headerRow}>
+                <h1 style={styles.title}>Registrar revisión médica</h1>
+                <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
 
-            {/* FORMULARIO COMPLETO AL ENCONTRAR ANIMAL */}
-            {animalData && (
-                <form onSubmit={handleRegistrarRevision} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-                
-                <div style={styles.grid2Cols}>
-                    <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Especie</label>
-                    <input style={styles.inputReadOnly} type="text" value={animalData.especie} readOnly />
+            <div style={styles.scrollableFormWrapper}>
+                <div style={styles.formContainer}>
+                    <label style={styles.labelCentered}>Ingrese el número del animal</label>
+                    
+                    {/* BUSCADOR */}
+                    <div style={{ display: 'flex', width: '100%', marginBottom: '25px' }}>
+                        <input 
+                            style={{
+                                flex: 1,
+                                padding: '12px',
+                                border: '2px solid #3498DB',
+                                borderRight: 'none',
+                                borderRadius: '5px 0 0 5px',
+                                fontSize: '14px',
+                                textAlign: 'center',
+                                color: '#2C3E50',
+                                outline: 'none',
+                                backgroundColor: '#ECF0F1'
+                            }}
+                            type="text" 
+                            placeholder="Ej: 15" 
+                            value={nroAnimal} 
+                            onChange={e => setNroAnimal(e.target.value.replace(/\D/g, ''))} 
+                        />
+                        <button 
+                            type="button" 
+                            style={{
+                                backgroundColor: '#ECF0F1',
+                                color: '#3498DB',
+                                border: '2px solid #3498DB',
+                                borderLeft: 'none',
+                                borderRadius: '0 5px 5px 0',
+                                padding: '0 20px',
+                                cursor: 'pointer',
+                                fontSize: '18px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }} 
+                            onClick={handleBuscarAnimal}
+                        >
+                            🔍
+                        </button>
                     </div>
-                    <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Raza</label>
-                    <input style={styles.inputReadOnly} type="text" value={animalData.raza} readOnly />
-                    </div>
+
+                    {/* FORMULARIO COMPLETO AL ENCONTRAR ANIMAL */}
+                    {animalData && (
+                        <form onSubmit={handleRegistrarRevision} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <div style={styles.grid2Cols}>
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.labelCentered}>Especie</label>
+                                    <input style={styles.inputReadOnly} type="text" value={animalData.especie} readOnly />
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.labelCentered}>Raza</label>
+                                    <input style={styles.inputReadOnly} type="text" value={animalData.raza} readOnly />
+                                </div>
+                            </div>
+
+                            <div style={styles.grid3Cols}>
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.labelCentered}>Edad (AÑOS)</label>
+                                    <input style={styles.inputReadOnly} type="text" value={animalData.edad} readOnly />
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.labelCentered}>Sexo</label>
+                                    <input style={styles.inputReadOnly} type="text" value={animalData.sexo} readOnly />
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <label style={styles.labelCentered}>Peso (KG)</label>
+                                    <input style={styles.inputReadOnly} type="text" value={animalData.peso} readOnly />
+                                </div>
+                            </div>
+
+                            <label style={styles.labelCentered}>Descripción</label>
+                            <input style={styles.inputReadOnly} type="text" value={animalData.descripcion} readOnly />
+
+                            <label style={styles.labelCentered}>Ingresar observaciones</label>
+                            <textarea 
+                                style={styles.textArea} 
+                                value={observaciones} 
+                                onChange={e => setObservaciones(e.target.value)} 
+                                required 
+                            />
+
+                            <label style={styles.labelCentered}>Seleccione el estado del animal</label>
+                            <select 
+                                style={styles.selectInput} 
+                                value={estadoAnimal} 
+                                onChange={e => setEstadoAnimal(e.target.value)} 
+                                required
+                            >
+                                <option value="" disabled>Seleccionar un estado</option>
+                                <option value="Apto para vacunar">Apto para vacunar</option>
+                                <option value="No apto">No apto</option>
+                            </select>
+
+                            <button type="submit" style={styles.buttonSubmit}>
+                                Registrar revisión
+                            </button>
+                        </form>
+                    )}
+
+                    {/* BOTÓN INACTIVO SI NO HAY ANIMAL */}
+                    {!animalData && (
+                        <button type="button" disabled style={styles.buttonSubmitDisabled}>
+                            Registrar revisión
+                        </button>
+                    )}
                 </div>
-
-                <div style={styles.grid3Cols}>
-                    <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Edad (AÑOS)</label>
-                    <input style={styles.inputReadOnly} type="text" value={animalData.edad} readOnly />
-                    </div>
-                    <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Sexo</label>
-                    <input style={styles.inputReadOnly} type="text" value={animalData.sexo} readOnly />
-                    </div>
-                    <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Peso (KG)</label>
-                    <input style={styles.inputReadOnly} type="text" value={animalData.peso} readOnly />
-                    </div>
-                </div>
-
-                <label style={styles.labelCentered}>Descripcion</label>
-                <input style={styles.inputReadOnly} type="text" value={animalData.descripcion} readOnly />
-
-                <label style={styles.labelCentered}>Ingresar observaciones</label>
-                <textarea 
-                    style={styles.textArea} 
-                    value={observaciones} 
-                    onChange={e => setObservaciones(e.target.value)} 
-                    required 
-                />
-
-                <label style={styles.labelCentered}>Seleccione el estado del animal</label>
-                <select 
-                    style={styles.selectInput} 
-                    value={estadoAnimal} 
-                    onChange={e => setEstadoAnimal(e.target.value)} 
-                    required
-                >
-                    <option value="" disabled>Seleccionar un estado</option>
-                    <option value="Apto para vacunar">Apto para vacunar</option>
-                    <option value="No apto">No apto</option>
-                </select>
-
-                <button type="submit" style={styles.buttonSubmit}>
-                    Registrar revision
-                </button>
-                </form>
-            )}
-
-            {/* BOTÓN INACTIVO SI NO HAY ANIMAL (Simulando vista inicial 1-FE-ingreso-animal) */}
-            {!animalData && (
-                <button type="button" disabled style={styles.buttonSubmitDisabled}>
-                Registrar revision
-                </button>
-            )}
             </div>
-        </div>
         </div>
     );
-    }
+}
 
     // -------------------------------------------------------------------------
     // ESTILOS
