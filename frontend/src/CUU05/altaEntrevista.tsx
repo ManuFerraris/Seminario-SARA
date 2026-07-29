@@ -13,7 +13,6 @@ interface Animal {
   estado: string;
 }
 
-// Interfaz para guardar los datos de la respuesta exitosa
 interface EntrevistaExitosa {
   nro_animal: number;
   fecha: string;
@@ -44,16 +43,9 @@ export default function AltaEntrevista() {
     if (!token) return null;
 
     try {
-      // Agarramos la segunda parte del token (el payload)
       const payloadBase64 = token.split('.')[1];
-      
-      // Lo decodificamos de Base64 a texto normal
       const payloadDecodificado = atob(payloadBase64);
-      
-      // Lo convertimos a un objeto JSON de JavaScript
       const payloadJson = JSON.parse(payloadDecodificado);
-      
-      // Retornamos el DNI
       return payloadJson.dni;
     } catch (error) {
       console.error("Error leyendo el token:", error);
@@ -70,10 +62,7 @@ export default function AltaEntrevista() {
     setCargandoAnimales(true);
 
     try {
-      // 1. Buscamos solo los animales disponibles
       const response = await api.get('/animal/estado-disponible');
-      console.log('Animales disponibles:', response.data.data);
-      // Mapeamos los datos del backend a tu interfaz Animal
       const animalesMapeados = response.data.data.map((a: any) => ({
         id: a.nro_animal,
         especie: a.especie,
@@ -83,7 +72,6 @@ export default function AltaEntrevista() {
       }));
       
       setAnimales(animalesMapeados);
-      console.log('Animales mapeados:', animalesMapeados);
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los animales.' });
     } finally {
@@ -92,8 +80,6 @@ export default function AltaEntrevista() {
   };
 
   const handleAdoptarClic = (animalId: number) => {
-    // Ya no hacemos el chequeo hardcodeado acá. 
-    // Avanzamos a la selección de fecha y validamos todo en el submit final.
     setSelectedAnimalId(animalId);
     setCurrentView('DATE_TIME_SELECT');
   };
@@ -101,11 +87,7 @@ export default function AltaEntrevista() {
   const handleConfirmarFechaHora = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaEntrevista || !horaEntrevista) {
-      Swal.fire({ 
-        icon: 'info', 
-        title: 'Atención', 
-        text: 'Debe seleccionar fecha y hora.' 
-      });
+      Swal.fire({ icon: 'info', title: 'Atención', text: 'Debe seleccionar fecha y hora.' });
       return;
     }
 
@@ -120,19 +102,16 @@ export default function AltaEntrevista() {
     }
 
     try {
-      // 3. Unificamos la fecha y hora para que el backend de Node lo entienda como Date
       const fechaHoraCombinada = `${fechaEntrevista}T${horaEntrevista}:00`;
 
-      // 4. Armamos el payload con los nombres exactos que espera el controlador
       const payload = {
         nro_animal: selectedAnimalId,
         fecha_hora: fechaHoraCombinada,
-        dni_adoptante: dni_adoptante // ¡Ahora sí enviamos el real!
+        dni_adoptante: dni_adoptante
       };
 
       const response = await api.post('/entrevista/registrar', payload);
       
-      // Guardamos los datos que devuelve el backend
       setDatosExito({
         nro_animal: response.data.data.nro_animal,
         fecha: fechaEntrevista,
@@ -169,7 +148,7 @@ export default function AltaEntrevista() {
       setFechaEntrevista('');
       setHoraEntrevista('');
       setDatosExito(null);
-      handleQuieroAdoptar(); // Recargamos la lista por si el animal ya no está disponible
+      handleQuieroAdoptar();
     } else if (currentView === 'DATE_TIME_SELECT') {
       setCurrentView('ANIMAL_LIST');
     } else if (currentView === 'ANIMAL_LIST') {
@@ -180,7 +159,7 @@ export default function AltaEntrevista() {
   };
 
   // -------------------------------------------------------------------------
-  // VISTA 4: ÉXITO (3-FS-entevista_confirmada)
+  // VISTA 4: ÉXITO (3-FS-entrevista_confirmada)
   // -------------------------------------------------------------------------
   if (currentView === 'SUCCESS' && datosExito) {
     return (
@@ -233,8 +212,6 @@ export default function AltaEntrevista() {
   // VISTA 3: DEFINIR FECHA (2-FE-listado_fecha_hora)
   // -------------------------------------------------------------------------
   if (currentView === 'DATE_TIME_SELECT') {
-    // Igual que tu código original... (lo omito para no alargar la respuesta, 
-    // pero funciona exactamente igual usando tus estados)
     return (
       <div style={styles.container}>
         <div style={styles.headerRow}>
@@ -316,7 +293,6 @@ export default function AltaEntrevista() {
   // VISTA 1: LANDING PAGE (1-FE-seleccion_ficha)
   // -------------------------------------------------------------------------
   return (
-    // Queda exactamente igual a tu código original...
     <div style={styles.container}>
       <div style={styles.headerRowLanding}>
         <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
@@ -326,16 +302,68 @@ export default function AltaEntrevista() {
 
       <div style={styles.scrollableWrapper}>
         <div style={styles.landingContent}>
-          <h2 style={styles.sectionTitle}>Quienes somos ?</h2>
-          <p style={styles.paragraphText}>Lorem ipsum...</p>
+          
+          {/* FOTO DEL PERRITO */}
+          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+            <img 
+              src="/perrito.jpg" // <-- PONÉ TU FOTO EN LA CARPETA PUBLIC O CAMBIÁ POR LA IMPORTACIÓN
+              alt="Perrito rescatado en adopción" 
+              style={{
+                width: '100%',
+                maxWidth: '450px',
+                height: '280px',
+                objectFit: 'cover',
+                borderRadius: '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+                border: '3px solid #3498DB'
+              }}
+            />
+          </div>
+
+          {/* QUIÉNES SOMOS */}
+          <h2 style={styles.sectionTitle}>¿Quiénes somos?</h2>
+          <p style={styles.paragraphText}>
+            En <strong>Protectora SARA</strong> somos una organización sin fines de lucro dedicada al rescate, 
+            rehabilitación y reubicación de animales en situación de abandono o vulnerabilidad. Nacimos con el sueño 
+            de darles una segunda oportunidad, conectando a cada uno de nuestros rescatados con familias 
+            responsables y llenas de amor a través de un sistema transparente y ágil.
+          </p>
+
+          {/* NUESTRA MISIÓN */}
+          <h2 style={styles.sectionTitle}>Nuestra Misión</h2>
+          <p style={styles.paragraphText}>
+            Garantizar el bienestar integral de los animales rescatados brindándoles atención médica veterinaria, 
+            socialización y refugio temporal, mientras gestionamos procesos de adopción conscientes que aseguren 
+            hogares seguros y definitivos para toda su vida.
+          </p>
+
+          {/* NUESTROS VALORES */}
+          <h2 style={styles.sectionTitle}>Nuestros Valores</h2>
+          <ul style={{ 
+            textAlign: 'left', 
+            color: '#34495E', 
+            fontSize: '16px', 
+            lineHeight: '1.6', 
+            marginBottom: '30px',
+            paddingLeft: '20px' 
+          }}>
+            <li><b>Compromiso por la vida:</b> Velamos por cada animal desde su ingreso hasta su adaptación en un nuevo hogar.</li>
+            <li><b>Transparencia:</b> Trazabilidad completa en revisiones médicas, entrevistas y gestión de donaciones.</li>
+            <li><b>Adopción responsable:</b> Evaluamos a cada adoptante para lograr la compatibilidad ideal entre familia y mascota.</li>
+            <li><b>Empatía:</b> Respetamos los tiempos de recuperación física y emocional de cada animal.</li>
+          </ul>
+
+          {/* BOTÓN CTA */}
           <button style={styles.btnQuieroAdoptar} onClick={handleQuieroAdoptar}>
-            Quiero adoptar!
+            ¡Quiero adoptar!
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+// ... (Acá pegás tus styles abajo)
 
 
     // -------------------------------------------------------------------------
@@ -501,14 +529,14 @@ export default function AltaEntrevista() {
         fontWeight: 'bold',
     },
     input: {
-        backgroundColor: '#ECF0F1',
+        backgroundColor: '#070a0a',
         border: '1px solid #BDC3C7',
         borderRadius: '5px',
         padding: '12px',
         marginBottom: '25px',
         fontSize: '14px',
         textAlign: 'center',
-        color: '#2C3E50',
+        color: '#f9f9f9',
         outline: 'none',
     },
     buttonSubmit: {

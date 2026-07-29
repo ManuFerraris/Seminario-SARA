@@ -20,7 +20,7 @@ export class RegistrarResultadoEntrevista {
         }
 
         // 2. Validación de Estado (solo se evalúan entrevistas pendientes)
-        if (entrevista.estado !== 'Pendiente') {
+        if ((entrevista.estado !== 'Pendiente') && (entrevista.estado !== 'Reprogramada')) {
             return {
                 success: false,
                 status: 400,
@@ -32,7 +32,7 @@ export class RegistrarResultadoEntrevista {
         // 3. Mapeo del resultado
         entrevista.estado = dto.estado; // 'Aprobada', 'Rechazada', 'Cancelada'
         entrevista.descripcion = dto.descripcion;
-        entrevista.aprobada = (dto.estado === 'Aprobada');
+        entrevista.aprobada = true;
 
         // 4. Regla de Negocio CLAVE: Liberar al animal si no se aprobó
         if (dto.estado === 'Rechazada' || dto.estado === 'Cancelada') {

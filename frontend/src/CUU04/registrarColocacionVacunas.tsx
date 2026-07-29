@@ -46,7 +46,7 @@ export default function ColocacionVacunas() {
 
     try {
       // 1. Petición GET al backend
-      const response = await api.get(`/ficha-medica/${nroFicha}`);
+      const response = await api.get(`/fichamedica/${nroFicha}`);
       const ficha = response.data.data;
 
       // 2. Mapeamos los datos. Ajustá "ficha.animal.nro_animal" según cómo venga tu JSON real

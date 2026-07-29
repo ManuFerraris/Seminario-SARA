@@ -9,7 +9,7 @@ GET http://localhost:3000/api/persona/33333333
 ### ----------------------------------------------------
 
 ### create Persona Normal (Ej: Posible Donante)
-POST http://localhost:3000/api/persona
+POST http://localhost:3000/api/persona/crear-persona
 Content-Type: application/json
 
 {
@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 ### create Persona Colaborador
-POST http://localhost:3000/api/persona
+POST http://localhost:3000/api/persona/crear-persona
 Content-Type: application/json
 
 {
@@ -36,22 +36,22 @@ Content-Type: application/json
 }
 
 ### create Persona Veterinario
-POST http://localhost:3000/api/persona
+POST http://localhost:3000/api/persona/crear-persona
 Content-Type: application/json
 
 {
-    "dni": "45521369",
-    "nombre": "Martín",
-    "apellido": "Quinteros",
-    "email": "marvet@clinicavet.com",
+    "dni": "78541369",
+    "nombre": "Hernan",
+    "apellido": "Mastantuono",
+    "email": "masherano@clinicavet.com",
     "contrasenia": "ab123456",
     "telefono": "3415550003",
-    "matricula": "MP-0001",
-    "anios_experiencia": 3
+    "matricula": "MP-0002",
+    "anios_experiencia": 7
 }
 
 ### create Persona Adoptante
-POST http://localhost:3000/api/persona
+POST http://localhost:3000/api/persona/crear-persona
 Content-Type: application/json
 
 {

@@ -21,7 +21,7 @@ export class RescateRepositoryORM implements RescateRepository {
 
     async createRescate(rescate: Rescate): Promise<Rescate> {
         this.em.persist(rescate);
-        this.em.flush();
+        await this.em.flush();
         return rescate;
     };
 

@@ -45,7 +45,8 @@ export const getOne = async (req:Request, res:Response):Promise<void> => {
             res.status(400).json({ message: codError , data: undefined });
             return;
         };
-        
+        //console.log('Número de ficha médica recibido en el controlador:', req.params.nro_ficha);
+        //console.log('Número de ficha médica recibido en el controlador:', codVal);
         const resultado = await casouso.ejecutar(codVal);
 
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });

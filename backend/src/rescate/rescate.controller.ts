@@ -167,6 +167,8 @@ export const registrarRescate = async (req: Request, res: Response): Promise<voi
         const resultado = await casoUso.ejecutar(dto);
     
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        console.log('Resultado del registro de rescate:', resultado);
+        
         return;
     } catch (error: unknown) {
         if (error instanceof Error) {

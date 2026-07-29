@@ -90,6 +90,7 @@ export class AltaEntrevistaCU {
                 nuevaEntrevista.fecha_hora = new Date(dto.fecha_hora);
                 nuevaEntrevista.fecha_hora_rep = dto.fecha_hora_rep ? new Date(dto.fecha_hora_rep) : null;
                 nuevaEntrevista.estado = dto.estado;
+                nuevaEntrevista.animal = animal;
         
                 if (dto.descripcion) nuevaEntrevista.descripcion = dto.descripcion;
                 if (dto.aprobada !== undefined) nuevaEntrevista.aprobada = dto.aprobada;

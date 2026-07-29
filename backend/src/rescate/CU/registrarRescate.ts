@@ -118,13 +118,13 @@ export class RegistrarRescate {
         nuevoRescate.fecha_rescate = fechaRescate;
         nuevoRescate.lugar_rescate = dto.lugar_rescate_descripcion.trim();
         
-        await this.rescateRepository.createRescate(nuevoRescate);
-        
+        const rescateGuardado = await this.rescateRepository.createRescate(nuevoRescate); 
+        console.log("Rescate guardado:", rescateGuardado);
         return {
             success: true,
             status: 201,
             messages: ["Rescate creado exitosamente"],
-            data: nuevoRescate
+            data: rescateGuardado
         };
     }
 }

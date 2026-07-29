@@ -121,11 +121,10 @@ export default function RegistroRescate() {
 
             // 2. Enviamos al endpoint que armamos en el paso anterior
             const response = await api.post('/rescate/registrar-rescate', payload);
-
-            if (response.data.success) {
+            console.log('Respuesta del backend:', response.data);
+            if (response.status === 200 || response.status === 201) {
                 const rescateCreado = response.data.data;
                 
-                // 1. Disparamos la notificación de éxito VERIFICAR MENSAJE SEGUN BOSQUEJO!!!
                 Swal.fire({
                     icon: 'success',
                     title: '¡Rescate registrado!',
@@ -134,13 +133,12 @@ export default function RegistroRescate() {
                     showConfirmButton: false
                 });
                 
-                // 2. Guardamos los IDs reales
+                // ATENCIÓN: Verificá si tu back devuelve 'nro_rescate' o 'id_rescate'
                 setRescateExitoso({
-                    nro_rescate: rescateCreado.nro_rescate, 
+                    nro_rescate: rescateCreado.nro_rescate || rescateCreado.id_rescate || rescateCreado.id, 
                     nro_animal: rescateCreado.animal.nro_animal 
                 });
                 
-                // 3. Pasamos a la vista de resumen (SUCCESS)
                 setCurrentView('SUCCESS');
             }
 
@@ -468,6 +466,7 @@ export default function RegistroRescate() {
         fontSize: '20px',
         fontWeight: 'bold',
         marginBottom: '40px',
+        color: '#000000',
     },
     successGrid: {
         display: 'flex',
@@ -486,13 +485,14 @@ export default function RegistroRescate() {
         fontSize: '14px',
         fontWeight: 'bold',
         marginBottom: '10px',
+        color: '#000000',
     },
     successValueBox: {
-        border: '2px solid #3498DB',
+        border: '2px solid #0f0fd4',
         padding: '10px 30px',
         fontSize: '18px',
         fontWeight: 'bold',
-        color: '#3498DB',
+        color: '#0a07d6',
         minWidth: '100px',
     }
 };

@@ -72,10 +72,11 @@ export const createEntrevista = async (req: Request, res: Response) => {
         const em = orm.em.fork();
         
         const entRepo = new EntrevistaRepositoryORM(em);
-        const personaRepo = new PersonaRepositoryORM(em); // Nuevo repo inyectado
+        const personaRepo = new PersonaRepositoryORM(em);
+        const animalRepo = new AnimalRepositoryORM(em);
         
         // El caso de uso ahora recibe ambos repositorios
-        const casoUso = new CreateEntrevista(entRepo, personaRepo);
+        const casoUso = new CreateEntrevista(entRepo, personaRepo, animalRepo);
         const dto = req.body;
 
         const resultado = await casoUso.ejecutar(dto);
@@ -210,11 +211,7 @@ export const registrarEntrevista = async (req: Request, res: Response): Promise<
         console.log('DTO recibido en el controlador registrarEntrevista:', dto);
         const resultado = await casoUso.ejecutar(dto);
         console.log('Resultado del caso de uso registrarEntrevista:', resultado);
-        res.status(resultado.status).json({ 
-            success: resultado.success, 
-            messages: resultado.messages, 
-            data: resultado.data 
-        });
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
 
     } catch (error: unknown) {

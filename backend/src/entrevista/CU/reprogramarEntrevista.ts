@@ -19,6 +19,15 @@ export class ReprogramarEntrevista {
             };
         }
 
+        if(entrevista.estado === 'Reprogramada') {
+            return {
+                success: false,
+                status: 400,
+                messages: ["La entrevista ya fue reprogramada anteriormente."],
+                data: undefined
+            };
+        };
+
         if (entrevista.estado !== 'Pendiente') {
             return {
                 success: false,
@@ -56,7 +65,7 @@ export class ReprogramarEntrevista {
         entrevista.fecha_hora_rep = nuevaFechaHora;
         entrevista.descripcion = dto.descripcion;
         // Nos aseguramos de que siga estando pendiente para ser evaluada en el futuro
-        entrevista.estado = 'Pendiente'; 
+        entrevista.estado = 'Reprogramada'; 
 
         // 5. Persistencia
         const entrevistaActualizada = await this.entRepo.actualizarEntrevista(entrevista);

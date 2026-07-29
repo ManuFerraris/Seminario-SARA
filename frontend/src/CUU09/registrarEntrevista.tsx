@@ -71,7 +71,7 @@ export default function ResultadoEntrevista() {
             //console.log('Respuesta del backend al buscar entrevista:', response.data);
             const data = response.data.data;
 
-            if (data.estado !== 'Pendiente') {
+            if (data.estado === 'Cancelada' || data.estado === 'Rechazada' || data.estado === 'Aprobada') {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Atención',
