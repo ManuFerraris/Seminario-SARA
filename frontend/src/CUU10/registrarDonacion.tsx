@@ -1,8 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 type ViewState = 'MAIN_FORM' | 'ALTA_DONANTE' | 'SUCCESS';
+
+interface DonacionExitosa {
+    nro_donacion?: string | number;
+    fecha_registro: string;
+    tipo: string;
+    cantidad: string;
+    descripcion: string;
+    fecha_vto?: string;
+    stock_actualizado?: number;
+}
 
 export default function RegistrarDonacion() {
     const navigate = useNavigate();
@@ -19,6 +30,8 @@ export default function RegistrarDonacion() {
     const [nuevoApellido, setNuevoApellido] = useState('');
     const [nuevoTelefono, setNuevoTelefono] = useState('');
     const [nuevoEmail, setNuevoEmail] = useState('');
+    const [nuevaContrasena, setNuevaContrasena] = useState('');
+    const [confirmarContrasena, setConfirmarContrasena] = useState('');
 
     // Estados - Datos de Donación
     const [tipoDonacion, setTipoDonacion] = useState('');
@@ -26,57 +39,133 @@ export default function RegistrarDonacion() {
     const [descripcion, setDescripcion] = useState('');
     const [fechaVto, setFechaVto] = useState('');
 
+    // Estado - Datos de Éxito
+    const [datosExito, setDatosExito] = useState<DonacionExitosa | null>(null);
+
+    // -------------------------------------------------------------------------
+    // FORMATEADOR
+    // -------------------------------------------------------------------------
+    const formatearFecha = (fechaString?: string) => {
+        if (!fechaString) return '';
+        const soloFecha = fechaString.split('T')[0];
+        const [year, month, day] = soloFecha.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
     // -------------------------------------------------------------------------
     // MÉTODOS DE ACCIÓN
     // -------------------------------------------------------------------------
 
-    const handleBuscarDonante = () => {
-        if (!dni) return;
+    const handleBuscarDonante = async () => {
+        if (!dni.trim()) return;
 
-        // Simulación: Solo el DNI 1210000 está registrado
-        if (dni === '1210000') {
-        setDonorFound(true);
-        } else {
-        setDonorFound(false);
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            text: 'El donante no se encuentra registrado',
-            confirmButtonColor: '#F39C12',
-        }).then(() => {
-            // Redirigir al formulario de Alta después de cerrar la alerta
-            setCurrentView('ALTA_DONANTE');
-        });
+        try {
+            // Buscamos si el donante ya existe en la BD
+            await api.get(`/persona/${dni}`);
+            
+            // Si el backend devuelve 200, significa que existe
+            setDonorFound(true);
+            
+        } catch (error: any) {
+            setDonorFound(false);
+            
+            // Si devuelve 404 (o el código que uses para no encontrado)
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'El donante no se encuentra registrado.',
+                confirmButtonColor: '#F39C12',
+            }).then(() => {
+                setCurrentView('ALTA_DONANTE');
+            });
         }
     };
 
-    const handleAltaDonante = (e: React.FormEvent) => {
+    const handleAltaDonante = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!nuevoNombre || !nuevoApellido || !nuevoTelefono || !nuevoEmail) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos del donante.' });
-        return;
+        
+        if (!nuevoNombre || !nuevoApellido || !nuevoTelefono || !nuevoEmail || !nuevaContrasena || !confirmarContrasena) {
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos del donante.' });
+            return;
+        }
+
+        if (nuevaContrasena !== confirmarContrasena) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Las contraseñas no coinciden.' });
+            return;
         }
         
-        // Al registrar el donante, simulamos que ahora existe y volvemos a la vista principal
-        setDonorFound(true);
-        setCurrentView('MAIN_FORM');
-        Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: 'Donante dado de alta correctamente. Proceda a registrar la donación.',
-        timer: 2000,
-        showConfirmButton: false
-        });
+        try {
+            const payload = {
+                dni: dni,
+                nombre: nuevoNombre,
+                apellido: nuevoApellido,
+                telefono: nuevoTelefono,
+                email: nuevoEmail,
+                contrasenia: nuevaContrasena
+                // Si tu BD requiere un rol (ej: 'Donante'), agregalo acá
+            };
+
+            await api.post('/persona/crear-persona', payload);
+            
+            setDonorFound(true);
+            setCurrentView('MAIN_FORM');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Donante dado de alta correctamente. Proceda a registrar la donación.',
+                timer: 2500,
+                showConfirmButton: false
+            });
+
+        } catch (error: any) {
+            let mensajeBack = 'Ocurrió un error al registrar al donante.';
+            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+            
+            Swal.fire({ icon: 'error', title: 'Error', text: mensajeBack });
+        }
     };
 
-    const handleRegistrarDonacion = (e: React.FormEvent) => {
+    const handleRegistrarDonacion = async (e: React.FormEvent) => {
         e.preventDefault();
+        
         if (!tipoDonacion || !cantidad || !descripcion) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete los datos obligatorios de la donación.' });
-        return;
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete los datos obligatorios de la donación.' });
+            return;
         }
         
-        setCurrentView('SUCCESS');
+        try {
+            const payload = {
+                dni_donante: dni,
+                tipo: tipoDonacion,
+                cantidad: Number(cantidad),
+                descripcion: descripcion,
+                fecha_vto: fechaVto || undefined // Solo lo enviamos si tiene valor
+            };
+
+            const response = await api.post('/donacion/registrar', payload);
+            const dataBack = response.data.data;
+
+            // Guardamos los datos para la vista de éxito
+            setDatosExito({
+                nro_donacion: dataBack.nro_donacion || dataBack.id_donacion,
+                fecha_registro: dataBack.fecha || new Date().toISOString(), // Fallback por si el back no la devuelve
+                tipo: tipoDonacion,
+                cantidad: cantidad,
+                descripcion: descripcion,
+                fecha_vto: fechaVto,
+                // Si tu backend devuelve el stock actualizado para las vacunas, lo guardamos
+                stock_actualizado: dataBack.stock_actualizado
+            });
+
+            setCurrentView('SUCCESS');
+
+        } catch (error: any) {
+            let mensajeBack = 'Ocurrió un error al registrar la donación.';
+            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+            
+            Swal.fire({ icon: 'error', title: 'Error', text: mensajeBack });
+        }
     };
 
     const handleReiniciarFlujo = () => {
@@ -87,22 +176,22 @@ export default function RegistrarDonacion() {
         setDescripcion('');
         setFechaVto('');
         
-        // Limpiar campos de alta
         setNuevoNombre('');
         setNuevoApellido('');
         setNuevoTelefono('');
         setNuevoEmail('');
         
+        setDatosExito(null);
         setCurrentView('MAIN_FORM');
     };
 
     const handleVolver = () => {
         if (currentView === 'ALTA_DONANTE') {
-        setCurrentView('MAIN_FORM');
+            setCurrentView('MAIN_FORM');
         } else if (currentView === 'SUCCESS') {
-        handleReiniciarFlujo();
+            handleReiniciarFlujo();
         } else {
-        navigate(-1);
+            navigate(-1);
         }
     };
 
@@ -111,45 +200,46 @@ export default function RegistrarDonacion() {
     // -------------------------------------------------------------------------
 
     // VISTA 3: ÉXITO (3-FS-registro-donacion)
-    if (currentView === 'SUCCESS') {
-        const isVacuna = tipoDonacion === 'Vacuna';
+    if (currentView === 'SUCCESS' && datosExito) {
+        const isVacuna = datosExito.tipo === 'Vacuna';
         
         return (
         <div style={styles.container}>
             <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar donacion</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+                <div style={{ flex: 1 }}></div>
+                <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
 
             <div style={styles.successCard}>
-            <h2 style={styles.successTitle}>Donacion registrada!</h2>
+            <h2 style={styles.successTitle}>Donación registrada!</h2>
             
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Tipo</span><span style={styles.infoValue}>{tipoDonacion}</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Cantidad</span><span style={styles.infoValue}>{cantidad}</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de registro</span><span style={styles.infoValue}>19/07/2026</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Tipo</span><span style={styles.infoValue}>{datosExito.tipo}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Cantidad</span><span style={styles.infoValue}>{datosExito.cantidad}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de registro</span><span style={styles.infoValue}>{formatearFecha(datosExito.fecha_registro)}</span></div>
             
-            {/* Mantenemos "Nro. Entrevista" tal como figura en el bosquejo, aunque probablemente deba ser "Nro. Donacion" */}
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Entrevista</span><span style={styles.infoValue}>10</span></div>
+            {datosExito.nro_donacion && (
+                <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Donación</span><span style={styles.infoValue}>{datosExito.nro_donacion}</span></div>
+            )}
             
             <div style={styles.infoColumn}>
-                <span style={styles.infoLabel}>Descripcion</span>
-                <div style={styles.readOnlyTextAreaBox}>{descripcion}</div>
+                <span style={styles.infoLabel}>Descripción</span>
+                <div style={styles.readOnlyTextAreaBox}>{datosExito.descripcion}</div>
             </div>
 
-            {fechaVto && (
-                <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de vencimiento</span><span style={styles.infoValue}>{fechaVto.split('-').reverse().join('/')}</span></div>
+            {datosExito.fecha_vto && (
+                <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de vencimiento</span><span style={styles.infoValue}>{formatearFecha(datosExito.fecha_vto)}</span></div>
             )}
 
-            {/* Lógica condicional: Si es vacuna, mostramos stock actualizado */}
-            {isVacuna && (
+            {/* Solo mostramos el stock si es vacuna y el backend nos devolvió ese dato */}
+            {isVacuna && datosExito.stock_actualizado !== undefined && (
                 <div style={styles.infoRow}>
-                <span style={styles.infoLabel}>Stock actualizado</span>
-                <span style={styles.infoValueSuccess}>{Number(cantidad) + 5}</span> {/* Simulamos un stock previo de 5 */}
+                <span style={styles.infoLabel}>Stock actualizado de vacunas</span>
+                <span style={styles.infoValueSuccess}>{datosExito.stock_actualizado}</span>
                 </div>
             )}
 
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>
-                Evaluar otra entrevista {/* Texto original del bosquejo */}
+                Registrar otra donación
             </button>
             </div>
         </div>
@@ -175,11 +265,17 @@ export default function RegistrarDonacion() {
             <label style={styles.labelCentered}>Ingrese el apellido</label>
             <input style={styles.input} type="text" value={nuevoApellido} onChange={e => setNuevoApellido(e.target.value)} required />
 
-            <label style={styles.labelCentered}>Ingrese el telefono</label>
+            <label style={styles.labelCentered}>Ingrese el teléfono</label>
             <input style={styles.input} type="tel" value={nuevoTelefono} onChange={e => setNuevoTelefono(e.target.value.replace(/\D/g, ''))} required />
 
             <label style={styles.labelCentered}>Ingrese el email</label>
             <input style={styles.input} type="email" value={nuevoEmail} onChange={e => setNuevoEmail(e.target.value)} required />
+
+            <label style={styles.labelCentered}>Ingrese su contraseña</label>
+            <input style={styles.input} type="password" value={nuevaContrasena} onChange={e => setNuevaContrasena(e.target.value)} required />
+
+            <label style={styles.labelCentered}>Confirme su contraseña</label>
+            <input style={styles.input} type="password" value={confirmarContrasena} onChange={e => setConfirmarContrasena(e.target.value)} required />
 
             <button type="submit" style={styles.buttonSubmit}>
                 Dar de alta
@@ -193,13 +289,13 @@ export default function RegistrarDonacion() {
     return (
         <div style={styles.container}>
         <div style={styles.headerRow}>
-            <h1 style={styles.title}>Registrar donacion</h1>
+            <h1 style={styles.title}>Registrar donación</h1>
             <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
         </div>
 
         <div style={styles.scrollableFormWrapper}>
             <div style={styles.formContainer}>
-            <label style={styles.labelCentered}>Ingrese el numero de DNI del donante</label>
+            <label style={styles.labelCentered}>Ingrese el número de DNI del donante</label>
             
             <div style={{ display: 'flex', width: '100%', marginBottom: '25px' }}>
                 <input 
@@ -213,7 +309,7 @@ export default function RegistrarDonacion() {
                 value={dni} 
                 onChange={e => {
                     setDni(e.target.value.replace(/\D/g, ''));
-                    if (donorFound) setDonorFound(false); // Resetear estado si cambia el input
+                    if (donorFound) setDonorFound(false);
                 }} 
                 />
                 <button 
@@ -243,7 +339,7 @@ export default function RegistrarDonacion() {
                         <option value="Alimento">Alimento</option>
                         <option value="Vacuna">Vacuna</option>
                         <option value="Medicamento">Medicamento</option>
-                        <option value="Insumo">Insumo general</option>
+                        <option value="Insumo general">Insumo general</option>
                     </select>
                     </div>
                     <div style={styles.inputGroup}>
@@ -252,7 +348,7 @@ export default function RegistrarDonacion() {
                     </div>
                 </div>
 
-                <label style={styles.labelCentered}>Descripcion</label>
+                <label style={styles.labelCentered}>Descripción</label>
                 <textarea 
                     style={styles.textArea} 
                     value={descripcion} 
@@ -261,11 +357,24 @@ export default function RegistrarDonacion() {
                     required 
                 />
 
-                <label style={styles.labelCentered}>Fecha vto. (opcional)</label>
-                <input style={styles.inputForm} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} />
+                {/* Si el tipo de donación es Vacuna o Medicamento, hacemos que la fecha de vencimiento sea un dato más relevante (o incluso obligatorio en el backend) */}
+                {(tipoDonacion === 'Vacuna' || tipoDonacion === 'Medicamento') && (
+                    <>
+                        <label style={styles.labelCentered}>Fecha vto. (Sugerida para {tipoDonacion})</label>
+                        <input style={styles.inputForm} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} required={tipoDonacion === 'Vacuna'} />
+                    </>
+                )}
+                
+                {(tipoDonacion !== 'Vacuna' && tipoDonacion !== 'Medicamento') && (
+                    <>
+                        <label style={styles.labelCentered}>Fecha vto. (opcional)</label>
+                        <input style={styles.inputForm} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} />
+                    </>
+                )}
+
 
                 <button type="submit" style={styles.buttonSubmit}>
-                    Registrar donacion
+                    Registrar donación
                 </button>
                 </form>
             )}
@@ -274,7 +383,7 @@ export default function RegistrarDonacion() {
         </div>
         </div>
     );
-    }
+}
 
     // -------------------------------------------------------------------------
     // ESTILOS

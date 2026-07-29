@@ -74,6 +74,7 @@ export const create = async (req:Request, res:Response):Promise<void> => {
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
         const resultado = await casouso.ejecutar(dto);
+        console.log('Resultado del caso de uso CreatePersona:', resultado);
     
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
