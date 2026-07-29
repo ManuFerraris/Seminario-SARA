@@ -1,5 +1,7 @@
 import { useState } from 'react';
-//import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import api from '../axiosConfig';
 
 export default function Registro() {
   const [nombre, setNombre] = useState('');
@@ -10,23 +12,62 @@ export default function Registro() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Pequeña validación para evitar que el usuario se equivoque en la contraseña
+    // Validación de contraseñas con Swal en lugar de alert()
     if (password !== confirmPassword) {
-      alert('Las contraseñas no coinciden. Por favor, verifíquelas.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'Las contraseñas no coinciden. Por favor, verifíquelas.',
+        confirmButtonColor: '#F39C12',
+      });
       return;
     }
 
-    // Objeto con los datos listos para ser enviados a tu base de datos
-    const newUser = { nombre, apellido, dni, telefono, email, password };
-    console.log('Intentando registrar usuario:', newUser);
+    try {
+      // Objeto con los datos listos para ser enviados a tu base de datos
+      const payload = { 
+        nombre, 
+        apellido, 
+        dni, 
+        telefono, 
+        email, 
+        contrasenia: password 
+      };
+      
+      console.log('Intentando registrar usuario:', payload);
 
-    // Al finalizar el registro correctamente, podrías redirigir al Login o al Inicio
-    // navigate('/login');
+      // Hacemos el POST al backend. Ajustá '/usuario/registrar' o '/auth/signup' según tu ruta.
+      await api.post('/persona/crear-persona', payload);
+
+      // Si todo sale bien, mostramos mensaje de éxito y redirigimos al Login
+      Swal.fire({
+        icon: 'success',
+        title: '¡Registro exitoso!',
+        text: 'Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.',
+        confirmButtonColor: '#2ECC71',
+      }).then(() => {
+        navigate('/login'); // Ajustá la ruta si tu pantalla de login se llama distinto
+      });
+
+    } catch (error: any) {
+      // Capturamos errores del backend (ej: "El DNI ya está registrado", "El email ya existe")
+      let mensajeBack = 'Ocurrió un error al intentar registrarte.';
+      if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+      else if (error.response?.data?.message) mensajeBack = error.response.data.message;
+      else if (error.response?.data?.error && typeof error.response.data.error === 'string') mensajeBack = error.response.data.error;
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Atención',
+        text: mensajeBack,
+        confirmButtonColor: '#E74C3C',
+      });
+    }
   };
 
   return (
@@ -67,7 +108,6 @@ export default function Registro() {
           inputMode="numeric"
           placeholder="Ej: 11222333"
           value={dni}
-          // Esta línea bloquea cualquier carácter que no sea un número (0-9)
           onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))} 
           required
         />
@@ -78,7 +118,6 @@ export default function Registro() {
           type="tel"
           placeholder="Ej: 0341300600"
           value={telefono}
-          // Esta línea también bloquea cualquier carácter que no sea un número
           onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))} 
           required
         />
@@ -101,6 +140,7 @@ export default function Registro() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={6} // Buena práctica para evitar contraseñas muy cortas
         />
 
         <label style={styles.label}>Repita su contraseña</label>
@@ -111,6 +151,7 @@ export default function Registro() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          minLength={6}
         />
 
         <button type="submit" style={styles.button}>
@@ -167,7 +208,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #BDC3C7',
     borderRadius: '8px',
     fontSize: '15px',
-    color: '#2C3E50',
+    color: '#cacccf',
     outline: 'none',
   },
   button: {
