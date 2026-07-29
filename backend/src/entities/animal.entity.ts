@@ -3,6 +3,7 @@ import { Adopcion } from './adopcion.entity.js';
 import { FichaMedica } from './ficha-medica.entity.js';
 import { Audiovisual } from './audiovisual.entity.js';
 import { Rescate } from './rescate.entity.js';
+import { Entrevista } from './entrevista.entity.js';
 import { Collection } from '@mikro-orm/core';
 
 @Entity()
@@ -53,4 +54,8 @@ export class Animal {
     // Relación bidireccional: Un animal puede tener muchos rescates
     @OneToMany(() => Rescate, rescate => rescate.animal)
     rescates = new Collection<Rescate>(this);
+
+    @OneToMany(() => Entrevista, (entrevista) => entrevista.animal)
+    entrevistas = new Collection<Entrevista>(this);
+
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from '../axiosConfig'; // Asegurate de importar la instancia de axios configurada
 
 type ViewState = 
     | 'MAIN_FORM' 
@@ -11,14 +12,23 @@ type ViewState =
     | 'SUCCESS_REPROGRAMMED';
 
 interface EntrevistaData {
+    // Datos crudos del backend
+    nro_entrevista?: string | number;
+    fecha?: string;
+    hora?: string;
+    
+    // Datos aplanados para mostrar
     nombreAdoptante: string;
     apellidoAdoptante: string;
+    dniAdoptante: string;
     especieAnimal: string;
     raza: string;
     edad: string;
     sexo: string;
     peso: string;
+    nroAnimal: string | number;
     descripcion: string;
+    id_colaborador?: string | number;
 }
 
 export default function ResultadoEntrevista() {
@@ -28,7 +38,7 @@ export default function ResultadoEntrevista() {
     const [currentView, setCurrentView] = useState<ViewState>('MAIN_FORM');
 
     // Estados - Búsqueda y Datos
-    const [nroEntrevista, setNroEntrevista] = useState('');
+    const [id_entrevista, setNroEntrevista] = useState('');
     const [entrevistaData, setEntrevistaData] = useState<EntrevistaData | null>(null);
 
     // Estados - Resultado
@@ -40,76 +50,149 @@ export default function ResultadoEntrevista() {
     const [nuevaHora, setNuevaHora] = useState('');
 
     // -------------------------------------------------------------------------
+    // FORMATEADORES
+    // -------------------------------------------------------------------------
+    const formatearFecha = (fechaString?: string) => {
+        if (!fechaString) return '';
+        const soloFecha = fechaString.split('T')[0]; 
+        const [year, month, day] = soloFecha.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
+    // -------------------------------------------------------------------------
     // MÉTODOS DE ACCIÓN
     // -------------------------------------------------------------------------
 
-    const handleBuscarEntrevista = () => {
-        // Simulación ALERTA 1: Entrevista 1 no existe
-        if (nroEntrevista === '1') {
-        setEntrevistaData(null);
-        Swal.fire({
-            icon: 'warning',
-            title: 'Atencion',
-            text: `Entrevista con numero ${nroEntrevista} no se encuentra registrado`,
-            confirmButtonColor: '#F39C12',
-        });
-        } else if (nroEntrevista.trim() !== '') {
-        // Cargamos datos simulados
-        setEntrevistaData({
-            nombreAdoptante: 'JUAN',
-            apellidoAdoptante: 'PEREZ',
-            especieAnimal: 'PERRO',
-            raza: 'MESTIZO',
-            edad: '3 AÑOS',
-            sexo: 'MACHO',
-            peso: '20 KG',
-            descripcion: 'Animal rescatado en buenas condiciones, apto para convivir con niños.'
-        });
+    const handleBuscarEntrevista = async () => {
+        if (!id_entrevista.trim()) return;
+
+        try {
+            const response = await api.get(`/entrevista/${id_entrevista}`);
+            //console.log('Respuesta del backend al buscar entrevista:', response.data);
+            const data = response.data.data;
+
+            if (data.estado !== 'Pendiente') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: `La entrevista ${id_entrevista} ya fue procesada anteriormente (Estado: ${data.estado}).`,
+                    confirmButtonColor: '#F39C12',
+                });
+                return;
+            }
+
+            const fechaCruda = data.fecha_hora_rep || data.fecha_hora;
+            const [fecha, horaCompleta] = fechaCruda.split('T');
+            const hora = horaCompleta.substring(0, 5);
+
+            setEntrevistaData({
+                nro_entrevista: data.id_entrevista,
+                fecha: fecha,
+                hora: hora,
+                
+                // Ahora sí accedemos a las propiedades del objeto populado
+                dniAdoptante: data.adoptante?.dni || '-',
+                nombreAdoptante: data.adoptante?.nombre || '-',
+                apellidoAdoptante: data.adoptante?.apellido || '-',
+                
+                // Mapeamos los datos del animal (ajustá si los nombres de tus columnas varían)
+                nroAnimal: data.animal?.nro_animal || '-',
+                especieAnimal: data.animal?.especie || '-',
+                raza: data.animal?.raza || '-',
+                edad: data.animal?.edad_estimada?.toString() || '-',
+                sexo: data.animal?.sexo || '-',
+                peso: data.animal?.peso?.toString() || '-',
+                descripcion: data.animal?.descripcion || '-',
+                
+                id_colaborador: data.colaborador?.dni || '-' // O id_colaborador, según tu entidad
+            });
+
+        } catch (error: any) {
+            setEntrevistaData(null);
+            
+            let mensajeBack = `Entrevista con número ${id_entrevista} no encontrada.`;
+            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+            else if (error.response?.data?.message) mensajeBack = error.response.data.message;
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: mensajeBack,
+                confirmButtonColor: '#F39C12',
+            });
         }
     };
 
-    const handleRegistrarResultado = (e: React.FormEvent) => {
+    const handleRegistrarResultado = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!resultado || !descripcionResultado) {
-        Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete el resultado y la descripción.' });
-        return;
+            Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete el resultado y la descripción.' });
+            return;
         }
 
-        // Aquí mapearías el estado booleano para Mikro-ORM según el resultado.
-        // Ejemplo: const isActiva = (resultado !== 'Cancelada'); 
-        
-        switch (resultado) {
-        case 'Aprobada':
-            setCurrentView('SUCCESS_APPROVED');
-            break;
-        case 'Rechazada':
-            setCurrentView('SUCCESS_REJECTED');
-            break;
-        case 'Cancelada':
-            setCurrentView('SUCCESS_CANCELLED');
-            break;
-        case 'Reprogramar':
+        // Si la decisión es reprogramar, no disparamos al backend todavía. 
+        // Llevamos al usuario al formulario de reprogramación.
+        if (resultado === 'Reprogramar') {
             setCurrentView('REPROGRAM_FORM');
-            break;
+            return;
+        }
+
+        // Si es Aprobada, Rechazada o Cancelada, llamamos al backend
+        try {
+            const payload = {
+                estado: resultado,
+                descripcion: descripcionResultado
+            };
+
+            // Ajustá la ruta según tu Controlador
+            await api.post(`/entrevista/${id_entrevista}/resultado`, payload);
+
+            // Cambiamos de vista según el resultado exitoso
+            switch (resultado) {
+                case 'Aprobada':
+                    setCurrentView('SUCCESS_APPROVED');
+                    break;
+                case 'Rechazada':
+                    setCurrentView('SUCCESS_REJECTED');
+                    break;
+                case 'Cancelada':
+                    setCurrentView('SUCCESS_CANCELLED');
+                    break;
+            }
+
+        } catch (error: any) {
+            let mensajeBack = 'Ocurrió un error al procesar la entrevista.';
+            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+            
+            Swal.fire({ icon: 'error', title: 'Error', text: mensajeBack });
         }
     };
 
-    const handleConfirmarReprogramacion = (e: React.FormEvent) => {
+    const handleConfirmarReprogramacion = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Simulación ALERTA 2: Reprogramación no permitida si elige el 1 de Enero de 2020
-        if (nuevaFecha === '2020-01-01') {
-        Swal.fire({
-            icon: 'error',
-            title: 'Atencion',
-            text: 'Reprogramacion no permitida. Elija una fecha futura válida.',
-            confirmButtonColor: '#E74C3C',
-        });
-        return;
-        }
+        try {
+            const payload = {
+                nuevaFecha: nuevaFecha,
+                nuevaHora: nuevaHora,
+                descripcion: descripcionResultado // Lo que escribió el colaborador justificando el cambio
+            };
 
-        setCurrentView('SUCCESS_REPROGRAMMED');
+            await api.put(`/entrevista/${id_entrevista}/reprogramar`, payload);
+            setCurrentView('SUCCESS_REPROGRAMMED');
+
+        } catch (error: any) {
+            let mensajeBack = 'Ocurrió un error al reprogramar.';
+            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: mensajeBack,
+                confirmButtonColor: '#E74C3C',
+            });
+        }
     };
 
     const handleReiniciarFlujo = () => {
@@ -124,11 +207,11 @@ export default function ResultadoEntrevista() {
 
     const handleVolver = () => {
         if (currentView === 'REPROGRAM_FORM') {
-        setCurrentView('MAIN_FORM');
+            setCurrentView('MAIN_FORM');
         } else if (currentView !== 'MAIN_FORM') {
-        handleReiniciarFlujo();
+            handleReiniciarFlujo();
         } else {
-        navigate(-1);
+            navigate(-1);
         }
     };
 
@@ -145,8 +228,8 @@ export default function ResultadoEntrevista() {
             <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
             <div style={styles.successCard}>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Numero entrevista</span><span style={styles.infoValue}>{nroEntrevista}</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha nueva</span><span style={styles.infoValue}>{nuevaFecha.split('-').reverse().join('/')}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Numero entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha nueva</span><span style={styles.infoValue}>{formatearFecha(nuevaFecha)}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Hora nueva</span><span style={styles.infoValue}>{nuevaHora}</span></div>
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
@@ -184,7 +267,6 @@ export default function ResultadoEntrevista() {
             <div style={styles.successCard}>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>Disponible</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Estado entrevista</span><span style={styles.infoValueDanger}>Cancelada</span></div>
-            {/* NOTA PARA BD: Este estado visual "Cancelada" corresponde a `estado = false` en tu tabla de Mikro-ORM */}
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
         </div>
@@ -209,7 +291,7 @@ export default function ResultadoEntrevista() {
     }
 
     // VISTA: APROBADA (3-FS)
-    if (currentView === 'SUCCESS_APPROVED') {
+    if (currentView === 'SUCCESS_APPROVED' && entrevistaData) {
         return (
         <div style={styles.container}>
             <div style={styles.headerRow}>
@@ -217,12 +299,19 @@ export default function ResultadoEntrevista() {
             <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
             <div style={styles.successCard}>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. de adopcion</span><span style={styles.infoValue}>15</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha adopcion</span><span style={styles.infoValue}>19/07/2026</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Entrevista</span><span style={styles.infoValue}>{nroEntrevista}</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Colaborador</span><span style={styles.infoValue}>22</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. DNI adoptante</span><span style={styles.infoValue}>35136842</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. de animal</span><span style={styles.infoValue}>8</span></div>
+            {/* Como de acá se deriva a Registrar Adopción, informamos los IDs clave para esa pantalla */}
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Colaborador asig.</span><span style={styles.infoValue}>{entrevistaData.id_colaborador}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. DNI adoptante</span><span style={styles.infoValue}>{entrevistaData.dniAdoptante}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. de animal</span><span style={styles.infoValue}>{entrevistaData.nroAnimal}</span></div>
+            
+            <div style={styles.infoColumn}>
+                <span style={styles.infoLabel}>Próximo paso sugerido:</span>
+                <span style={{textAlign: 'center', marginTop: '10px', color: '#7F8C8D'}}>
+                    Dirigirse al módulo de <strong>Registrar Adopción</strong> utilizando el DNI {entrevistaData.dniAdoptante}.
+                </span>
+            </div>
+
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
         </div>
@@ -250,7 +339,7 @@ export default function ResultadoEntrevista() {
                 }}
                 type="text" 
                 placeholder="Ej: 5" 
-                value={nroEntrevista} 
+                value={id_entrevista} 
                 onChange={e => setNroEntrevista(e.target.value.replace(/\D/g, ''))} 
                 />
                 <button 
@@ -280,12 +369,12 @@ export default function ResultadoEntrevista() {
                 </div>
 
                 <div style={styles.grid3Cols}>
-                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Edad</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.edad} readOnly /></div>
-                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Sexo animal</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.sexo} readOnly /></div>
-                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Peso</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.peso} readOnly /></div>
+                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Edad (Años)</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.edad} readOnly /></div>
+                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Sexo</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.sexo} readOnly /></div>
+                    <div style={styles.inputGroup}><label style={styles.labelCentered}>Peso (Kg)</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.peso} readOnly /></div>
                 </div>
 
-                <label style={styles.labelCentered}>Descripcion</label>
+                <label style={styles.labelCentered}>Descripción del animal</label>
                 <textarea style={{...styles.textAreaReadOnly, minHeight: '60px'}} value={entrevistaData.descripcion} readOnly />
 
                 <div style={styles.divider}></div>
@@ -299,7 +388,7 @@ export default function ResultadoEntrevista() {
                     <option value="Reprogramar">Reprogramar</option>
                 </select>
 
-                <label style={styles.labelCentered}>Descripcion</label>
+                <label style={styles.labelCentered}>Descripción / Observaciones</label>
                 <textarea 
                     style={styles.textArea} 
                     value={descripcionResultado} 
@@ -317,7 +406,7 @@ export default function ResultadoEntrevista() {
         </div>
         </div>
     );
-    }
+}
 
     // -------------------------------------------------------------------------
     // ESTILOS

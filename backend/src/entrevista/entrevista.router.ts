@@ -5,9 +5,10 @@ getOneEntrevista,
 findAllEntrevistas,
 createEntrevista,
 updateEntrevista,
-deleteEntrevista,
 bajaLogicaEntrevista,
-registrarEntrevista
+registrarEntrevista,
+registrarResultadoEntrevista,
+reprogramarEntrevista
 } from "./entrevista.controller.js";
 
 export const entrevistaRouter = Router();
@@ -19,3 +20,5 @@ entrevistaRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), creat
 entrevistaRouter.put("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), updateEntrevista);
 //entrevistaRouter.delete("/:id_entrevista", verificarToken(["Colaborador", "Veterinario"]), deleteEntrevista);
 entrevistaRouter.delete("/:id_entrevista", bajaLogicaEntrevista);
+entrevistaRouter.post("/:id_entrevista/resultado", verificarToken(["Colaborador", "Veterinario"]), registrarResultadoEntrevista);
+entrevistaRouter.put("/:id_entrevista/reprogramar", verificarToken(["Colaborador", "Veterinario"]), reprogramarEntrevista);

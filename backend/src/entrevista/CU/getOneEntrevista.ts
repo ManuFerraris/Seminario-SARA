@@ -8,8 +8,9 @@ export class GetOneEntrevista {
 
     async ejecutar(id_entrevista: number): Promise<ServiceResponse<Entrevista>> {
         // La búsqueda ahora es directa y ultra rápida por la PK
+        console.log('Buscando entrevista con ID:', id_entrevista);
         const entrevista = await this.entRepo.buscarEntrevista(id_entrevista);
-        
+        console.log('Entrevista encontrada:', entrevista);
         if (!entrevista) {
             return {
                 success: false,

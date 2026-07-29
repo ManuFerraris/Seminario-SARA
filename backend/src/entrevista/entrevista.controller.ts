@@ -8,8 +8,10 @@ import { FindAllEntrevistas } from "./CU/findAllEntrevistas.js";
 import { CreateEntrevista } from "./CU/createEntrevista.js";
 import { UpdateEntrevista } from "./CU/updateEntrevista.js";
 import { BajaLogicaEntrevista } from "./CU/bajaLogicaEntrevista.js";
-import { AltaEntrevistaCU, AltaEntrevistaDTO } from "./CU/altaEntrevistaCU.js";
+import { AltaEntrevistaCU } from "./CU/altaEntrevistaCU.js";
 import { AnimalRepositoryORM } from "../animal/animal.repositoryORM.js";
+import { ReprogramarEntrevista } from "./CU/reprogramarEntrevista.js";
+import { RegistrarResultadoEntrevista } from "./CU/registrarResultadoEntrevista.js";
 
 export const findAllEntrevistas = async (req: Request, res: Response) => {
     try{
@@ -41,7 +43,7 @@ export const getOneEntrevista = async (req: Request, res: Response) => {
         const entRepo = new EntrevistaRepositoryORM(em);
         
         const casoUso = new GetOneEntrevista(entRepo);
-        
+        console.log('ID de entrevista recibido en el controlador getOneEntrevista:', req.params.id_entrevista);
         const {valor:codVaEnt, error:codErrorEnt} = validarCodigo(req.params.id_entrevista, "nro entrevista");
         if (codErrorEnt || codVaEnt === undefined) {
             res.status(400).json({ error: codErrorEnt });
@@ -49,6 +51,7 @@ export const getOneEntrevista = async (req: Request, res: Response) => {
         };
 
         const resultado = await casoUso.ejecutar(codVaEnt);
+        console.log('Resultado del caso de uso getOneEntrevista:', resultado);
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
 
@@ -223,3 +226,65 @@ export const registrarEntrevista = async (req: Request, res: Response): Promise<
         return;
     }
 };
+
+export const registrarResultadoEntrevista = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const entRepo = new EntrevistaRepositoryORM(em);
+        const casoUso = new RegistrarResultadoEntrevista(entRepo);
+
+        const { valor: codVaEnt, error: codErrorEnt } = validarCodigo(req.params.id_entrevista, "nro entrevista");
+        if (codErrorEnt || codVaEnt === undefined) {
+            res.status(400).json({ error: codErrorEnt });
+            return;
+        }
+        const dto = req.body;
+        const resultado = await casoUso.ejecutar(codVaEnt, dto);
+        res.status(resultado.status).json({ 
+            success: resultado.success, 
+            messages: resultado.messages, 
+            data: resultado.data 
+        });
+        return;
+    } catch (error: unknown) {
+        console.error('Error crítico en controlador registrarResultadoEntrevista:', error);
+        res.status(500).json({ 
+            success: false, 
+            messages: ["Error interno del servidor al procesar el resultado de la entrevista."] 
+        });
+        return;
+    }
+};
+
+export const reprogramarEntrevista = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const entRepo = new EntrevistaRepositoryORM(em);
+        const casoUso = new ReprogramarEntrevista(entRepo);
+
+        const { valor: codVaEnt, error: codErrorEnt } = validarCodigo(req.params.id_entrevista, "nro entrevista");
+        if (codErrorEnt || codVaEnt === undefined) {
+            res.status(400).json({ error: codErrorEnt });
+            return;
+        }
+
+        const dto = req.body;
+        const resultado = await casoUso.ejecutar(codVaEnt, dto);
+        res.status(resultado.status).json({ 
+            success: resultado.success, 
+            messages: resultado.messages, 
+            data: resultado.data 
+        });
+        return;
+
+    } catch (error: unknown) {
+        console.error('Error crítico en controlador reprogramarEntrevista:', error);
+        res.status(500).json({ 
+            success: false, 
+            messages: ["Error interno del servidor al reprogramar la entrevista."] 
+        });
+        return;
+    };
+}

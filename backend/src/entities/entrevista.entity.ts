@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
 import { Rel } from '@mikro-orm/core';
 import { Persona } from './persona.entity.js';
+import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Entrevista {
@@ -16,6 +17,9 @@ export class Entrevista {
     // Relación N a 1: Muchas entrevistas pueden tener al mismo adoptante (si aplicó varias veces)
     @ManyToOne(() => Persona, { joinColumn: 'dni_adoptante' })
     adoptante!: Rel<Persona>;
+
+    @ManyToOne(() => Animal, { joinColumn: 'nro_animal' })
+    animal!: Rel<Animal>;
 
     @Property({ type: 'datetime' })
     fecha_hora!: Date;
