@@ -1,62 +1,84 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+
+// Definimos la estructura de los botones
+interface MenuItem {
+  label: string;
+  path: string;
+  allowedRoles: string[]; // Qué roles pueden ver este botón
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  { label: 'REGISTRAR RESCATE ANIMAL', path: '/registro-rescate', allowedRoles: ['Colaborador'] },
+  { label: 'REGISTRAR ALTA ANIMAL', path: '/alta-animal', allowedRoles: ['Colaborador'] },
+  { label: 'REGISTRAR COLOCACION DE VACUNAS', path: '/colocacion-vacunas', allowedRoles: ['Veterinario'] },
+  { label: 'REGISTRAR REVISION MEDICA', path: '/registrar-revision', allowedRoles: ['Veterinario'] },
+  { label: 'REGISTRAR ALTA DE ENTREVISTA', path: '/registrar-entrevista', allowedRoles: ['Colaborador'] },
+  { label: 'REGISTRAR ADOPCION', path: '/registrar-adopcion', allowedRoles: ['Colaborador'] },
+  { label: 'REGISTRAR SEGUIMIENTO', path: '/registrar-seguimiento', allowedRoles: ['Colaborador'] },
+  { label: 'REGISTAR RETIRO POR MALTRATO', path: '/retiro-maltrato', allowedRoles: ['Colaborador'] },
+  // Baja animal podría ser ejecutada por ambos roles
+  { label: 'REGISTRAR FALLECIMIENTO DE ANIMAL', path: '/baja-animal', allowedRoles: ['Colaborador', 'Veterinario'] },
+  { label: 'REGISTRAR DONACIONES', path: '/registrar-donacion', allowedRoles: ['Colaborador'] },
+  { label: 'GESTION DE PERSONAL', path: '/gestion-personal', allowedRoles: ['Colaborador'] },
+];
 
 export default function MenuPrincipal() {
   const navigate = useNavigate();
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Al montar el componente, leemos los roles del localStorage
+    const storedRoles = localStorage.getItem('roles');
+    if (storedRoles) {
+      try {
+        const parsedRoles = JSON.parse(storedRoles);
+        setUserRoles(parsedRoles);
+      } catch (error) {
+        console.error('Error al leer los roles del localStorage', error);
+      }
+    } else {
+      // Si por algún motivo llega al menú sin roles (ej. borró el localstorage), lo devolvemos al login
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
-    // Aquí puedes limpiar tokens de sesión o estado del usuario antes de salir
+    // Limpiamos los tokens y variables de sesión
+    localStorage.removeItem('token');
+    localStorage.removeItem('roles');
     console.log('Cerrando sesión...');
     navigate('/login');
   };
 
-  const handleAction = (accion: string) => {
-    // TODO: Conectar estas acciones con los endpoints de la API TypeScript 
-    // para persistir los eventos en la base de datos MySQL (Aiven) mediante Mikro-ORM.
-    console.log(`Navegando a la acción: ${accion}`);
-    // navigate(`/${accion.toLowerCase().replace(/ /g, '-')}`);
-  };
+  // Filtramos los botones. 
+  // Un botón se muestra SI ALGUNO (some) de los roles del usuario está incluido (includes) en los roles permitidos del botón.
+  const botonesPermitidos = MENU_ITEMS.filter((item) =>
+    item.allowedRoles.some((role) => userRoles.includes(role))
+  );
 
   return (
     <div style={styles.container}>
       <div style={styles.headerContainer}>
         <h1 style={styles.title}>Menu Principal</h1>
+        <p style={styles.subtitle}>
+          Perfil activo: {userRoles.join(' y ')}
+        </p>
       </div>
 
-      {/* Panel de botones principal usando CSS Grid */}
       <div style={styles.gridContainer}>
-        <button style={styles.actionButton} onClick={() => navigate('/registro-rescate')}>
-          REGISTRAR RESCATE ANIMAL
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/alta-animal')}>
-          REGISTRAR ALTA ANIMAL
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/colocacion-vacunas')}>
-          REGISTRAR COLOCACION DE VACUNAS
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/registrar-revision')}>
-          REGISTRAR REVISION MEDICA
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/registrar-entrevista')}>
-          REGISTRAR ALTA DE ENTREVISTA
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/registrar-adopcion')}>
-          REGISTRAR ADOPCION
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/registrar-seguimiento')}>
-          REGISTRAR SEGUIMIENTO
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/retiro-maltrato')}>
-          REGISTAR RETIRO POR MALTRATO
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/baja-animal')}>
-          REGISTRAR FALLECIMIENTO DE ANIMAL
-        </button>
-        <button style={styles.actionButton} onClick={() => navigate('/registrar-donacion')}>
-          REGISTRAR DONACIONES
-        </button>
+        {/* Renderizamos dinámicamente solo los botones permitidos */}
+        {botonesPermitidos.map((item, index) => (
+          <button 
+            key={index} 
+            style={styles.actionButton} 
+            onClick={() => navigate(item.path)}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
-      {/* Botón de Salir */}
       <div style={styles.footerContainer}>
         <button style={styles.exitButton} onClick={handleLogout}>
           SALIR

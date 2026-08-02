@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Home } from './inicio/home'; 
+//import { Home } from './inicio/home'; 
 import Login from './inicio/login';
 import Registro from './inicio/signup';
 import MenuPrincipal from './inicio/menu';
@@ -14,6 +14,7 @@ import RegistrarAdopcion from './CUU07/registrarAdopcion';
 import RegistrarRevision from './CUU08/registrarRevision';
 import RegistrarEntrevista from './CUU09/registrarEntrevista';
 import RegistrarDonacion from './CUU10/registrarDonacion';
+import GestionPersonal from './CUS02/gestionPersonal';
 import './App.css'; 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
         <Route path="/registrar-revision" element={<RegistrarRevision />} />
         <Route path="/registrar-entrevista" element={<RegistrarEntrevista />} />
         <Route path="/registrar-donacion" element={<RegistrarDonacion />} />
+        <Route path="/gestion-personal" element={<GestionPersonal />} />
         
         <Route path="/animales" element={<div style={{ textAlign: 'center', marginTop: '50px' }}><h1>Próximamente: Listado de animales para adoptar 🐾</h1></div>} />
         

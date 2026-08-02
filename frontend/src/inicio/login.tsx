@@ -29,6 +29,8 @@ export default function Login() {
         localStorage.setItem('token', token);
         localStorage.setItem('roles', JSON.stringify(roles));
 
+        console.log('Login exitoso. Token y roles guardados en localStorage.');
+        console.log('Roles del usuario:', roles);
         // 4. Lógica de enrutamiento (RBAC en el frontend)
         if (roles.includes('Colaborador') || roles.includes('Veterinario')) {
           navigate('/menu'); // Los mandamos al dashboard interno
