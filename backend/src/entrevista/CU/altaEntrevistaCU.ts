@@ -3,7 +3,9 @@ import { EntityManager } from '@mikro-orm/core';
 import { AnimalRepository } from '../../animal/animal.repository.js';
 import { EntrevistaRepository } from '../entrevista.repository.js';
 import { PersonaRepository } from '../../persona/persona.repository.js';
-import { ServiceResponse } from '../../types/service.response';
+import { ServiceResponse } from '../../types/service.response.js';
+import { ColaboradorRepository } from '../../persona/col.repository.js';
+import { AdoptanteRepository } from '../../persona/ado.repository.js';
 
 export interface AltaEntrevistaDTO {
     dni_adoptante: string;
@@ -19,6 +21,8 @@ export interface AltaEntrevistaDTO {
 export class AltaEntrevistaCU {
     constructor(
         private readonly personaRepo: PersonaRepository,
+        private readonly colaboradorRepo: ColaboradorRepository,
+        private readonly adoptanteRepo: AdoptanteRepository,
         private readonly animalRepo: AnimalRepository,
         private readonly entrevistaRepo: EntrevistaRepository,
         private readonly em: EntityManager
@@ -26,7 +30,17 @@ export class AltaEntrevistaCU {
 
     async ejecutar(dto: any): Promise<ServiceResponse<any>> {
         // 1. Validación del Adoptante (Regla de negocio: Lista Negra)
-        const adoptante = await this.personaRepo.findOne(dto.dni_adoptante);
+        const persona = await this.personaRepo.findOne(dto.dni_adoptante);
+        if (!persona) {
+            return {
+                status: 404,
+                success: false,
+                messages: ["Persona no encontrada."],
+                data: undefined
+            };
+        }
+
+        const adoptante = await this.adoptanteRepo.findOneByPersona(persona);
         if (!adoptante) {
             return {
                 status: 404,
@@ -45,7 +59,7 @@ export class AltaEntrevistaCU {
             };
         }
 
-        const colaborador = await this.personaRepo.findOne(dto.dni_colaborador);
+        const colaborador = await this.colaboradorRepo.findOneByPersona(persona);
         if (!colaborador) {
             return {
                 status: 404,
@@ -93,7 +107,6 @@ export class AltaEntrevistaCU {
                 nuevaEntrevista.animal = animal;
         
                 if (dto.descripcion) nuevaEntrevista.descripcion = dto.descripcion;
-                if (dto.aprobada !== undefined) nuevaEntrevista.aprobada = dto.aprobada;
                 
                 emTransaccional.persist(nuevaEntrevista);
             });
@@ -105,7 +118,7 @@ export class AltaEntrevistaCU {
                 messages: ["Entrevista registrada con éxito."], 
                 data: {
                     nro_animal: animal.nro_animal,
-                    dni_adoptante: adoptante.dni,
+                    dni_adoptante: adoptante.persona.dni,
                     estado_animal: animal.estado
                 } 
             };

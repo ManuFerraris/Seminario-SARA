@@ -8,16 +8,16 @@ export class Seguimiento {
     @PrimaryKey({ type: 'number', autoincrement: true })
     id_seguimiento!: number;
 
+    @ManyToOne(() => Adopcion, { joinColumn: 'nro_adopcion' })
+    adopcion!: Rel<Adopcion>;
+
     @Property({ type: 'date' })
     fecha_seguimiento!: Date;
-
-    @Property({ type: 'string', length: 30 })
-    estado_animal!: string;
 
     @Property({ type: 'string', length: 255, nullable: false })
     entorno!: string;
 
-    @ManyToOne(() => Adopcion, { joinColumn: 'nro_adopcion' })
-    adopcion!: Rel<Adopcion>;
+    @Property({ type: 'string', length: 30 })
+    estado_animal!: string;
 
 }

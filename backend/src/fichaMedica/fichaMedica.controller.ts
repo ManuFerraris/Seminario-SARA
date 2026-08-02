@@ -9,6 +9,7 @@ import { UpdateFichaMedica } from "../fichaMedica/CU/updateFM.js";
 import { DeleteFichaMedica } from "../fichaMedica/CU/deleteFM.js";
 import { AnimalRepositoryORM } from "../animal/animal.repositoryORM.js";
 import { PersonaRepositoryORM } from "../persona/persona.repositoryORM.js";
+import { VeterinarioRepositoryORM } from "../persona/vet.repositoryORM.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -70,8 +71,9 @@ export const create = async (req:Request, res:Response):Promise<void> => {
         const animalRepo = new AnimalRepositoryORM(em);
         const personaRepo = new PersonaRepositoryORM(em);
         const fichaRepo = new FichaMedicaRepositoryORM(em);
+        const veterinarioRepo = new VeterinarioRepositoryORM(em);
 
-        const casouso = new CreateFichaMedica(fichaRepo, animalRepo, personaRepo);
+        const casouso = new CreateFichaMedica(fichaRepo, animalRepo, personaRepo, veterinarioRepo);
 
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
@@ -100,7 +102,9 @@ export const update = async (req:Request, res:Response):Promise<void> => {
         const repo = new FichaMedicaRepositoryORM(em);
         const animalRepo = new AnimalRepositoryORM(em);
         const personaRepo = new PersonaRepositoryORM(em);
-        const casouso = new UpdateFichaMedica(repo, animalRepo, personaRepo);
+        const veterinarioRepo = new VeterinarioRepositoryORM(em);
+        
+        const casouso = new UpdateFichaMedica(repo, animalRepo, personaRepo, veterinarioRepo);
 
         const {valor: codVal, error:codError} = validarCodigo(req.params.nro_ficha, 'numero de ficha');
         if(codError || codVal === undefined){

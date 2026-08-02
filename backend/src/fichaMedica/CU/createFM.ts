@@ -5,12 +5,14 @@ import { AnimalRepository } from "../../animal/animal.repository.js";
 import { PersonaRepository } from "../../persona/persona.repository.js";
 import { FichaMedicaDTO } from "../fichaMedicaDTO.js";
 import { validarCreacionFichaMedica } from "../../fichaMedica/validarCreacionFichaMedica.js";
+import { VeterinarioRepository } from "../../persona/vet.repository.js";
 
 export class CreateFichaMedica {
     constructor(
         private readonly fichaMedicaRepository: FichaMedicaRepository,
         private readonly animalRepository: AnimalRepository,
-        private readonly personaRepository: PersonaRepository
+        private readonly personaRepository: PersonaRepository,
+        private readonly veterinarioRepo: VeterinarioRepository
     ) {}
 
     async ejecutar(dto: FichaMedicaDTO): Promise<ServiceResponse<FichaMedica>> {
@@ -25,14 +27,19 @@ export class CreateFichaMedica {
             return { status: 404, success: false, messages: ["Animal no encontrado."], data: undefined };
         }
 
-        const veterinario = await this.personaRepository.findOne(dto.dni_veterinario);
+        const persona = await this.personaRepository.findOne(dto.dni_veterinario);
+        if (!persona) {
+            return { status: 404, success: false, messages: ["Persona no encontrada."], data: undefined };
+        }
+
+        const veterinario = await this.veterinarioRepo.findOneByPersona(persona);
         if (!veterinario) {
             return { status: 404, success: false, messages: ["Veterinario no encontrado."], data: undefined };
         }
 
         const nuevaFicha = new FichaMedica();
         nuevaFicha.animal = animal;
-        nuevaFicha.persona = veterinario;
+        nuevaFicha.veterinario = veterinario;
         nuevaFicha.fecha = new Date(dto.fecha);
         if (dto.observaciones) nuevaFicha.observaciones = dto.observaciones.trim();
 

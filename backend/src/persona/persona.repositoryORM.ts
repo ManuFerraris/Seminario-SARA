@@ -10,7 +10,7 @@ export class PersonaRepositoryORM implements PersonaRepository {
     };
 
     async findOne(dni: string): Promise<Persona | null> {
-        return await this.em.findOne(Persona, { dni });
+        return await this.em.findOne(Persona, { dni }, { populate: ['veterinario', 'colaborador'] });
     };
 
     async findByEmail(email: string): Promise<Persona | null> {

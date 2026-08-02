@@ -39,19 +39,15 @@ export class Animal {
     @Property({ length: 255, type: 'string', nullable: true })
     descripcion?: string;
 
-    // Relación bidireccional: Un animal puede tener muchas fichas médicas
     @OneToMany(() => FichaMedica, ficha => ficha.animal)
     fichas_medicas = new Collection<FichaMedica>(this);
 
-    // Relación bidireccional: Un animal puede tener muchos materiales audiovisuales
     @OneToMany(() => Audiovisual, audiovisual => audiovisual.animal)
     audiovisuales = new Collection<Audiovisual>(this);
 
-    // Relación bidireccional: Un animal puede tener muchas adopciones
     @OneToMany(() => Adopcion, adopcion => adopcion.animal)
     adopciones = new Collection<Adopcion>(this);
 
-    // Relación bidireccional: Un animal puede tener muchos rescates
     @OneToMany(() => Rescate, rescate => rescate.animal)
     rescates = new Collection<Rescate>(this);
 

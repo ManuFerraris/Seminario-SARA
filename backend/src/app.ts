@@ -15,13 +15,14 @@ import { fichaMedicaRouter } from './fichaMedica/fichaMedica.routes.js';
 import { colocacionRouter } from './colocacion/colocacion.routes.js';
 import { seguimientoRouter } from './seguimiento/seg.routes.js';
 import { authRouter } from './login/auth.routes.js';
+import { seedPersonaVeterinario } from './seed/seed.js';
+import { seedPersonaColaborador } from './seed/seed.js';
 
 const app = express();
 app.locals.orm = orm
 
 app.use(cors());
 
-// Este middleware le enseña a Express a leer e interpretar JSONs
 app.use(express.json());
 
 // Rutas de la API
@@ -37,6 +38,8 @@ app.use("/api/fichamedica", fichaMedicaRouter);
 app.use("/api/colocacion", colocacionRouter);
 app.use("/api/seguimiento", seguimientoRouter);
 app.use("/api/auth", authRouter);
+//app.use("/api/seed/veterinario", seedPersonaVeterinario);
+//app.use("/api/seed/colaborador", seedPersonaColaborador);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);

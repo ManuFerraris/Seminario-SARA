@@ -15,6 +15,9 @@ import { FichaMedica } from '../entities/ficha-medica.entity.js';
 import { Rescate } from '../entities/rescate.entity.js';
 import { Audiovisual } from '../entities/audiovisual.entity.js';
 import { Colocacion } from '../entities/colocacion.entity.js';
+import { Colaborador } from '../entities/colaborador.entity.js';
+import { Adoptante } from '../entities/adoptante.entity.js';
+import { Veterinario } from '../entities/veterinario.entity.js';
 
 dotenv.config();
 const DB_URL = process.env.DB_URL as string;
@@ -22,8 +25,9 @@ const DB_NAME = process.env.DB_NAME as string;
 //const SSL_MODE = process.env.SSL_MODE as string;
 
 const config = defineConfig({
-    entities: [Animal, Persona, Donacion, Vacuna, Adopcion
-        , Seguimiento, Entrevista, FichaMedica, Rescate, Audiovisual, Colocacion],
+    entities: [Animal, Persona, Adoptante, Colaborador, Veterinario
+        , Donacion, Vacuna, Adopcion, Seguimiento, Entrevista
+        , FichaMedica, Rescate, Audiovisual, Colocacion],
     entitiesTs: ['src/**/*.entity.ts'],
     dbName: DB_NAME,
     driver: MySqlDriver,

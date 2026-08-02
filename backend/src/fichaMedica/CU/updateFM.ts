@@ -5,12 +5,14 @@ import { AnimalRepository } from "../../animal/animal.repository.js";
 import { PersonaRepository } from "../../persona/persona.repository.js";
 import { FichaMedicaDTO } from "../fichaMedicaDTO.js";
 import { validarActualizacionFichaMedica } from "../../fichaMedica/validarActualizacionFichaMedica.js";
+import { VeterinarioRepository } from "../../persona/vet.repository.js";
 
 export class UpdateFichaMedica {
     constructor(
         private readonly fichaMedicaRepository: FichaMedicaRepository,
         private readonly animalRepository: AnimalRepository,
-        private readonly personaRepository: PersonaRepository
+        private readonly personaRepository: PersonaRepository,
+        private readonly veterinarioRepo: VeterinarioRepository
     ) {}
 
     async ejecutar(numero: number, dto: Partial<FichaMedicaDTO>): Promise<ServiceResponse<FichaMedica>> {
@@ -34,9 +36,22 @@ export class UpdateFichaMedica {
         }
 
         if (dto.dni_veterinario !== undefined) {
-            const veterinario = await this.personaRepository.findOne(dto.dni_veterinario);
-            if (!veterinario) return { status: 404, success: false, messages: ["El nuevo veterinario indicado no existe."], data: undefined };
-            datosActualizados.persona = veterinario;
+            const persona = await this.personaRepository.findOne(dto.dni_veterinario);
+            if (!persona) return { 
+                status: 404, 
+                success: false, 
+                messages: ["La persona del nuevo veterinario indicado no existe."], 
+                data: undefined 
+            };
+
+            const veterinario = await this.veterinarioRepo.findOneByPersona(persona);
+            if (!veterinario) return { 
+                status: 404, 
+                success: false, 
+                messages: ["El nuevo veterinario indicado no existe."], 
+                data: undefined 
+            };
+            datosActualizados.veterinario = veterinario;
         }
 
         if (dto.fecha !== undefined) {

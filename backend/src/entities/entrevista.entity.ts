@@ -1,22 +1,20 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/decorators/legacy';
 import { Rel } from '@mikro-orm/core';
-import { Persona } from './persona.entity.js';
+import { Colaborador } from './colaborador.entity.js';
+import { Adoptante } from './adoptante.entity.js';
 import { Animal } from './animal.entity.js';
 
 @Entity()
 export class Entrevista {
 
-    // ID subrogado puro
     @PrimaryKey({ type: 'number', autoincrement: true })
     id_entrevista!: number;
 
-    // Relación N a 1: Muchas entrevistas pueden ser realizadas por un mismo colaborador
-    @ManyToOne(() => Persona, { joinColumn: 'dni_colaborador' })
-    colaborador?: Rel<Persona>;
+    @ManyToOne(() => Colaborador, { joinColumn: 'id_colaborador' })
+    colaborador?: Rel<Colaborador>;
 
-    // Relación N a 1: Muchas entrevistas pueden tener al mismo adoptante (si aplicó varias veces)
-    @ManyToOne(() => Persona, { joinColumn: 'dni_adoptante' })
-    adoptante!: Rel<Persona>;
+    @ManyToOne(() => Adoptante, { joinColumn: 'id_adoptante' })
+    adoptante!: Rel<Adoptante>;
 
     @ManyToOne(() => Animal, { joinColumn: 'nro_animal' })
     animal!: Rel<Animal>;
@@ -32,8 +30,5 @@ export class Entrevista {
 
     @Property({ type: 'string', length: 255, nullable: true })
     descripcion?: string;
-
-    @Property({ type: 'boolean', default: false })
-    aprobada!: boolean;
 
 }

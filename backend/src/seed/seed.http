@@ -1,0 +1,7 @@
+### Disparamos el seed de la primer persona y veterinario para poder loguearnos y probar la app
+POST http://localhost:3000/api/seed/veterinario
+Content-Type: application/json
+
+### Disparamos el seed de la primer persona y colaborador para poder loguearnos y probar la app
+POST http://localhost:3000/api/seed/colaborador
+Content-Type: application/json

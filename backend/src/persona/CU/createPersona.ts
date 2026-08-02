@@ -4,6 +4,9 @@ import { PersonaDTO } from "../personaDTO.js";
 import { PersonaRepository } from "../persona.repository.js";
 import { ServiceResponse } from "../../types/service.response.js";
 import { validarCreacionPersona } from "../validarCreacionPersona.js";
+import { Veterinario } from '../../entities/veterinario.entity.js';
+import { Colaborador } from '../../entities/colaborador.entity.js';
+import { Adoptante } from '../../entities/adoptante.entity.js';
 
 export class CreatePersona {
     constructor(private readonly repo: PersonaRepository) {}
@@ -51,16 +54,28 @@ export class CreatePersona {
         const hashedPassword = await bcrypt.hash(dto.contrasenia, SALT_ROUNDS);
         nuevaPersona.contrasenia = hashedPassword;
 
-        // Campos opcionales (roles)
+        // Campos opcionales (roles) Probablemente tire error porque manda todo junto, debe 
+        // mandar una Persona, crearla y luego asignarle los roles, o crear la persona y luego crear los roles y asignarlos a la persona.
         if (dto.telefono) nuevaPersona.telefono = dto.telefono;
-        if (dto.matricula) nuevaPersona.matricula = dto.matricula;
-        if (dto.anios_experiencia) nuevaPersona.anios_experiencia = dto.anios_experiencia;
-        if (dto.id_colaborador) nuevaPersona.id_colaborador = dto.id_colaborador;
-        if (dto.id_adoptante) nuevaPersona.id_adoptante = dto.id_adoptante;
-        if (dto.estado) nuevaPersona.estado = dto.estado;
+        if (dto.anios_experiencia && dto.matricula) {
+            const veterinario = new Veterinario();
+            veterinario.matricula = dto.matricula;
+            veterinario.anios_experiencia = dto.anios_experiencia;
+            nuevaPersona.veterinario = veterinario;
+        }
+        if (dto.id_colaborador) {
+            const colaborador = new Colaborador();
+            colaborador.id_colaborador = dto.id_colaborador;
+            nuevaPersona.colaborador = colaborador;
+        }
+        if (dto.id_adoptante && dto.estado) {
+            const adoptante = new Adoptante();
+            adoptante.id_adoptante = dto.id_adoptante;
+            nuevaPersona.adoptante = adoptante;
+            adoptante.estado = dto.estado;
+        }
         if (dto.domicilio) nuevaPersona.domicilio = dto.domicilio;
 
-        // Ahora sí, MikroORM reconoce qué es esto
         await this.repo.create(nuevaPersona);
         
         return {

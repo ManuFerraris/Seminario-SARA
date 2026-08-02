@@ -8,12 +8,10 @@ export class Colocacion {
 
     @PrimaryKey({ type: 'number', autoincrement: true })
     nro_colocacion!: number;
-
-    // Relación 1 a 1 con la ficha
+    
     @ManyToOne(() => FichaMedica, { joinColumn: 'nro_ficha' })
     ficha!: Rel<FichaMedica>;
 
-    // Corregido a ManyToOne: Una vacuna del catálogo puede tener muchas colocaciones
     @ManyToOne(() => Vacuna, { joinColumn: 'nro_vacuna' })
     vacuna!: Rel<Vacuna>;
 

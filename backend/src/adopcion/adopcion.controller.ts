@@ -8,6 +8,8 @@ import { FindAllAdopcion } from './CU/findAllAdopcion.js';
 import { GetOneAdopcion } from './CU/getOneAdopcion.js';
 import { CreateAdopcion } from './CU/createAdopcion.js';
 import { UpdateAdopcion } from './CU/updateAdopcion.js';
+import { AdoptanteRepositoryORM } from '../persona/ado.repositoryORM.js';
+import { SeguimientoRepositoryORM } from '../seguimiento/seg.repositoryORM.js';
 
 export const findAll = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -68,8 +70,10 @@ export const create = async (req: Request, res: Response): Promise<void> => {
         const adopcionRepo = new AdopcionRepositoryORM(em);
         const personaRepo = new PersonaRepositoryORM(em);
         const animalRepo = new AnimalRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
+        const seguimientoRepo = new SeguimientoRepositoryORM(em);
         
-        const casouso = new CreateAdopcion(adopcionRepo, personaRepo, animalRepo);
+        const casouso = new CreateAdopcion(adopcionRepo, personaRepo, adoptanteRepo, animalRepo, seguimientoRepo);
 
         console.log('Datos recibidos para crear adopción:', req.body);
         const resultado = await casouso.ejecutar(req.body);

@@ -20,6 +20,6 @@ export class Donacion {
     @Property({ type: 'date', nullable: true })
     fecha_vencimiento?: Date;
 
-    @ManyToOne(() => Persona, { joinColumn: 'dni_donante' })
+    @ManyToOne(() => Persona, { joinColumn: 'dni_persona' })
     persona!: Rel<Persona>;
 }

@@ -9,11 +9,11 @@ export class Rescate {
     @PrimaryKey({ type: 'number', autoincrement: true })
     nro_rescate!: number;
 
-    @ManyToOne(() => Persona, { joinColumn: 'dni_rescatista' })
-    persona!: Rel<Persona>;
-
     @ManyToOne(() => Animal, { joinColumn: 'nro_animal' })
     animal!: Rel<Animal>;
+
+    @ManyToOne(() => Persona, { joinColumn: 'dni_persona' })
+    persona!: Rel<Persona>;
 
     @Property({type: 'string', length: 255 })
     lugar_rescate!: string;

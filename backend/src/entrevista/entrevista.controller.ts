@@ -12,6 +12,8 @@ import { AltaEntrevistaCU } from "./CU/altaEntrevistaCU.js";
 import { AnimalRepositoryORM } from "../animal/animal.repositoryORM.js";
 import { ReprogramarEntrevista } from "./CU/reprogramarEntrevista.js";
 import { RegistrarResultadoEntrevista } from "./CU/registrarResultadoEntrevista.js";
+import { ColaboradorRepositoryORM } from "../persona/col.repositoryORM.js";
+import { AdoptanteRepositoryORM } from "../persona/ado.repositoryORM.js";
 
 export const findAllEntrevistas = async (req: Request, res: Response) => {
     try{
@@ -74,9 +76,11 @@ export const createEntrevista = async (req: Request, res: Response) => {
         const entRepo = new EntrevistaRepositoryORM(em);
         const personaRepo = new PersonaRepositoryORM(em);
         const animalRepo = new AnimalRepositoryORM(em);
+        const colaboradorRepo = new ColaboradorRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
         
         // El caso de uso ahora recibe ambos repositorios
-        const casoUso = new CreateEntrevista(entRepo, personaRepo, animalRepo);
+        const casoUso = new CreateEntrevista(entRepo, personaRepo, colaboradorRepo, adoptanteRepo, animalRepo);
         const dto = req.body;
 
         const resultado = await casoUso.ejecutar(dto);
@@ -189,10 +193,12 @@ export const registrarEntrevista = async (req: Request, res: Response): Promise<
         const em = orm.em.fork();
         
         // Instanciamos los repositorios
-        const adoptanteRepo = new PersonaRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
         const animalRepo = new AnimalRepositoryORM(em);
         const entrevistaRepo = new EntrevistaRepositoryORM(em);
-        const casoUso = new AltaEntrevistaCU(adoptanteRepo, animalRepo, entrevistaRepo, em);
+        const personaRepo = new PersonaRepositoryORM(em);
+        const colaboradorRepo = new ColaboradorRepositoryORM(em);
+        const casoUso = new AltaEntrevistaCU(personaRepo, colaboradorRepo, adoptanteRepo, animalRepo, entrevistaRepo, em);
 
         const { nro_animal, fecha_entrevista, hora_entrevista, dni_adoptante } = req.body;
 

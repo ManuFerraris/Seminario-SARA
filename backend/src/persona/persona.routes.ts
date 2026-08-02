@@ -5,7 +5,8 @@ import {
     getOne,
     create,
     update,
-    deletePersona
+    deletePersona,
+    gestionPersonal
 } from "./persona.controller.js";
 
 export const personaRouter = Router();
@@ -13,5 +14,6 @@ export const personaRouter = Router();
 personaRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 personaRouter.get('/:dni', verificarToken(["Colaborador", "Veterinario"]), getOne);
 personaRouter.post('/crear-persona', /*verificarToken(["Colaborador", "Veterinario"]),*/ create);
+personaRouter.post('/gestion-personal', /*verificarToken(["Colaborador", "Veterinario"]),*/ gestionPersonal);
 personaRouter.put('/:dni', verificarToken(["Colaborador", "Veterinario"]), update);
 personaRouter.delete('/:dni', verificarToken(["Colaborador", "Veterinario"]), deletePersona);

@@ -2,12 +2,19 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { PersonaRepository } from '../persona/persona.repository.js';
+import { AdoptanteRepository } from '../persona/ado.repository.js';
+import { ColaboradorRepository } from '../persona/col.repository.js';
+import { VeterinarioRepository } from '../persona/vet.repository.js';
 
 dotenv.config();
 const SECRET_KEY = process.env.JWT_SECRET as string;
 
 export class LoginPersona {
-    constructor(private readonly personaRepository: PersonaRepository) {}
+    constructor(private readonly personaRepository: PersonaRepository,
+        private readonly colaboradorRepository: ColaboradorRepository,
+        private readonly adoptanteRepository: AdoptanteRepository,
+        private readonly veterinarioRepository: VeterinarioRepository
+    ) {}
     async ejecutar(email: string, passwordPlano: string) {
 
         const persona = await this.personaRepository.findByEmail( email );
@@ -19,6 +26,9 @@ export class LoginPersona {
                 messages: ["Credenciales inválidas."]
             };
         }
+        const colaborador = await this.colaboradorRepository.findOneByPersona(persona);
+        const adoptante = await this.adoptanteRepository.findOneByPersona(persona);
+        const veterinario = await this.veterinarioRepository.findOneByPersona(persona);
 
         // 2. Comparamos la contraseña enviada con el hash guardado
         const passwordValida = await bcrypt.compare(passwordPlano, persona.contrasenia);
@@ -31,18 +41,22 @@ export class LoginPersona {
             };
         }
 
-        // 3. Inferimos los roles evaluando los atributos directos de la entidad
+        // Inferimos los roles evaluando los atributos directos de la entidad
         const roles: string[] = [];
         
-        // Si el campo tiene un código (no es null, undefined, ni string vacío), se asigna el rol
-        if (persona.id_colaborador) {
+        if (colaborador) {
             roles.push('Colaborador');
         }
-        if (persona.id_adoptante) {
+        if (adoptante) {
             roles.push('Adoptante');
         }
-        if (persona.matricula) {
+        if (veterinario) {
             roles.push('Veterinario');
+        }
+        
+        // Si no tiene ninguno de los tres, es un usuario básico registrado
+        if (roles.length === 0) {
+            roles.push('Usuario'); 
         }
         
         // Si no tiene ninguno de los tres, es un usuario básico registrado

@@ -32,7 +32,6 @@ export class RegistrarResultadoEntrevista {
         // 3. Mapeo del resultado
         entrevista.estado = dto.estado; // 'Aprobada', 'Rechazada', 'Cancelada'
         entrevista.descripcion = dto.descripcion;
-        entrevista.aprobada = true;
 
         // 4. Regla de Negocio CLAVE: Liberar al animal si no se aprobó
         if (dto.estado === 'Rechazada' || dto.estado === 'Cancelada') {

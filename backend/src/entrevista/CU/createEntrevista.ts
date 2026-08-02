@@ -2,7 +2,8 @@ import { Entrevista } from "../../entities/entrevista.entity.js";
 import { EntrevistaRepository } from "../../entrevista/entrevista.repository.js";
 import { PersonaRepository } from "../../persona/persona.repository.js";
 import { ServiceResponse } from "../../types/service.response.js";
-import { EntrevistaDTO } from "./../entrevistaDTO.js";
+import { ColaboradorRepository } from "../../persona/col.repository.js";
+import { AdoptanteRepository } from "../../persona/ado.repository.js";
 import { validarCreacionEntrevista } from "../validarCreacionEntrevista.js";
 import { AnimalRepository } from "../../animal/animal.repository.js";
 
@@ -11,6 +12,8 @@ export class CreateEntrevista {
     constructor(
         private entRepo: EntrevistaRepository,
         private personaRepo: PersonaRepository,
+        private colaboradorRepo: ColaboradorRepository,
+        private adoptanteRepo: AdoptanteRepository,
         private animalRepo: AnimalRepository
     ) {}
 
@@ -28,8 +31,19 @@ export class CreateEntrevista {
             };
         }
 
+        const persona = await this.personaRepo.findOne(dto.dni_adoptante);
+        if (!persona) {
+            return {
+                status: 404,
+                success: false,
+                messages: ["Persona no encontrada."],
+                data: undefined
+            };
+        };
+        console.log('Persona encontrada en CU-REGISTRARENTREVISTA:', persona);
+
         // 2. Buscar a los actores en la tabla Persona unificada
-        const colaborador = await this.personaRepo.findOne(dto.dni_colaborador);
+        const colaborador = await this.colaboradorRepo.findOneByPersona(persona);
         if (!colaborador) {
             return {
                 status: 404,
@@ -37,10 +51,10 @@ export class CreateEntrevista {
                 messages: [`No se encontró al colaborador con DNI ${dto.dni_colaborador}`],
                 data: undefined
             };
-        }
+        };
         console.log('Colaborador encontrado en CU-REGISTRARENTREVISTA:', colaborador);
 
-        const adoptante = await this.personaRepo.findOne(dto.dni_adoptante);
+        const adoptante = await this.adoptanteRepo.findOneByPersona(persona);
         if (!adoptante) {
             return {
                 status: 404,
@@ -75,7 +89,6 @@ export class CreateEntrevista {
         nuevaEntrevista.animal = animal;
         
         if (dto.descripcion) nuevaEntrevista.descripcion = dto.descripcion;
-        if (dto.aprobada !== undefined) nuevaEntrevista.aprobada = dto.aprobada;
 
         // 4. Persistencia
         const entrevistaCreada = await this.entRepo.crearEntrevista(nuevaEntrevista);

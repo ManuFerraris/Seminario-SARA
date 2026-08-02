@@ -29,7 +29,7 @@ export function validarCreacionPersona(dto: PersonaDTO): string[] {
 
     // Validación de Teléfono (Opcional, pero si viene, estricto a 10 dígitos)
     if (dto.telefono && !/^\d{10}$/.test(dto.telefono)) {
-        errores.push('El teléfono debe tener exactamente 10 dígitos numéricos.');
+        errores.push('El teléfono no puede tener mas de 30 dígitos.');
     }
 
     // Validaciones de atributos de herencia (Opcionales)

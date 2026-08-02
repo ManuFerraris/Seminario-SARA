@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import { MikroORM } from "@mikro-orm/core";
 import { PersonaRepositoryORM } from "./persona.repositoryORM.js";
-import { validarCodigo } from "../helpers/validarCodigo.js";
 import { FindAll } from "./CU/findAll.js";
 import { GetOne } from "./CU/getOne.js";
 import { CreatePersona } from "./CU/createPersona.js";
 import { UpdatePersona } from "./CU/update.js";
 import { DeletePersona } from "./CU/deletePersona.js";
+import { GestionPersonal } from "./CU/gestionPersonal.js";
+import { ColaboradorRepositoryORM } from "./col.repositoryORM.js";
+import { VeterinarioRepositoryORM } from "./vet.repositoryORM.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -154,6 +156,35 @@ export const deletePersona = async (req:Request, res:Response):Promise<void> => 
         };
         console.error('Error desconocido al eliminar la persona', error);
         res.status(500).json({ error: "Error desconocido al eliminar la persona" });
+        return;
+    };
+};
+
+export const gestionPersonal = async (req:Request, res:Response):Promise<void> => {
+    try{
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const personaRepo = new PersonaRepositoryORM(em);
+        const veterinarioRepo = new VeterinarioRepositoryORM(em);
+        const colaboradorRepo = new ColaboradorRepositoryORM(em);
+
+        const casouso = new GestionPersonal(personaRepo, veterinarioRepo, colaboradorRepo);
+
+        const payload = req.body;
+        console.log('Payload recibido en el controlador:', payload);
+        const resultado = await casouso.ejecutar(payload);
+        console.log('Resultado del caso de uso GestionPersonal:', resultado);
+
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        return;
+    }catch(error:unknown){
+        if (error instanceof Error) {
+            console.error('Error al gestionar el personal', error.message);
+            res.status(500).json({ error: "Error al gestionar el personal" });
+            return;
+        }
+        console.error('Error desconocido al gestionar el personal', error);
+        res.status(500).json({ error: "Error desconocido al gestionar el personal" });
         return;
     };
 };

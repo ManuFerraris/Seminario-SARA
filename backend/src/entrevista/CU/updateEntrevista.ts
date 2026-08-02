@@ -62,7 +62,6 @@ export class UpdateEntrevista {
         if (dto.fecha_hora_rep) entrevista.fecha_hora_rep = fechaRepNueva;
         if (dto.estado !== undefined) entrevista.estado = dto.estado;
         if (dto.descripcion !== undefined) entrevista.descripcion = dto.descripcion;
-        if (dto.aprobada !== undefined) entrevista.aprobada = dto.aprobada;
 
         // 5. Persistencia
         const entrevistaActualizada = await this.entRepo.actualizarEntrevista(entrevista);

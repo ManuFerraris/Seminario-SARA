@@ -1,7 +1,7 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToOne, OneToMany } from '@mikro-orm/decorators/legacy';
 import { Collection, type Rel } from '@mikro-orm/core';
 import { Animal } from './animal.entity.js';
-import { Persona } from './persona.entity.js';
+import { Veterinario } from './veterinario.entity.js';
 import { Colocacion } from './colocacion.entity.js';
 
 @Entity()
@@ -13,8 +13,8 @@ export class FichaMedica {
     @ManyToOne(() => Animal, { joinColumn: 'nro_animal' })
     animal!: Rel<Animal>;
 
-    @ManyToOne(() => Persona, { joinColumn: 'dni_veterinario' })
-    persona!: Rel<Persona>;
+    @ManyToOne(() => Veterinario, { joinColumn: 'matricula' })
+    veterinario!: Rel<Veterinario>;
 
     @Property({ type: 'date' })
     fecha!: Date;
