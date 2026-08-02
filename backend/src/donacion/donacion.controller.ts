@@ -8,6 +8,7 @@ import { GetOneDonacion } from "./CU/getOneDonaciones.js";
 import { CreateDonacion } from "./CU/createDonacion.js";
 import { UpdateDonacion } from "./CU/updateDonacion.js";
 import { DeleteDonacion } from "./CU/deleteDonacion.js";
+import { VacunaRepositoryORM } from "../vacuna/vacuna.repositoryORM.js";
 
 export const findAllDonaciones = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -67,7 +68,8 @@ export const createDonacion = async (req:Request, res:Response):Promise<void> =>
         const em = orm.em.fork();
         const repo = new DonacionRepositoryORM(em);
         const personaRepo = new PersonaRepositoryORM(em);
-        const casouso = new CreateDonacion(repo, personaRepo);
+        const vacunaRepo = new VacunaRepositoryORM(em);
+        const casouso = new CreateDonacion(repo, vacunaRepo, personaRepo);
         
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);

@@ -71,7 +71,6 @@ export default function RegistroRescate() {
     const handleRegistrarRescatista = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // Acá conectarías con el endpoint de crear persona
             const payload = {
                 dni: dniBusqueda,
                 nombre: nombreResc,
@@ -82,20 +81,47 @@ export default function RegistroRescate() {
                 domicilio: direccionResc,
                 telefono: telefonoResc
             };
+            const response = await api.post('/persona/crear-persona', payload);
+            console.log('Respuesta del backend:', response.data);
             
-            await api.post('/persona/crear-persona', payload);
+            // Verificamos si el backend envió mensajes de éxito en el arreglo 'message'
+            const successMessages = response.data.message;
+            const textoExito = (successMessages && successMessages.length > 0) 
+                ? successMessages.join('\n') 
+                : 'Rescatista dado de alta correctamente.';
 
             Swal.fire({
                 icon: 'success',
                 title: 'Éxito',
-                text: 'Rescatista dado de alta correctamente.',
+                text: textoExito, // Usamos los mensajes concatenados
                 timer: 1500,
                 showConfirmButton: false,
             });
+            
             setCurrentView('MAIN_FORM');
             setIsRescatistaNotFound(false);
-        } catch (error) {
-            Swal.fire('Error', 'No se pudo registrar el rescatista', 'error');
+            
+        } catch (error: any) {
+            console.error('Error al registrar el rescatista:', error);
+            
+            // Navegamos por el objeto de error de Axios usando optional chaining (?.)
+            // para evitar que la aplicación rompa si el backend no responde
+            const backendMessages = error.response?.data?.message;
+            
+            let textoError = 'No se pudo registrar el rescatista.';
+            
+            // Si el backend envió el arreglo de strings, los unimos con un salto de línea
+            if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+                textoError = backendMessages.join('\n');
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención',
+                text: textoError, // Mostrará uno o múltiples errores línea por línea
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#E74C3C'
+            });
         }
     };
 
@@ -108,10 +134,10 @@ export default function RegistroRescate() {
                 dni_rescatista: dniBusqueda,
                 animal_especie: especie,
                 animal_sexo: sexo, 
-                animal_raza: raza,
+                animal_raza: raza, // Recuerda: especie es Gato/Perro, raza es Siamés/Caniche
                 animal_peso: parseFloat(peso), // Convertimos a número
                 animal_estado: estadoAnimal, 
-                animal_edad_estimada: parseInt(edad, 10), // Convertimos a número
+                animal_edad_estimada: parseInt(edad, 10), // Convertimos a número entero base 10
                 animal_descripcion: descripcion,
                 lugar_rescate_descripcion: lugar,
                 fecha_rescate: fechaRescate,
@@ -119,9 +145,11 @@ export default function RegistroRescate() {
                 // fotos: Por ahora lo omitimos hasta que configuremos Multer en el back
             };
 
-            // 2. Enviamos al endpoint que armamos en el paso anterior
+            // 2. Enviamos al endpoint
             const response = await api.post('/rescate/registrar-rescate', payload);
             console.log('Respuesta del backend:', response.data);
+            
+            // Si Axios no lanzó error, el status es 2xx
             if (response.status === 200 || response.status === 201) {
                 const rescateCreado = response.data.data;
                 
@@ -133,22 +161,36 @@ export default function RegistroRescate() {
                     showConfirmButton: false
                 });
                 
-                // ATENCIÓN: Verificá si tu back devuelve 'nro_rescate' o 'id_rescate'
+                // Extraemos los IDs que devuelve la base de datos
                 setRescateExitoso({
                     nro_rescate: rescateCreado.nro_rescate || rescateCreado.id_rescate || rescateCreado.id, 
-                    nro_animal: rescateCreado.animal.nro_animal 
+                    nro_animal: rescateCreado.animal?.nro_animal || '-'
                 });
                 
                 setCurrentView('SUCCESS');
             }
 
         } catch (error: any) {
-            // Mostramos el error exacto que mandó tu middleware o tu validación
-            const mensajeError = error.response?.data?.messages?.[0] || 'Ocurrió un error inesperado al registrar';
+            console.error('Error capturado por Axios:', error.response);
+
+            // Capturamos el arreglo de mensajes (atento a si tu back manda 'message' o 'messages')
+            const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+            
+            let textoError = 'Ocurrió un error inesperado al registrar el rescate.';
+            
+            // Si es un arreglo de errores, los unimos para mostrarlos todos
+            if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+                textoError = backendMessages.join('\n');
+            } else if (typeof backendMessages === 'string') {
+                textoError = backendMessages;
+            }
+
             Swal.fire({
                 icon: 'error',
                 title: 'No se pudo registrar',
-                text: mensajeError,
+                text: textoError,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#E74C3C'
             });
         }
     };
@@ -298,11 +340,29 @@ export default function RegistroRescate() {
                 Alta Rescatista
             </button>
 
-            <label style={styles.labelCentered}>Ingrese la especie</label>
-            <input style={styles.input} type="text" value={especie} onChange={e => setEspecie(e.target.value)} required />
+            <label style={styles.labelCentered}>Seleccione la especie</label>
+            <select 
+              style={styles.selectInput} 
+              value={especie}
+              onChange={e => setEspecie(e.target.value)} 
+              required
+            >
+              <option value="" disabled>Seleccione una opción</option>
+              <option value="Perro">Perro</option>
+              <option value="Gato">Gato</option>
+            </select>
 
-            <label style={styles.labelCentered}>Ingrese el sexo</label>
-            <input style={styles.input} type="text" value={sexo} onChange={e => setSexo(e.target.value)} required />
+            <label style={styles.labelCentered}>Seleccione el sexo</label>
+            <select 
+              style={styles.selectInput} 
+              value={sexo} 
+              onChange={e => setSexo(e.target.value)} 
+              required
+            >
+              <option value="" disabled>Seleccione una opción</option>
+              <option value="Macho">Macho</option>
+              <option value="Hembra">Hembra</option>
+            </select>
 
             <label style={styles.labelCentered}>Ingrese la raza</label>
             <input style={styles.input} type="text" value={raza} onChange={e => setRaza(e.target.value)} required />
@@ -323,10 +383,22 @@ export default function RegistroRescate() {
             <input style={styles.input} type="text" value={lugar} onChange={e => setLugar(e.target.value)} required />
 
             <label style={styles.labelCentered}>Seleccione la fecha del rescate</label>
-            <input style={styles.input} type="date" value={fechaRescate} onChange={e => setFechaRescate(e.target.value)} required />
+            <input 
+              style={styles.dateInput} 
+              type="date" 
+              value={fechaRescate} 
+              onChange={e => setFechaRescate(e.target.value)} 
+              required 
+            />
 
             <label style={styles.labelCentered}>Seleccione la fecha de ingreso</label>
-            <input style={styles.input} type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required />
+            <input 
+              style={styles.dateInput} 
+              type="date" 
+              value={fechaIngreso} 
+              onChange={e => setFechaIngreso(e.target.value)} 
+              required 
+            />
 
             <label style={styles.labelCentered}>Ingresar fotografia/s y video/s</label>
             <input style={{...styles.input, padding: '10px'}} type="file" multiple accept="image/*,video/*" />
@@ -341,6 +413,33 @@ export default function RegistroRescate() {
     }
 
     const styles: { [key: string]: React.CSSProperties } = {
+    dateInput: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #BDC3C7',
+        borderRadius: '5px',
+        padding: '12px',
+        marginBottom: '20px',
+        fontSize: '14px',
+        textAlign: 'center',
+        color: '#2C3E50', // Asegura que el texto y las barras del calendario sean oscuras
+        outline: 'none',
+        width: '95%',
+        colorScheme: 'light', // MAGIA: Le dice al navegador que el calendario renderizado debe ser la versión clara, evitando iconos blancos invisibles.
+    },
+    selectInput: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #BDC3C7',
+        borderRadius: '5px',
+        padding: '12px',
+        marginBottom: '20px',
+        fontSize: '14px',
+        textAlign: 'center',
+        color: '#2C3E50',
+        outline: 'none',
+        width: '100%',
+        cursor: 'pointer',
+        appearance: 'auto', // Asegura que se vea la flecha del dropdown en todos los navegadores
+    },
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -394,14 +493,14 @@ export default function RegistroRescate() {
     },
     labelCentered: {
         fontSize: '13px',
-        color: '#000',
+        color: '#0f0c0c',
         marginBottom: '5px',
         textAlign: 'center',
         fontWeight: 'bold',
     },
     input: {
         backgroundColor: '#ECF0F1',
-        border: '1px solid #BDC3C7',
+        border: '1px solid #010303',
         borderRadius: '5px',
         padding: '10px',
         marginBottom: '15px',

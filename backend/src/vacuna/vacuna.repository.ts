@@ -8,4 +8,5 @@ export interface VacunaRepository {
     updateVacuna(dto: VacunaDTO, vacuna: Vacuna): Promise<Vacuna | null>;
     deleteVacuna(vacuna: Vacuna): Promise<void>;
     actualizarStock(cantidad: number, vacuna: Vacuna): Promise<void>;
+    buscarVacunaPorNombre(nombre: string): Promise<Vacuna | null>;
 }

@@ -163,11 +163,11 @@ export const registrarRescate = async (req: Request, res: Response): Promise<voi
         
         const casoUso = new RegistrarRescate(repoRes, repoAni, repoPer);
         const dto = req.body;
+        console.log('DTO recibido para registrar rescate:', dto);
         
         const resultado = await casoUso.ejecutar(dto);
-    
-        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         console.log('Resultado del registro de rescate:', resultado);
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         
         return;
     } catch (error: unknown) {

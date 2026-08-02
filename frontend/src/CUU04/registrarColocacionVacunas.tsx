@@ -47,14 +47,15 @@ export default function ColocacionVacunas() {
     try {
       // 1. Petición GET al backend
       const response = await api.get(`/fichamedica/${nroFicha}`);
+      console.log('Respuesta del backend:', response.data);
       const ficha = response.data.data;
 
       // 2. Mapeamos los datos. Ajustá "ficha.animal.nro_animal" según cómo venga tu JSON real
       setFichaData({
-        nroAnimal: ficha.nro_animal?.toString() || 'N/A', 
-        matricula: ficha.matricula_veterinario || 'N/A', 
+        nroAnimal: ficha.animal?.toString() || 'N/A', 
+        matricula: ficha.veterinario?.toString() || 'N/A', 
         // Formateamos la fecha que viene de la BD a formato local
-        fechaCreacion: new Date(ficha.fecha_creacion).toLocaleDateString('es-AR'),
+        fechaCreacion: new Date(ficha.fecha).toLocaleDateString('es-AR'),
         observaciones: ficha.observaciones || 'Sin observaciones relevantes'
       });
 

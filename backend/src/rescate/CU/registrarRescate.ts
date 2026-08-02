@@ -40,11 +40,8 @@ export class RegistrarRescate {
             };
         }
 
-        const fechaRescate = new Date(dto.fecha_rescate); // Asegúrate de que el DTO envíe fecha_rescate
+        const fechaRescate = new Date(dto.fecha_rescate);
 
-        // 2. VALIDACIONES ASÍNCRONAS (Base de Datos)
-        
-        // OJO AQUÍ: Ahora buscamos por DNI (string), no por número
         const persona = await this.personaRepository.findOne(dto.dni_rescatista);
         if (!persona) {
             return {
@@ -64,10 +61,10 @@ export class RegistrarRescate {
             edad_estimada: number;
             descripcion?: string;
             fecha_ingreso: Date;
-            nro_animal: 0, // Se autogenera, no es necesario enviarlo
+            nro_animal: 0,// Se autogenera, no es necesario enviarlo
         }
         const animalDTO: AnimalDTOCU = {
-            nro_animal: 0, // Se autogenera, no es necesario enviarlo
+            nro_animal: 0,
             especie: dto.animal_especie,
             sexo: dto.animal_sexo,
             raza: dto.animal_raza,

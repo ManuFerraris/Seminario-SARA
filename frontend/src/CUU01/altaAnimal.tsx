@@ -60,17 +60,51 @@ export default function AltaAnimal() {
     if (!animalData) return;
 
     try {
-      // 1. Petición PATCH (o PUT) para actualizar específicamente el estado
-      await api.put(`/animal/${numeroBusqueda}/cambiar-estado`, {
+      // 1. Enviamos la petición (corregido el nombre de la variable a 'response')
+      const response = await api.put(`/animal/${numeroBusqueda}/cambiar-estado`, {
         estado: nuevoEstado
       });
       
-      // 2. Cambiamos a la "Pantalla 2" de éxito
+      console.log('Respuesta del backend:', response.data);
       setIsSuccess(true);
 
+      // 2. Mostramos el mensaje de éxito del backend si existe
+      const successMessages = response.data.messages || response.data.message;
+      const textoExito = (successMessages && Array.isArray(successMessages) && successMessages.length > 0)
+          ? successMessages.join('\n')
+          : 'Estado del animal actualizado correctamente.';
+
+      Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: textoExito,
+          timer: 2000,
+          showConfirmButton: false
+      });
+
     } catch (error: any) {
-      const mensajeError = error.response?.data?.messages?.[0] || 'Ocurrió un error al intentar cambiar el estado.';
-      Swal.fire('Error', mensajeError, 'error');
+      console.error('Error capturado por Axios:', error.response);
+
+      // 3. Capturamos los errores de validación del backend
+      const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+      
+      let textoError = 'Ocurrió un error al intentar cambiar el estado.';
+
+      // 4. Si es un arreglo de errores, los concatenamos con saltos de línea
+      if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+          textoError = backendMessages.join('\n');
+      } else if (typeof backendMessages === 'string') {
+          textoError = backendMessages;
+      }
+
+      // 5. Para reglas de negocio (ej. falta ficha médica), el ícono 'warning' es más amigable que 'error'
+      Swal.fire({
+          icon: 'warning',
+          title: 'Atención',
+          text: textoError,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#F39C12'
+      });
     }
   };
 

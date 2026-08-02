@@ -45,4 +45,8 @@ export class AnimalRepositoryORM implements AnimalRepository {
         await this.em.flush();
         return null;
     }
+
+    async obtenerFichasMedicas(numero_animal:number):Promise<Animal | null>{
+        return await this.em.findOne(Animal, {nro_animal: numero_animal}, {populate: ['fichas_medicas', 'fichas_medicas.colocaciones']});
+    }
 };

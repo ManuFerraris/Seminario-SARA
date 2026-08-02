@@ -40,4 +40,8 @@ export class VacunaRepositoryORM implements VacunaRepository {
         await this.em.flush();
         return;
     }
+
+    async buscarVacunaPorNombre(nombre: string): Promise<Vacuna | null> {
+        return await this.em.findOne(Vacuna, { droga: nombre });
+    }
 }

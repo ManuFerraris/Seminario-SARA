@@ -11,7 +11,7 @@ interface DonacionExitosa {
     tipo: string;
     cantidad: string;
     descripcion: string;
-    fecha_vto?: string;
+    fecha_vencimiento?: string;
     stock_actualizado?: number;
 }
 
@@ -140,7 +140,7 @@ export default function RegistrarDonacion() {
                 tipo: tipoDonacion,
                 cantidad: Number(cantidad),
                 descripcion: descripcion,
-                fecha_vto: fechaVto || undefined // Solo lo enviamos si tiene valor
+                fecha_vencimiento: fechaVto || undefined // Solo lo enviamos si tiene valor
             };
 
             const response = await api.post('/donacion/registrar', payload);
@@ -153,7 +153,7 @@ export default function RegistrarDonacion() {
                 tipo: tipoDonacion,
                 cantidad: cantidad,
                 descripcion: descripcion,
-                fecha_vto: fechaVto,
+                fecha_vencimiento: fechaVto,
                 // Si tu backend devuelve el stock actualizado para las vacunas, lo guardamos
                 stock_actualizado: dataBack.stock_actualizado
             });
@@ -226,8 +226,8 @@ export default function RegistrarDonacion() {
                 <div style={styles.readOnlyTextAreaBox}>{datosExito.descripcion}</div>
             </div>
 
-            {datosExito.fecha_vto && (
-                <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de vencimiento</span><span style={styles.infoValue}>{formatearFecha(datosExito.fecha_vto)}</span></div>
+            {datosExito.fecha_vencimiento && (
+                <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha de vencimiento</span><span style={styles.infoValue}>{formatearFecha(datosExito.fecha_vencimiento)}</span></div>
             )}
 
             {/* Solo mostramos el stock si es vacuna y el backend nos devolvió ese dato */}
@@ -284,6 +284,16 @@ export default function RegistrarDonacion() {
         </div>
         );
     }
+    const VACUNAS_DISPONIBLES = [
+        "Antirrábica",
+        "Séxtuple Canina (DHPPi+L)",
+        "Quíntuple Canina (DHPPi)",
+        "Parvovirus Canino",
+        "Moquillo Canino (Distemper)",
+        "Tos de las Perreras (Bordetella)",
+        "Triple Felina (FVRCP)",
+        "Leucemia Felina (FeLV)"
+    ];
 
     // VISTA 1: BÚSQUEDA Y REGISTRO DE DONACIÓN (1-FE-ingreso-donante / 2-FE-datos-donacion)
     return (
@@ -333,45 +343,67 @@ export default function RegistrarDonacion() {
 
                 <div style={styles.grid2Cols}>
                     <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Tipo</label>
-                    <select style={styles.selectInput} value={tipoDonacion} onChange={e => setTipoDonacion(e.target.value)} required>
-                        <option value="" disabled>Seleccionar...</option>
-                        <option value="Alimento">Alimento</option>
-                        <option value="Vacuna">Vacuna</option>
-                        <option value="Medicamento">Medicamento</option>
-                        <option value="Insumo general">Insumo general</option>
-                    </select>
+                        <label style={styles.labelCentered}>Tipo</label>
+                        <select style={styles.selectInput} value={tipoDonacion} onChange={e => {
+                            setTipoDonacion(e.target.value);
+                            // Reseteamos la descripción si el usuario cambia el tipo, 
+                            // para evitar que mande una vacuna en el texto de un "Alimento"
+                            setDescripcion(""); 
+                        }} required>
+                            <option value="" disabled>Seleccionar...</option>
+                            <option value="Alimento">Alimento</option>
+                            <option value="Vacuna">Vacuna</option>
+                            <option value="Medicamento">Medicamento</option>
+                            <option value="Insumo general">Insumo general</option>
+                        </select>
                     </div>
                     <div style={styles.inputGroup}>
-                    <label style={styles.labelCentered}>Cantidad</label>
-                    <input style={styles.inputForm} type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} required />
+                        <label style={styles.labelCentered}>Cantidad</label>
+                        <input style={styles.inputForm} type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} required />
                     </div>
                 </div>
 
-                <label style={styles.labelCentered}>Descripción</label>
-                <textarea 
-                    style={styles.textArea} 
-                    value={descripcion} 
-                    onChange={e => setDescripcion(e.target.value)} 
-                    placeholder="Ej: Bolsa de alimento para cachorro de 10kg..."
-                    required 
-                />
+                {/* RENDERIZADO CONDICIONAL PARA LA DESCRIPCIÓN */}
+                <label style={styles.labelCentered}>
+                    {tipoDonacion === 'Vacuna' ? 'Vacuna (Seleccione el tipo)' : 'Descripción'}
+                </label>
+                
+                {tipoDonacion === 'Vacuna' ? (
+                    <select 
+                        style={styles.selectInput} 
+                        value={descripcion} 
+                        onChange={e => setDescripcion(e.target.value)} 
+                        required
+                    >
+                        <option value="" disabled>Seleccionar vacuna...</option>
+                        {VACUNAS_DISPONIBLES.map((vacuna, index) => (
+                            <option key={index} value={vacuna}>{vacuna}</option>
+                        ))}
+                    </select>
+                ) : (
+                    <textarea 
+                        style={styles.textArea} 
+                        value={descripcion} 
+                        onChange={e => setDescripcion(e.target.value)} 
+                        placeholder="Ej: Bolsa de alimento para cachorro de 10kg..."
+                        required 
+                    />
+                )}
 
-                {/* Si el tipo de donación es Vacuna o Medicamento, hacemos que la fecha de vencimiento sea un dato más relevante (o incluso obligatorio en el backend) */}
+                {/* FECHAS DE VENCIMIENTO */}
                 {(tipoDonacion === 'Vacuna' || tipoDonacion === 'Medicamento') && (
                     <>
-                        <label style={styles.labelCentered}>Fecha vto. (Sugerida para {tipoDonacion})</label>
-                        <input style={styles.inputForm} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} required={tipoDonacion === 'Vacuna'} />
+                        <label style={styles.labelCentered}>Fecha vto. (Obligatoria para {tipoDonacion})</label>
+                        <input style={styles.dateInput} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} required />
                     </>
                 )}
                 
                 {(tipoDonacion !== 'Vacuna' && tipoDonacion !== 'Medicamento') && (
                     <>
                         <label style={styles.labelCentered}>Fecha vto. (opcional)</label>
-                        <input style={styles.inputForm} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} />
+                        <input style={styles.dateInput} type="date" value={fechaVto} onChange={e => setFechaVto(e.target.value)} />
                     </>
                 )}
-
 
                 <button type="submit" style={styles.buttonSubmit}>
                     Registrar donación
@@ -392,6 +424,19 @@ export default function RegistrarDonacion() {
     container: {
         display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh',
         backgroundColor: '#FFFFFF', fontFamily: 'Arial, sans-serif', padding: '40px 20px',
+    },
+    dateInput: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #151a1d',
+        borderRadius: '5px',
+        padding: '12px',
+        marginBottom: '20px',
+        fontSize: '14px',
+        textAlign: 'center',
+        color: '#2C3E50', // Asegura que el texto y las barras del calendario sean oscuras
+        outline: 'none',
+        width: '95%',
+        colorScheme: 'light', // MAGIA: Le dice al navegador que el calendario renderizado debe ser la versión clara, evitando iconos blancos invisibles.
     },
     headerRow: {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%',
@@ -418,7 +463,7 @@ export default function RegistrarDonacion() {
     grid2Cols: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%' },
     inputGroup: { display: 'flex', flexDirection: 'column', width: '100%' },
     input: {
-        backgroundColor: '#ECF0F1', border: '1px solid #BDC3C7', borderRadius: '5px',
+        backgroundColor: '#ECF0F1', border: '1px solid #7a838b', borderRadius: '5px',
         padding: '12px', marginBottom: '20px', fontSize: '14px', textAlign: 'center',
         color: '#2C3E50', outline: 'none',
     },
