@@ -9,6 +9,8 @@ import { DeletePersona } from "./CU/deletePersona.js";
 import { GestionPersonal } from "./CU/gestionPersonal.js";
 import { ColaboradorRepositoryORM } from "./col.repositoryORM.js";
 import { VeterinarioRepositoryORM } from "./vet.repositoryORM.js";
+import { CreateSignup } from "./CU/createSignup.js";
+import { AdoptanteRepositoryORM } from "./ado.repositoryORM.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -185,6 +187,33 @@ export const gestionPersonal = async (req:Request, res:Response):Promise<void> =
         }
         console.error('Error desconocido al gestionar el personal', error);
         res.status(500).json({ error: "Error desconocido al gestionar el personal" });
+        return;
+    };
+};
+
+export const createSignup = async (req:Request, res:Response):Promise<void> => {
+    try{
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const repo = new PersonaRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
+        const casouso = new CreateSignup(repo, adoptanteRepo);
+        
+        const dto = req.body;
+        console.log('DTO recibido en el controlador:', dto);
+        const resultado = await casouso.ejecutar(dto);
+        console.log('Resultado del caso de uso CreatePersona:', resultado);
+    
+        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
+        return;
+    }catch(error:unknown){
+        if (error instanceof Error) {
+            console.error('Error al crear la persona', error.message);
+            res.status(500).json({ error: "Error al crear la persona" });
+            return;
+        };
+        console.error('Error desconocido al crear la persona', error);
+        res.status(500).json({ error: "Error desconocido al crear la persona" });
         return;
     };
 };

@@ -1,7 +1,7 @@
 import multer from 'multer';
 import { Router } from 'express';
 import { verificarToken } from '../login/auth.middleware.js';
-import { registrarRetiro } from '../retiro/retiroController.js';
+import { registrarRetiroAiven } from '../retiro/retiroController.js';
 import {
     findAll,
     getOne,
@@ -21,4 +21,4 @@ adopcionRouter.put(
     '/:nro_adopcion/retiro', 
     verificarToken(["Colaborador", "Veterinario"]),
     upload.array('archivos'),
-    registrarRetiro);
+    registrarRetiroAiven);

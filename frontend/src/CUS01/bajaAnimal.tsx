@@ -22,8 +22,8 @@ export default function BajaAnimal() {
       };
 
       // 2. Disparamos la petición al backend
-      await api.put(`/animal/${numeroAnimal}/cambiar-estado-fallecido`, payload);
-
+      const response = await api.put(`/animal/${numeroAnimal}/cambiar-estado-fallecido`, payload);
+      console.log('Respuesta del backend:', response.data);
       // Formateamos la fecha a DD/MM/YYYY solo para que se vea linda en el HTML del alert
       const [anio, mes, dia] = fechaDefuncion.split('-');
       const fechaFormateada = `${dia}/${mes}/${anio}`;
@@ -48,35 +48,45 @@ export default function BajaAnimal() {
       });
 
     } catch (error: any) {
-      // 4. Manejo de Errores (404, 400, etc.)
-      const status = error.response?.status;
+        console.error('Error capturado por Axios:', error.response);
 
-      if (status === 404) {
-        // Animal no encontrado
+        // 1. Extraemos los mensajes reales de tu backend
+        const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+        let textoError = 'Ocurrió un error inesperado al procesar la baja del animal.';
+
+        // 2. Concatenamos si es un arreglo, o asignamos si es un string
+        if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+            textoError = backendMessages.join('\n');
+        } else if (typeof backendMessages === 'string') {
+            textoError = backendMessages;
+        }
+
+        // 3. Leemos el status solo para mejorar el aspecto visual de la alerta
+        const status = error.response?.status;
+        let alertIcon: 'error' | 'warning' | 'info' = 'error';
+        let alertTitle = 'No se pudo registrar la baja';
+        let buttonColor = '#E74C3C'; // Rojo por defecto
+
+        if (status === 404) {
+          // Animal no encontrado
+          alertTitle = 'Error de búsqueda';
+          alertIcon = 'error';
+        } else if (status === 400 || status === 409) {
+          // Reglas de negocio (ej. ya está fallecido, falta algún dato, etc.)
+          alertTitle = 'Atención';
+          alertIcon = 'warning'; 
+          buttonColor = '#F39C12'; // Naranja/Amarillo para advertencias
+        }
+
+        // 4. Mostramos el error dinámico proveniente del backend
         Swal.fire({
-          icon: 'error',
-          title: 'Error de búsqueda',
-          text: "El numero ingresado del animal no existe",
-          confirmButtonColor: '#E74C3C',
-        });
-      } else if (status === 400 || status === 409) {
-        // Animal ya fallecido o error de reglas de negocio
-        Swal.fire({
-          icon: 'info',
-          title: 'Atención',
-          text: "El animal ya se encuentra registrado como fallecido",
-          confirmButtonColor: '#3498DB',
-        });
-      } else {
-        // Error genérico del servidor
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Hubo un problema de conexión con el servidor.',
-          confirmButtonColor: '#E74C3C',
+          icon: alertIcon,
+          title: alertTitle,
+          text: textoError,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: buttonColor,
         });
       }
-    }
   };
 
   return (

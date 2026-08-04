@@ -59,12 +59,13 @@ export class AltaEntrevistaCU {
             };
         }
 
-        const colaborador = await this.colaboradorRepo.findOneByPersona(persona);
-        if (!colaborador) {
+        const colaboradores = await this.colaboradorRepo.findAll();
+        const colaborador1 = colaboradores[0];
+        if (!colaborador1) {
             return {
                 status: 404,
                 success: false,
-                messages: [`No se encontró al colaborador con DNI ${dto.dni_colaborador}`],
+                messages: [`No se encontró un colaborador para asignar la entrevista. Por favor, comuniquese con el equipo de la protectora.`],
                 data: undefined
             };
         }
@@ -91,24 +92,25 @@ export class AltaEntrevistaCU {
 
         try {
             // 3. Transacción Atómica
-            await this.em.transactional(async (emTransaccional) => {
+            const nuevaEntrevista = await this.em.transactional(async (emTransaccional) => {
                 
                 // A. Cambiamos el estado del animal para "bloquearlo" temporalmente
-                animal.estado = 'No disponible'; // O 'En proceso', según tus estados definidos
+                animal.estado = 'No disponible';
                 emTransaccional.persist(animal);
 
                 // B. Creamos la entrevista
-                const nuevaEntrevista = new Entrevista();
-                nuevaEntrevista.adoptante = adoptante;
-                nuevaEntrevista.colaborador = colaborador; // Se asignará más adelante según el token JWT
-                nuevaEntrevista.fecha_hora = new Date(dto.fecha_hora);
-                nuevaEntrevista.fecha_hora_rep = dto.fecha_hora_rep ? new Date(dto.fecha_hora_rep) : null;
-                nuevaEntrevista.estado = dto.estado;
-                nuevaEntrevista.animal = animal;
+                const entrevista = new Entrevista();
+                entrevista.adoptante = adoptante;
+                entrevista.colaborador = colaborador1; // Se asignará más adelante según el token JWT
+                entrevista.fecha_hora = new Date(dto.fecha_hora);
+                entrevista.fecha_hora_rep = dto.fecha_hora_rep ? new Date(dto.fecha_hora_rep) : null;
+                entrevista.estado = dto.estado;
+                entrevista.animal = animal;
         
-                if (dto.descripcion) nuevaEntrevista.descripcion = dto.descripcion;
+                if (dto.descripcion) entrevista.descripcion = dto.descripcion;
                 
-                emTransaccional.persist(nuevaEntrevista);
+                emTransaccional.persist(entrevista);
+                return entrevista;
             });
 
             // 4. Retornamos los datos exactos que necesita tu componente React
@@ -117,6 +119,7 @@ export class AltaEntrevistaCU {
                 success: true, 
                 messages: ["Entrevista registrada con éxito."], 
                 data: {
+                    id_entrevista: nuevaEntrevista.id_entrevista,
                     nro_animal: animal.nro_animal,
                     dni_adoptante: adoptante.persona.dni,
                     estado_animal: animal.estado

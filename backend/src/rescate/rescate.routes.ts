@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { verificarToken } from "../login/auth.middleware.js";
+import { uploadRescates } from "../shared/multer.service.js";
 import {
 findAllRescates,
 getOneRescate,
@@ -16,4 +17,4 @@ rescateRouter.get("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]
 rescateRouter.post("/", verificarToken(["Colaborador", "Veterinario"]), createRescate);
 rescateRouter.put("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), updateRescate);
 rescateRouter.delete("/:nro_rescate", verificarToken(["Colaborador", "Veterinario"]), deleteRescate);
-rescateRouter.post("/registrar-rescate", verificarToken(["Colaborador", "Veterinario"]), registrarRescate);
+rescateRouter.post("/registrar-rescate", verificarToken(["Colaborador", "Veterinario"]), uploadRescates.array('archivos'), registrarRescate);

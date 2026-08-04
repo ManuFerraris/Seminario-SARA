@@ -6,7 +6,7 @@ export class AnimalRepositoryORM implements AnimalRepository {
     constructor(private readonly em:EntityManager){};
 
     async findAll(): Promise<Animal[]> {
-        return await this.em.find(Animal, {});
+        return await this.em.find(Animal, {}, {populate: ['audiovisuales']});
     };
 
     async getOne(numero:number):Promise<Animal | null>{

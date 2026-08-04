@@ -161,22 +161,44 @@ export const registrarRescate = async (req: Request, res: Response): Promise<voi
         const repoAni = new AnimalRepositoryORM(em);
         const repoPer = new PersonaRepositoryORM(em);
         
-        const casoUso = new RegistrarRescate(repoRes, repoAni, repoPer);
-        const dto = req.body;
-        console.log('DTO recibido para registrar rescate:', dto);
+        // Inyectamos el 'em' en el caso de uso
+        const casoUso = new RegistrarRescate(repoRes, repoAni, repoPer, em);
         
-        const resultado = await casoUso.ejecutar(dto);
-        console.log('Resultado del registro de rescate:', resultado);
-        res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
-        
+        // Armamos el DTO manualmente convirtiendo los tipos que llegan como string desde el FormData
+        const dtoRegistrarRescate = {
+            dni_rescatista: req.body.dni_rescatista,
+            animal_especie: req.body.animal_especie,
+            animal_sexo: req.body.animal_sexo,
+            animal_raza: req.body.animal_raza,
+            // Convertimos los numéricos usando parseFloat y parseInt
+            animal_peso: parseFloat(req.body.animal_peso),
+            animal_estado: req.body.animal_estado,
+            animal_edad_estimada: parseInt(req.body.animal_edad_estimada, 10),
+            animal_descripcion: req.body.animal_descripcion,
+            lugar_rescate_descripcion: req.body.lugar_rescate_descripcion,
+            fecha_rescate: req.body.fecha_rescate,
+            fecha_ingreso_animal: req.body.fecha_ingreso_animal,
+            // Atrapamos las fotos de Multer
+            archivos: (req.files as Express.Multer.File[]) || []
+        };
+
+        console.log('DTO parseado para registrar rescate:', dtoRegistrarRescate);
+        const resultado = await casoUso.ejecutar(dtoRegistrarRescate);
+        console.log('Resultado del caso de uso registrar rescate:', resultado);
+
+        res.status(resultado.status).json({ 
+            success: resultado.success, 
+            messages: resultado.messages, 
+            data: resultado.data 
+        });
         return;
+
     } catch (error: unknown) {
-        if (error instanceof Error) {
-            console.error('Error al crear el rescate:', error.message);
-            res.status(500).json({ error: "Error al crear el rescate" });
-            return;
-        }
-        res.status(500).json({ error: "Error desconocido al crear el rescate" });
+        console.error('Error crítico en controlador registrarRescate:', error);
+        res.status(500).json({ 
+            success: false, 
+            messages: ["Error desconocido al crear el rescate"] 
+        });
         return;
     }
 };

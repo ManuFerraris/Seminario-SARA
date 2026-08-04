@@ -18,7 +18,7 @@ export class AuthController {
 
             // 2. Ejecutamos el caso de uso
             const result = await this.loginPersona.ejecutar(email, password);
-
+            console.log("Resultado del login:", result);    
             // 3. Devolvemos la respuesta (el status code viene del use case)
             return res.status(result.status).json({
                 success: result.success,

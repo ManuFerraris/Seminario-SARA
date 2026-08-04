@@ -9,6 +9,7 @@ export default function Registro() {
   const [dni, setDni] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
+  const [direccion, setDireccion] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -36,13 +37,13 @@ export default function Registro() {
         dni, 
         telefono, 
         email, 
+        domicilio: direccion,
         contrasenia: password 
       };
       
       console.log('Intentando registrar usuario:', payload);
 
-      // Hacemos el POST al backend. Ajustá '/usuario/registrar' o '/auth/signup' según tu ruta.
-      await api.post('/persona/crear-persona', payload);
+      await api.post('/persona/crear-signup', payload);
 
       // Si todo sale bien, mostramos mensaje de éxito y redirigimos al Login
       Swal.fire({
@@ -119,6 +120,16 @@ export default function Registro() {
           placeholder="Ej: 0341300600"
           value={telefono}
           onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))} 
+          required
+        />
+
+        <label style={styles.label}>Ingrese su dirección</label>
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Ej: Calle Falsa 123"
+          value={direccion}
+          onChange={(e) => setDireccion(e.target.value)}
           required
         />
 

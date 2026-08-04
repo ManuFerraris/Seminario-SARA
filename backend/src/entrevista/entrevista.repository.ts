@@ -1,5 +1,4 @@
 import { Entrevista } from "../entities/entrevista.entity.js";
-import {Persona} from "../entities/persona.entity.js";
 
 export interface EntrevistaRepository {
     buscarEntrevista(nro_entrevista: number): Promise<Entrevista | null>;

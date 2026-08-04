@@ -9,7 +9,6 @@ import { CreateSeguimiento } from "./CU/createSeg.js";
 import { UpdateSeguimiento } from "./CU/updateSeg.js";
 import { DeleteSeguimiento } from "./CU/deleteSeg.js";
 
-
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
         const orm = (req.app.locals as { orm: MikroORM }).orm;
@@ -98,6 +97,7 @@ export const update = async (req:Request, res:Response):Promise<void> => {
         const adopcionRepo = new AdopcionRepositoryORM(em);
         const casouso = new UpdateSeguimiento(segRepo, adopcionRepo);
 
+        console.log('Nro de seguimiento recibido en el controlador:', req.params.nro_seguimiento);
         const {valor: codVal, error:codError} = validarCodigo(req.params.nro_seguimiento, 'numero de seguimiento');
         if(codError || codVal === undefined){
             res.status(400).json({ message: codError , data: undefined });
@@ -106,9 +106,10 @@ export const update = async (req:Request, res:Response):Promise<void> => {
 
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);
+        console.log('Número de seguimiento a actualizar:', codVal);
 
         const resultado = await casouso.ejecutar(codVal, dto);
-
+        console.log('Resultado del caso de uso de actualización:', resultado);
         res.status(resultado.status).json({ message: resultado.messages, data: resultado.data });
         return;
 

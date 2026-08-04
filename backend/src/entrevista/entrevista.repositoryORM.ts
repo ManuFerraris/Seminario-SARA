@@ -6,7 +6,7 @@ export class EntrevistaRepositoryORM implements EntrevistaRepository {
     constructor(private em: EntityManager){};
     
     async buscarEntrevista(nro_entrevista: number): Promise<Entrevista | null> {
-        return await this.em.findOne(Entrevista, { id_entrevista: nro_entrevista }, {populate: ['adoptante', 'colaborador', 'animal']});
+        return await this.em.findOne(Entrevista, { id_entrevista: nro_entrevista }, {populate: ['adoptante.persona', 'colaborador', 'animal']});
     };
 
     async traerTodasEntrevistas(): Promise<Entrevista[]> {

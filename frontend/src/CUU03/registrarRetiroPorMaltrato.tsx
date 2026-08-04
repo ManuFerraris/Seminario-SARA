@@ -42,10 +42,11 @@ export default function RetiroMaltrato() {
     try {
       const response = await api.get(`/adopcion/${numeroAdopcion}`);
       const adopcion = response.data.data;
+      console.log('Datos de adopción obtenidos:', adopcion);
 
       setAdopcionData({
-        nombreAdoptante: adopcion.adoptante?.nombre || 'N/A',
-        apellidoAdoptante: adopcion.adoptante?.apellido || 'N/A',
+        nombreAdoptante: adopcion.adoptante?.persona?.nombre || 'N/A',
+        apellidoAdoptante: adopcion.adoptante?.persona?.apellido || 'N/A',
         numeroAnimal: adopcion.animal?.nro_animal?.toString() || 'N/A',
         especieAnimal: adopcion.animal?.especie || 'N/A',
         razaAnimal: adopcion.animal?.raza || 'N/A',
@@ -81,6 +82,7 @@ export default function RetiroMaltrato() {
     try {
       const formData = new FormData();
       
+      formData.append('nro_adopcion', numeroAdopcion);
       formData.append('motivos', motivosRetiro);
       formData.append('descripcion_evidencia', evidenciaMaltrato);
       formData.append('fecha_retiro', fechaRetiro);
@@ -89,15 +91,25 @@ export default function RetiroMaltrato() {
         formData.append('archivos', archivo); 
       });
 
-      await api.put(`/adopcion/${numeroAdopcion}/retiro`, formData);
+      const response = await api.post('/retiro/registrar', formData);
+      console.log('Retiro registrado con éxito:', response);
       setCurrentView('SUCCESS');
 
     } catch (error: any) {
-      const mensajeBack = error.response?.data?.messages?.[0] || 'Error al procesar el retiro.';
+      const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+      let textoError = 'Error al procesar el retiro.';
+      
+      if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+          textoError = backendMessages.join('\n');
+      } else if (typeof backendMessages === 'string') {
+          textoError = backendMessages;
+      }
+
       Swal.fire({
         icon: 'error',
         title: 'Atención',
-        text: mensajeBack,
+        text: textoError,
+        confirmButtonColor: '#E74C3C'
       });
     }
   };
@@ -182,7 +194,7 @@ export default function RetiroMaltrato() {
 
           <label style={styles.labelCentered}>Fecha de retiro</label>
           <input 
-            style={styles.input} 
+            style={styles.dateInput} 
             type="date" 
             value={fechaRetiro} 
             onChange={e => setFechaRetiro(e.target.value)} 
@@ -289,10 +301,23 @@ export default function RetiroMaltrato() {
   );
 }
 
-    // -------------------------------------------------------------------------
-    // ESTILOS
-    // -------------------------------------------------------------------------
-    const styles: { [key: string]: React.CSSProperties } = {
+  // -------------------------------------------------------------------------
+  // ESTILOS
+  // -------------------------------------------------------------------------
+  const styles: { [key: string]: React.CSSProperties } = {
+    dateInput: {
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #BDC3C7',
+      borderRadius: '5px',
+      padding: '12px',
+      marginBottom: '20px',
+      fontSize: '14px',
+      textAlign: 'center',
+      color: '#000000', // Asegura que el texto y las barras del calendario sean oscuras
+      outline: 'none',
+      width: '95%',
+      colorScheme: 'light', // MAGIA: Le dice al navegador que el calendario renderizado debe ser la versión clara, evitando iconos blancos invisibles.
+    },
     container: {
         display: 'flex',
         flexDirection: 'column',

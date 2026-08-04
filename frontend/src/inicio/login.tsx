@@ -19,6 +19,7 @@ export default function Login() {
         email: email,
         password: password
       });
+      console.log('Respuesta del backend:', response.data);
 
       // 2. Si es exitoso, extraemos los datos
       if (response.data.success) {
@@ -32,20 +33,37 @@ export default function Login() {
         console.log('Login exitoso. Token y roles guardados en localStorage.');
         console.log('Roles del usuario:', roles);
         // 4. Lógica de enrutamiento (RBAC en el frontend)
-        if (roles.includes('Colaborador') || roles.includes('Veterinario')) {
-          navigate('/menu'); // Los mandamos al dashboard interno
+        const esStaff = roles.includes('Colaborador') || roles.includes('Veterinario');
+        const esAdoptante = roles.includes('Adoptante');
+
+        if (esStaff && esAdoptante) {
+          // Bifurcación: Es empleado pero también está buscando adoptar
+          navigate('/seleccionar-perfil');
+        } else if (esStaff) {
+          // Es solo staff (Veterinario, Colaborador, o ambos) -> va directo a trabajar
+          navigate('/menu'); 
         } else {
-          navigate('/alta-entrevista'); // Los adoptantes/usuarios van al catálogo público
+          // Es solo Adoptante (o usuario estándar) -> va al catálogo público
+          navigate('/alta-entrevista'); 
         }
       }
     } catch (error: any) {
-      console.error('Error durante el login:', error);
-      // Capturamos el 401 que configuramos en el backend
-      if (error.response && error.response.data && error.response.data.messages) {
-        setErrorMensaje(error.response.data.messages[0]);
-      } else {
-        setErrorMensaje('Error de conexión con el servidor.');
+      console.error('Error capturado por Axios:', error.response);
+      
+      // 1. Extraemos los mensajes reales de tu backend
+      const backendMessages = error.response?.data?.messages;
+      console.log('Mensajes del backend:', backendMessages);
+      let textoError = 'Error de conexión con el servidor.';
+
+      // 2. Concatenamos si es un arreglo, o asignamos si es un string
+      if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+          textoError = backendMessages.join('\n');
+      } else if (typeof backendMessages === 'string') {
+          textoError = backendMessages;
       }
+
+      // 3. Guardamos el texto dinámico en el estado para mostrarlo en el formulario
+      setErrorMensaje(textoError);
     }
   };
 
@@ -83,6 +101,22 @@ export default function Login() {
           required
         />
 
+        {errorMensaje && (
+            <div style={{ 
+                color: '#E74C3C', 
+                backgroundColor: '#FDEDEC',
+                border: '1px solid #E74C3C',
+                padding: '10px',
+                borderRadius: '5px',
+                marginTop: '10px',
+                marginBottom: '15px',
+                textAlign: 'center',
+                fontWeight: '500',
+                whiteSpace: 'pre-wrap' /* ¡Esta es la propiedad mágica para que el \n funcione en HTML! */
+            }}>
+                {errorMensaje}
+            </div>
+        )}
         <button type="submit" style={styles.button}>
           Ingresar
         </button>

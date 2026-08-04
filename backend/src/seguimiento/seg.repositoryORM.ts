@@ -10,7 +10,7 @@ export class SeguimientoRepositoryORM implements SeguimientoRepository {
     };
 
     async getOne(id_seguimiento: number): Promise<Seguimiento | null> {
-        return this.ormRepository.findOne(Seguimiento, { id_seguimiento });
+        return this.ormRepository.findOne(Seguimiento, { id_seguimiento }, { populate: ['adopcion.adoptante.persona'] });
     };
 
     async createSeguimiento(seguimiento: Seguimiento): Promise<void> {

@@ -12,5 +12,5 @@ export const seguimientoRouter = Router();
 seguimientoRouter.get('/', verificarToken(["Colaborador", "Veterinario"]), findAll);
 seguimientoRouter.get('/:nro_seguimiento', verificarToken(["Colaborador", "Veterinario"]), getOne);
 seguimientoRouter.post('/registrar', verificarToken(["Colaborador", "Veterinario"]), create);
-seguimientoRouter.put('/:nro_seguimiento', verificarToken(["Colaborador", "Veterinario"]), update);
+seguimientoRouter.put('/:nro_seguimiento/completar', verificarToken(["Colaborador", "Veterinario"]), update);
 seguimientoRouter.delete('/:nro_seguimiento', verificarToken(["Colaborador", "Veterinario"]), deleteSeguimiento);

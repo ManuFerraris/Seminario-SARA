@@ -11,9 +11,11 @@ interface Animal {
   edad: string;
   fechaIngreso: string;
   estado: string;
+  fotoUrl?: string;
 }
 
 interface EntrevistaExitosa {
+  id_entrevista: number;
   nro_animal: number;
   fecha: string;
   hora: string;
@@ -63,17 +65,29 @@ export default function AltaEntrevista() {
 
     try {
       const response = await api.get('/animal/estado-disponible');
-      const animalesMapeados = response.data.data.map((a: any) => ({
-        id: a.nro_animal,
-        especie: a.especie,
-        edad: a.edad_estimada,
-        fechaIngreso: new Date(a.fecha_ingreso).toLocaleDateString('es-AR'),
-        estado: a.estado,
-      }));
+      console.log('Respuesta del backend:', response);
+
+      const animalesMapeados = response.data.data.map((a: any) => {
+        const urlMaterial = a.audiovisuales && a.audiovisuales.length > 0 
+          ? a.audiovisuales[0].url_material 
+          : null;
+
+        return {
+          id: a.nro_animal,
+          especie: a.especie,
+          edad: a.edad_estimada,
+          fechaIngreso: new Date(a.fecha_ingreso).toLocaleDateString('es-AR'),
+          estado: a.estado,
+          fotoUrl: urlMaterial
+        };
+      });
       
       setAnimales(animalesMapeados);
-    } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los animales.' });
+    } catch (error : any) {
+      Swal.fire({ 
+        icon: 'error', 
+        title: 'Error', 
+        text: error.message || 'No se pudieron cargar los animales.' });
     } finally {
       setCargandoAnimales(false);
     }
@@ -111,8 +125,10 @@ export default function AltaEntrevista() {
       };
 
       const response = await api.post('/entrevista/registrar', payload);
-      
+      console.log('Respuesta del backend:', response);
+
       setDatosExito({
+        id_entrevista: response.data.data.id_entrevista,
         nro_animal: response.data.data.nro_animal,
         fecha: fechaEntrevista,
         hora: horaEntrevista,
@@ -124,20 +140,40 @@ export default function AltaEntrevista() {
       setCurrentView('SUCCESS');
 
     } catch (error: any) {
+      console.error('Error capturado por Axios:', error.response);
+      
       const status = error.response?.status;
-      const mensajeBack = error.response?.data?.messages?.[0];
+      const backendMessages = error.response?.data?.messages || error.response?.data?.message;
 
+      // 1. Extraemos los mensajes reales del backend.
+      // ATENCIÓN: Aquí usamos <br/> en lugar de \n porque lo inyectaremos en la propiedad 'html'
+      let mensajesFormateados = 'Ocurrió un problema al agendar la entrevista.';
+      
+      if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+          mensajesFormateados = backendMessages.join('<br/>');
+      } else if (typeof backendMessages === 'string') {
+          mensajesFormateados = backendMessages;
+      }
+
+      // 2. Evaluamos el status para mostrar la alerta correspondiente
       if (status === 403 || status === 409) {
         Swal.fire({
           icon: 'warning',
           title: 'Atención',
-          html: `<b>Inhabilitado para adoptar</b><br/><br/>${mensajeBack || 'Si considera que es un error, comuníquese con nosotros'}`,
+          // Inyectamos todos los errores extraídos usando interpolación
+          html: `<b>Inhabilitado para adoptar</b><br/><br/>${mensajesFormateados}`,
           confirmButtonColor: '#F39C12',
           background: '#F1C40F',
           color: '#FFFFFF'
         });
       } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un problema al agendar la entrevista.' });
+        // Para errores 400, 500 u otros, mostramos también los mensajes formateados
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Error', 
+          html: mensajesFormateados, // Usamos html aquí también para mantener la consistencia
+          confirmButtonColor: '#E74C3C'
+        });
       }
     }
   };
@@ -170,6 +206,10 @@ export default function AltaEntrevista() {
         </div>
 
         <div style={styles.successCard}>
+          <div style={styles.infoRow}>
+            <span style={styles.infoLabel}>ID entrevista:</span>
+            <span style={styles.infoValue}>{datosExito.id_entrevista}</span>
+          </div>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Estado animal:</span>
             <span style={styles.infoValueWarning}>{datosExito.estado_animal}</span>
@@ -267,8 +307,27 @@ export default function AltaEntrevista() {
               ) : (
                 animales.map(animal => (
                   <div key={animal.id} style={styles.animalCard}>
-                    <div style={styles.iconPlaceholder}>
-                      <span style={styles.iconBracket}>{`{ }`}</span>
+                    <div style={{
+                      ...styles.iconPlaceholder, 
+                      padding: 0, 
+                      overflow: 'hidden', 
+                      backgroundColor: '#f5f5f5' // Un fondo gris claro por si no hay foto
+                    }}>
+                      {animal.fotoUrl ? (
+                        <img 
+                          // Como src hace un GET directo, concatenamos la URL de tu backend
+                          src={`http://localhost:3000${animal.fotoUrl}`} 
+                          alt={`Foto de ${animal.especie}`} 
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover' // Evita que la foto se estire o deforme
+                          }}
+                        />
+                      ) : (
+                        // Nuestro Fallback en caso de que el animal no tenga foto subida
+                        <span style={styles.iconBracket}>{`{ }`}</span>
+                      )}
                     </div>
                     <div style={styles.animalDetails}>
                       <p style={styles.animalText}>Especie: {animal.especie}</p>
@@ -370,6 +429,19 @@ export default function AltaEntrevista() {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    dateInput: {
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #BDC3C7',
+        borderRadius: '5px',
+        padding: '12px',
+        marginBottom: '20px',
+        fontSize: '14px',
+        textAlign: 'center',
+        color: '#2C3E50', // Asegura que el texto y las barras del calendario sean oscuras
+        outline: 'none',
+        width: '95%',
+        colorScheme: 'light', // MAGIA: Le dice al navegador que el calendario renderizado debe ser la versión clara, evitando iconos blancos invisibles.
+    },
     container: {
         display: 'flex',
         flexDirection: 'column',

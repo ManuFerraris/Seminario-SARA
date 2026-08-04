@@ -30,13 +30,13 @@ export class CambiarEstadoFallecido {
         
         const errores: string[] = [];
 
-        if(!dto.fecha_defuncion) errores.push("El campo 'fecha_defuncion' es obligatorio");
+        if(!dto.fecha_defuncion) errores.push("El campo 'fecha de funcion' es obligatorio");
         
         const fechaDate = new Date(dto.fecha_defuncion);
-        if(fechaDate > new Date()) errores.push("El campo 'fecha_defuncion' no puede ser una fecha futura");
-        if(!dto.fecha_defuncion) errores.push("El campo 'fecha_defuncion' es obligatorio");
+        if(fechaDate > new Date()) errores.push("El campo 'fecha de funcion' no puede ser una fecha futura");
+        if(!dto.fecha_defuncion) errores.push("El campo 'fecha de funcion' es obligatorio");
 
-        if(isNaN(fechaDate.getTime())) errores.push("El campo 'fecha_defuncion' no es una fecha válida");
+        if(isNaN(fechaDate.getTime())) errores.push("El campo 'fecha de funcion' no es una fecha válida");
         
         if(errores.length > 0) return {
             status: 400, 

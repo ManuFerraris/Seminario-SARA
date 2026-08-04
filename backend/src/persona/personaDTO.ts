@@ -5,7 +5,7 @@ export interface PersonaDTO {
     id_colaborador?: number;
     id_adoptante?: number;
     estado?: string;
-    domicilio?: string;
+    domicilio: string;
     nombre: string;
     apellido: string;
     email: string;

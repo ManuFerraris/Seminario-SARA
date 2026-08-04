@@ -16,6 +16,7 @@ interface EntrevistaData {
     nro_entrevista?: string | number;
     fecha?: string;
     hora?: string;
+    estadoEntrevista: string;
     
     // Datos aplanados para mostrar
     nombreAdoptante: string;
@@ -29,6 +30,7 @@ interface EntrevistaData {
     nroAnimal: string | number;
     descripcion: string;
     id_colaborador?: string | number;
+    estadoAnimal: string; 
 }
 
 export default function ResultadoEntrevista() {
@@ -68,7 +70,7 @@ export default function ResultadoEntrevista() {
 
         try {
             const response = await api.get(`/entrevista/${id_entrevista}`);
-            //console.log('Respuesta del backend al buscar entrevista:', response.data);
+            console.log('Respuesta del backend al buscar entrevista:', response.data);
             const data = response.data.data;
 
             if (data.estado === 'Cancelada' || data.estado === 'Rechazada' || data.estado === 'Aprobada') {
@@ -89,11 +91,11 @@ export default function ResultadoEntrevista() {
                 nro_entrevista: data.id_entrevista,
                 fecha: fecha,
                 hora: hora,
-                
+                estadoEntrevista: data.estado || '-',
                 // Ahora sí accedemos a las propiedades del objeto populado
-                dniAdoptante: data.adoptante?.dni || '-',
-                nombreAdoptante: data.adoptante?.nombre || '-',
-                apellidoAdoptante: data.adoptante?.apellido || '-',
+                dniAdoptante: data.adoptante?.persona?.dni || '-',
+                nombreAdoptante: data.adoptante?.persona?.nombre || '-',
+                apellidoAdoptante: data.adoptante?.persona?.apellido || '-',
                 
                 // Mapeamos los datos del animal (ajustá si los nombres de tus columnas varían)
                 nroAnimal: data.animal?.nro_animal || '-',
@@ -104,7 +106,8 @@ export default function ResultadoEntrevista() {
                 peso: data.animal?.peso?.toString() || '-',
                 descripcion: data.animal?.descripcion || '-',
                 
-                id_colaborador: data.colaborador?.dni || '-' // O id_colaborador, según tu entidad
+                id_colaborador: data.colaborador?.id_colaborador || '-', // O id_colaborador, según tu entidad
+                estadoAnimal: data.animal?.estado || '-'
             });
 
         } catch (error: any) {
@@ -146,7 +149,36 @@ export default function ResultadoEntrevista() {
             };
 
             // Ajustá la ruta según tu Controlador
-            await api.post(`/entrevista/${id_entrevista}/resultado`, payload);
+            const response = await api.post(`/entrevista/${id_entrevista}/resultado`, payload);
+            console.log('Respuesta del backend al registrar resultado:', response.data);
+
+            const data = response.data.data;
+            const fechaCruda = data.fecha_hora_rep || data.fecha_hora;
+            const [fecha, horaCompleta] = fechaCruda.split('T');
+            const hora = horaCompleta.substring(0, 5);
+
+            setEntrevistaData({
+                nro_entrevista: data.id_entrevista,
+                fecha: fecha,
+                hora: hora,
+                estadoEntrevista: data.estado || '-',
+                // Ahora sí accedemos a las propiedades del objeto populado
+                dniAdoptante: data.adoptante?.persona?.dni || '-',
+                nombreAdoptante: data.adoptante?.persona?.nombre || '-',
+                apellidoAdoptante: data.adoptante?.persona?.apellido || '-',
+                
+                // Mapeamos los datos del animal (ajustá si los nombres de tus columnas varían)
+                nroAnimal: data.animal?.nro_animal || '-',
+                especieAnimal: data.animal?.especie || '-',
+                raza: data.animal?.raza || '-',
+                edad: data.animal?.edad_estimada?.toString() || '-',
+                sexo: data.animal?.sexo || '-',
+                peso: data.animal?.peso?.toString() || '-',
+                descripcion: data.animal?.descripcion || '-',
+                
+                id_colaborador: data.colaborador?.id_colaborador || '-', // O id_colaborador, según tu entidad
+                estadoAnimal: data.animal?.estado || '-'
+            });
 
             // Cambiamos de vista según el resultado exitoso
             switch (resultado) {
@@ -247,9 +279,9 @@ export default function ResultadoEntrevista() {
             </div>
             <form style={styles.formContainer} onSubmit={handleConfirmarReprogramacion}>
             <label style={styles.labelCentered}>Fecha de reprogramacion</label>
-            <input style={styles.input} type="date" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} required />
+            <input style={styles.dateInput} type="date" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} required />
             <label style={styles.labelCentered}>Hora de reprogramacion</label>
-            <input style={styles.input} type="time" value={nuevaHora} onChange={e => setNuevaHora(e.target.value)} required />
+            <input style={styles.dateInput} type="time" value={nuevaHora} onChange={e => setNuevaHora(e.target.value)} required />
             <button type="submit" style={styles.buttonSubmit}>Confirmar reprogramacion</button>
             </form>
         </div>
@@ -265,8 +297,9 @@ export default function ResultadoEntrevista() {
             <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
             <div style={styles.successCard}>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>Disponible</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado entrevista</span><span style={styles.infoValueDanger}>Cancelada</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Numero entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>{entrevistaData?.estadoAnimal}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado entrevista</span><span style={styles.infoValueDanger}>{entrevistaData?.estadoEntrevista}</span></div>
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
         </div>
@@ -282,8 +315,10 @@ export default function ResultadoEntrevista() {
             <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
             <div style={styles.successCard}>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>Disponible</span></div>
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado entrevista</span><span style={styles.infoValueDanger}>Rechazada</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Numero entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>{entrevistaData?.estadoAnimal}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado entrevista</span><span style={styles.infoValueDanger}>{entrevistaData?.estadoEntrevista}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Motivo del rechazo</span><span style={styles.infoValueDanger}>{descripcionResultado}</span></div>
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
         </div>
@@ -412,6 +447,11 @@ export default function ResultadoEntrevista() {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    dateInput: {
+        backgroundColor: '#FFFFFF', border: '1px solid #BDC3C7', borderRadius: '5px', padding: '12px', 
+        marginBottom: '20px', fontSize: '14px', textAlign: 'center', 
+        color: '#2C3E50', width: '95%', colorScheme: 'light', 
+    },
     container: {
         display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh',
         backgroundColor: '#FFFFFF', fontFamily: 'Arial, sans-serif', padding: '40px 20px',

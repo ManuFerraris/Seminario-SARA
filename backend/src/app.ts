@@ -14,6 +14,7 @@ import { adopcionRouter } from './adopcion/adopcion.routes.js';
 import { fichaMedicaRouter } from './fichaMedica/fichaMedica.routes.js';
 import { colocacionRouter } from './colocacion/colocacion.routes.js';
 import { seguimientoRouter } from './seguimiento/seg.routes.js';
+import { retiroRouter } from './retiro/retiro.routes.js';
 import { authRouter } from './login/auth.routes.js';
 import { seedPersonaVeterinario } from './seed/seed.js';
 import { seedPersonaColaborador } from './seed/seed.js';
@@ -26,6 +27,8 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas de la API
+app.use("/api/retiro", retiroRouter);
+app.use("/api/uploads", express.static("uploads"));
 app.use("/api/animal", animalRouter);
 app.use("/api/persona", personaRouter);
 app.use("/api/donacion", donacionRouter);

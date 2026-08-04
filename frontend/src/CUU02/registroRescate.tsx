@@ -20,12 +20,13 @@ export default function RegistroRescate() {
     const [sexo, setSexo] = useState('');
     const [raza, setRaza] = useState('');
     const [peso, setPeso] = useState('');
-    const [estadoAnimal] = useState('No Apto'); // Ojo: lo puse igual que tu backend
+    const [estadoAnimal] = useState('No Apto');
     const [edad, setEdad] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [lugar, setLugar] = useState('');
     const [fechaRescate, setFechaRescate] = useState('');
     const [fechaIngreso, setFechaIngreso] = useState('');
+    const [archivos, setArchivos] = useState<File[]>([]);
 
     // Estados del formulario Alta Rescatista
     const [nombreResc, setNombreResc] = useState('');
@@ -129,27 +130,28 @@ export default function RegistroRescate() {
         e.preventDefault();
         
         try {
-            // 1. Armamos el objeto con EXACTAMENTE los nombres que espera tu DTO
-            const payload = {
-                dni_rescatista: dniBusqueda,
-                animal_especie: especie,
-                animal_sexo: sexo, 
-                animal_raza: raza, // Recuerda: especie es Gato/Perro, raza es Siamés/Caniche
-                animal_peso: parseFloat(peso), // Convertimos a número
-                animal_estado: estadoAnimal, 
-                animal_edad_estimada: parseInt(edad, 10), // Convertimos a número entero base 10
-                animal_descripcion: descripcion,
-                lugar_rescate_descripcion: lugar,
-                fecha_rescate: fechaRescate,
-                fecha_ingreso_animal: fechaIngreso
-                // fotos: Por ahora lo omitimos hasta que configuremos Multer en el back
-            };
+            // 1. Instanciamos FormData en lugar de un objeto plano
+            const formData = new FormData();
+            
+            // 2. Agregamos los campos de texto y números
+            formData.append('dni_rescatista', dniBusqueda);
+            formData.append('animal_especie', especie);
+            formData.append('animal_sexo', sexo);
+            formData.append('animal_raza', raza);
+            formData.append('animal_peso', peso);
+            formData.append('animal_estado', estadoAnimal);
+            formData.append('animal_edad_estimada', edad);
+            formData.append('animal_descripcion', descripcion);
+            formData.append('lugar_rescate_descripcion', lugar);
+            formData.append('fecha_rescate', fechaRescate);
+            formData.append('fecha_ingreso_animal', fechaIngreso);
+            archivos.forEach((archivo) => {
+                formData.append('archivos', archivo);
+            });
 
-            // 2. Enviamos al endpoint
-            const response = await api.post('/rescate/registrar-rescate', payload);
+            const response = await api.post('/rescate/registrar-rescate', formData);
             console.log('Respuesta del backend:', response.data);
             
-            // Si Axios no lanzó error, el status es 2xx
             if (response.status === 200 || response.status === 201) {
                 const rescateCreado = response.data.data;
                 
@@ -161,10 +163,9 @@ export default function RegistroRescate() {
                     showConfirmButton: false
                 });
                 
-                // Extraemos los IDs que devuelve la base de datos
                 setRescateExitoso({
-                    nro_rescate: rescateCreado.nro_rescate || rescateCreado.id_rescate || rescateCreado.id, 
-                    nro_animal: rescateCreado.animal?.nro_animal || '-'
+                    nro_rescate: rescateCreado.rescate_id || '-', 
+                    nro_animal: rescateCreado.nro_animal || '-'
                 });
                 
                 setCurrentView('SUCCESS');
@@ -173,12 +174,9 @@ export default function RegistroRescate() {
         } catch (error: any) {
             console.error('Error capturado por Axios:', error.response);
 
-            // Capturamos el arreglo de mensajes (atento a si tu back manda 'message' o 'messages')
             const backendMessages = error.response?.data?.messages || error.response?.data?.message;
-            
             let textoError = 'Ocurrió un error inesperado al registrar el rescate.';
             
-            // Si es un arreglo de errores, los unimos para mostrarlos todos
             if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
                 textoError = backendMessages.join('\n');
             } else if (typeof backendMessages === 'string') {
@@ -215,6 +213,13 @@ export default function RegistroRescate() {
             setCurrentView('MAIN_FORM');
         } else {
             navigate(-1);
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            // Convertimos el FileList del navegador a un arreglo de JavaScript
+            setArchivos(Array.from(e.target.files));
         }
     };
 
@@ -401,7 +406,12 @@ export default function RegistroRescate() {
             />
 
             <label style={styles.labelCentered}>Ingresar fotografia/s y video/s</label>
-            <input style={{...styles.input, padding: '10px'}} type="file" multiple accept="image/*,video/*" />
+            <input 
+                type="file" 
+                multiple
+                onChange={handleFileChange} 
+                accept="image/*, video/*"
+            />
 
             <button type="submit" style={styles.buttonSubmit}>
                 Registrar rescate

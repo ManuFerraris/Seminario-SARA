@@ -15,6 +15,7 @@ import RegistrarRevision from './CUU08/registrarRevision';
 import RegistrarEntrevista from './CUU09/registrarEntrevista';
 import RegistrarDonacion from './CUU10/registrarDonacion';
 import GestionPersonal from './CUS02/gestionPersonal';
+import SeleccionarPerfil from './inicio/seleccionarPerfil';
 import './App.css'; 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
 
+        <Route path="/seleccionar-perfil" element={<SeleccionarPerfil />} />
         <Route path="/alta-entrevista" element={<AltaEntrevista />} />
         <Route path="/menu" element={<MenuPrincipal />} />
         <Route path="/login" element={<Login />} />

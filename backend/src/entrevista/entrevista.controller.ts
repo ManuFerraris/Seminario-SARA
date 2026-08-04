@@ -243,12 +243,14 @@ export const registrarResultadoEntrevista = async (req: Request, res: Response):
             return;
         }
         const dto = req.body;
+        console.log('DTO recibido en el controlador registrarResultadoEntrevista:', dto);
         const resultado = await casoUso.ejecutar(codVaEnt, dto);
         res.status(resultado.status).json({ 
             success: resultado.success, 
             messages: resultado.messages, 
             data: resultado.data 
         });
+        console.log('Resultado del caso de uso registrarResultadoEntrevista:', resultado);
         return;
     } catch (error: unknown) {
         console.error('Error crítico en controlador registrarResultadoEntrevista:', error);

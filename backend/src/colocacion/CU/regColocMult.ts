@@ -53,6 +53,10 @@ export class RegistrarColocacionesMasivas {
                         throw new Error(`Stock insuficiente para la vacuna '${vacuna.droga || item.nro_vacuna}'.`);
                     }
 
+                    if(new Date(vacuna.fecha_vencimiento) <= new Date()) {
+                        throw new Error(`La vacuna '${vacuna.droga || item.nro_vacuna}' está vencida y no puede ser colocada.`);
+                    }
+
                     const nuevaColocacion = new Colocacion();
                     nuevaColocacion.ficha = ficha;
                     nuevaColocacion.vacuna = vacuna;

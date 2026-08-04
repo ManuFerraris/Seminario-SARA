@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../axiosConfig'; // ¡Asegurate de importar tu instancia de axios!
+import jsPDF from 'jspdf';
 
 type ViewState = 'MAIN_FORM' | 'SUCCESS';
 
@@ -11,6 +12,7 @@ interface AdopcionExitosa {
     fecha_adopcion: string;
     nro_animal: string;
     dni_adoptante: string;
+    seguimientos: any[];
 }
 
 export default function RegistrarAdopcion() {
@@ -55,7 +57,8 @@ export default function RegistrarAdopcion() {
                 nro_adopcion: response.data.data.nro_adopcion,
                 fecha_adopcion: response.data.data.fecha_adopcion, 
                 nro_animal: nroAnimal,
-                dni_adoptante: dni
+                dni_adoptante: dni,
+                seguimientos: response.data.data.seguimientos
             });
 
             setCurrentView('SUCCESS');
@@ -115,6 +118,60 @@ export default function RegistrarAdopcion() {
         return `${day}/${month}/${year}`; // Arma "28/07/2026"
     };
 
+    const handleDescargarPDF = () => {
+        // Si no hay datos de éxito, no hacemos nada
+        if (!datosExito) return; 
+
+        // 1. Instanciamos el documento (tamaño A4 por defecto)
+        const doc = new jsPDF();
+
+        // 2. Título principal
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        // (Texto, posX, posY en milímetros)
+        doc.text("Certificado de Adopción - Protectora SARA", 20, 20); 
+
+        // 3. Datos de la Adopción
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text(`Nro. de Adopción: ${datosExito.nro_adopcion}`, 20, 35);
+        doc.text(`Fecha de Adopción: ${datosExito.fecha_adopcion}`, 20, 42);
+
+        // 4. Línea separadora
+        doc.line(20, 48, 190, 48); 
+
+        // 5. Cronograma de Seguimientos (El 1{ ... }4)
+        doc.setFont("helvetica", "bold");
+        doc.text("Cronograma de Seguimientos Obligatorios:", 20, 60);
+
+        doc.setFont("helvetica", "normal");
+        
+        // Iteramos sobre el arreglo de 4 seguimientos que devolvió el backend
+        // Asumo que vienen en datosExito.seguimientos
+        datosExito.seguimientos.forEach((seguimiento: any, index: number) => {
+            // Incrementamos la posición Y para que cada línea baje 10mm
+            const posicionY = 70 + (index * 10); 
+
+            const fechaLimpia = formatearFecha(seguimiento.fecha_seguimiento);
+            
+            doc.text(
+                `${index + 1}. Seguimiento Nro: ${seguimiento.id_seguimiento} - Fecha Programada: ${fechaLimpia}`, 
+                25, 
+                posicionY
+            );
+        });
+
+        // 6. Firmas (al fondo de la hoja)
+        doc.line(30, 140, 90, 140);
+        doc.text("Firma del Adoptante", 45, 146);
+
+        doc.line(120, 140, 180, 140);
+        doc.text("Firma Protectora SARA", 130, 146);
+
+        // 7. Descargar el archivo automáticamente
+        doc.save(`Adopcion_${datosExito.nro_adopcion}_SARA.pdf`);
+    };
+
     // -------------------------------------------------------------------------
     // VISTA 2: ÉXITO (3-FS-adopcion-creada)
     // -------------------------------------------------------------------------
@@ -147,6 +204,17 @@ export default function RegistrarAdopcion() {
                         <span style={styles.infoValue}>{datosExito.dni_adoptante}</span>
                     </div>
 
+                    <button 
+                        style={{
+                            ...styles.buttonSubmit,
+                            backgroundColor: '#E67E22', 
+                            marginTop: '20px'
+                        }} 
+                        onClick={handleDescargarPDF}
+                    >
+                        📄 Descargar Comprobante (PDF)
+                    </button>
+
                     <button style={styles.buttonBackLarge} onClick={handleOtraAdopcion}>
                         Realizar otra adopción
                     </button>
@@ -166,7 +234,7 @@ export default function RegistrarAdopcion() {
             </div>
 
             <form style={styles.formContainer} onSubmit={handleRegistrarAdopcion}>
-                <label style={styles.labelCentered}>Ingrese el numero de DNI</label>
+                <label style={styles.labelCentered}>Ingrese el numero de DNI del adoptante</label>
                 <input 
                     style={styles.input} 
                     type="text" 
@@ -176,7 +244,7 @@ export default function RegistrarAdopcion() {
                     required 
                 />
 
-                <label style={styles.labelCentered}>Ingrese el numero del animal</label>
+                <label style={styles.labelCentered}>Ingrese el numero del animal a adoptar</label>
                 <input 
                     style={styles.input} 
                     type="text" 

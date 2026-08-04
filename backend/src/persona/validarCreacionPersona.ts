@@ -14,6 +14,9 @@ export function validarCreacionPersona(dto: PersonaDTO): string[] {
     if (!dto.apellido || dto.apellido.trim().length === 0) errores.push('El apellido es obligatorio.');
     else if (dto.apellido.length > 30) errores.push('El apellido no puede exceder los 30 caracteres.');
 
+    if (!dto.domicilio || dto.domicilio.length > 100){
+        errores.push('El domicilio no puede exceder los 100 caracteres.');
+    }
     // Validación de Email (Regex y límite de 50 caracteres)
     if (!dto.email || dto.email.trim().length === 0) {
         errores.push('El email es obligatorio.');
@@ -27,13 +30,10 @@ export function validarCreacionPersona(dto: PersonaDTO): string[] {
         errores.push('La contraseña es obligatoria y debe tener al menos 8 caracteres.');
     }
 
-    // Validación de Teléfono (Opcional, pero si viene, estricto a 10 dígitos)
-    if (dto.telefono && !/^\d{10}$/.test(dto.telefono)) {
+    if (dto.telefono && !/^\d{0,30}$/.test(dto.telefono)) {
         errores.push('El teléfono no puede tener mas de 30 dígitos.');
     }
 
-    // Validaciones de atributos de herencia (Opcionales)
-    if (dto.domicilio && dto.domicilio.length > 100) errores.push('El domicilio no puede exceder los 100 caracteres.');
     if (dto.estado && dto.estado.length > 20) errores.push('El estado no puede exceder los 20 caracteres.');
     if (dto.matricula && dto.matricula.length > 30) errores.push('La matrícula no puede exceder los 30 caracteres.');
     

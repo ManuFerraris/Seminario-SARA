@@ -38,11 +38,13 @@ export default function RegistrarSeguimiento() {
     const [currentView, setCurrentView] = useState<ViewState>('SEARCH_ADOPCION');
     const [nroAdopcion, setNroAdopcion] = useState('');
     const [adopcionData, setAdopcionData] = useState<AdopcionData | null>(null);
+    
+    // NUEVO ESTADO LÓGICO: Guardamos el ID del seguimiento vacío que vamos a actualizar
+    const [idSeguimientoPendiente, setIdSeguimientoPendiente] = useState<number | null>(null);
+
     const [fecha, setFecha] = useState('');
     const [descripcionEntorno, setDescripcionEntorno] = useState('');
     const [estadoAnimal, setEstadoAnimal] = useState('');
-    
-    // NUEVO ESTADO: Para mostrar el Nro de Seguimiento real en la última pantalla
     const [datosExito, setDatosExito] = useState<SeguimientoExitoso | null>(null);
 
     // -------------------------------------------------------------------------
@@ -53,23 +55,56 @@ export default function RegistrarSeguimiento() {
         if (!nroAdopcion) return;
 
         try {
-            // Hacemos el GET a tu backend. Ajustá la URL según tus rutas.
             const response = await api.get(`/adopcion/${nroAdopcion}`);
-            
-            // Asumiendo que el backend devuelve { data: { adoptante: { nombre... }, animal: { especie... } } }
             const datosAdopcion = response.data.data;
 
+            // 1. Verificamos que la adopción traiga un seguimiento pendiente
+            if (!datosAdopcion.seguimiento_pendiente_id) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin seguimientos',
+                    text: 'Esta adopción no tiene seguimientos pendientes programados.',
+                    confirmButtonColor: '#3498DB',
+                });
+                return;
+            }
+
+            // 2. Buscamos el objeto de seguimiento específico dentro del array
+            const seguimientoPendiente = datosAdopcion.seguimientos.find(
+                (seg: any) => seg.id_seguimiento === datosAdopcion.seguimiento_pendiente_id
+            );
+
+            // 3. Si lo encontramos, seteamos la fecha. Si por alguna razón falla, evitamos que la app crashee.
+            if (seguimientoPendiente) {
+                setFecha(seguimientoPendiente.fecha_seguimiento);
+            }
+
+            // 4. Guardamos el ID para el PUT posterior
+            setIdSeguimientoPendiente(datosAdopcion.seguimiento_pendiente_id);
+
+            // 5. Seteamos los datos visuales
             setAdopcionData({
-                nombreAdoptante: datosAdopcion.adoptante.nombre,
-                apellidoAdoptante: datosAdopcion.adoptante.apellido,
+                nombreAdoptante: datosAdopcion.adoptante.persona.nombre,
+                apellidoAdoptante: datosAdopcion.adoptante.persona.apellido,
                 especieAnimal: datosAdopcion.animal.especie,
             });
-        } catch (error) {
+            
+        }catch (error: any) {
             setAdopcionData(null);
+            setIdSeguimientoPendiente(null);
+            
+            const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+            let textoError = 'Número de adopción no encontrado o no existe.';
+            if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+                textoError = backendMessages.join('\n');
+            } else if (typeof backendMessages === 'string') {
+                textoError = backendMessages;
+            }
+
             Swal.fire({
                 icon: 'warning',
                 title: 'Atención',
-                text: 'Número de adopción no encontrado o no existe.',
+                text: textoError,
                 confirmButtonColor: '#F39C12',
             });
         }
@@ -77,12 +112,17 @@ export default function RegistrarSeguimiento() {
 
     const handleConfirmarSeguimiento = async (e: React.FormEvent) => {
         e.preventDefault();
+        
         if (!fecha || !descripcionEntorno || !estadoAnimal) {
             Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos requeridos.' });
             return;
         }
 
-        // Sacamos el DNI del colaborador que está usando el sistema
+        if (!idSeguimientoPendiente) {
+            Swal.fire({ icon: 'error', title: 'Error interno', text: 'Falta el ID del seguimiento a actualizar.' });
+            return;
+        }
+
         const dni_colaborador = obtenerDniDelToken();
         if (!dni_colaborador) {
             Swal.fire({ icon: 'error', title: 'Error', text: 'Sesión inválida. Vuelva a iniciar sesión.' });
@@ -90,29 +130,38 @@ export default function RegistrarSeguimiento() {
         }
 
         try {
-            // Armamos el payload para el controlador (ajustá los nombres según tu DTO)
+            // Ya no mandamos nro_adopcion, mandamos directamente los datos a actualizar
             const payload = {
-                nro_adopcion: parseInt(nroAdopcion, 10),
                 fecha_seguimiento: fecha, 
                 entorno: descripcionEntorno,
                 estado_animal: estadoAnimal,
                 dni_colaborador: dni_colaborador
             };
 
-            // Hacemos el POST al backend. Ajustá la URL según tus rutas.
-            const response = await api.post('/seguimiento/registrar', payload);
-            console.log('Respuesta del backend al registrar seguimiento:', response.data);
-            // Guardamos la respuesta exitosa para la vista 3
+            // LÓGICA NUEVA: Cambiamos de POST a PUT y apuntamos al ID del seguimiento
+            const nro_seguimiento = idSeguimientoPendiente;
+            const response = await api.put(`/seguimiento/${nro_seguimiento}/completar`, payload);
+            console.log('Respuesta del backend al completar seguimiento:', response.data);
+            
             setDatosExito({
-                nro_seguimiento: response.data.data.id_seguimiento, // ACÁ ESTABA EL BUG
-                fecha: response.data.data.fecha_seguimiento,        // Usamos la fecha del backend
-                entorno: response.data.data.entorno,                // "Mal estado del patio"
-                estado_animal: response.data.data.estado_animal     // "No apto"
+                nro_seguimiento: response.data.data.id_seguimiento, 
+                fecha: response.data.data.fecha_seguimiento,        
+                entorno: response.data.data.entorno,                
+                estado_animal: response.data.data.estado_animal     
             });
 
             setCurrentView('SUCCESS');
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un problema al registrar el seguimiento.' });
+            
+        } catch (error: any) {
+            const backendMessages = error.response?.data?.messages || error.response?.data?.message;
+            let textoError = 'Ocurrió un problema al registrar el seguimiento.';
+            if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {
+                textoError = backendMessages.join('\n');
+            } else if (typeof backendMessages === 'string') {
+                textoError = backendMessages;
+            }
+
+            Swal.fire({ icon: 'error', title: 'Error', text: textoError, confirmButtonColor: '#E74C3C' });
         }
     };
 
@@ -134,9 +183,9 @@ export default function RegistrarSeguimiento() {
 
     const handleVolver = () => {
         if (currentView === 'REGISTER_SEGUIMIENTO') {
-        setCurrentView('SEARCH_ADOPCION');
+            setCurrentView('SEARCH_ADOPCION');
         } else {
-        navigate(-1);
+            navigate(-1);
         }
     };
 
@@ -144,35 +193,41 @@ export default function RegistrarSeguimiento() {
     // VISTA 3: ÉXITO (3-FS-seguimiento-registrado)
     // -------------------------------------------------------------------------
     if (currentView === 'SUCCESS' && datosExito) {
-
         return (
-            // ... (tu contenedor y header) ...
-            <div style={styles.successCard}>
-                <h2 style={styles.successTitle}>Seguimiento registrado con éxito</h2>
-                
-                <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Nro. Seguimiento</span>
-                    {/* Renderizamos el número real de la BD */}
-                    <span style={styles.infoValue}>{datosExito.nro_seguimiento}</span>
-                </div>
-                <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Fecha realizado</span>
-                    <span style={styles.infoValue}>{datosExito.fecha.split('-').reverse().join('/')}</span>
-                </div>
-                <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Entorno</span>
-                    <span style={styles.infoValue}>{datosExito.entorno}</span>
-                </div>
-                <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Estado animal</span>
-                    <span style={datosExito.estado_animal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
-                        {datosExito.estado_animal}
-                    </span>
+            <div style={styles.container}>
+                {/* Agregamos el header estándar con tu botón de Volver */}
+                <div style={styles.headerRow}>
+                    <h1 style={styles.title}>Detalle del seguimiento</h1>
+                    <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
                 </div>
 
-                <button style={styles.buttonBackLarge} onClick={handleOtroSeguimiento}>
-                    Realizar otro seguimiento
-                </button>
+                <div style={styles.successCard}>
+                    <h2 style={styles.successTitle}>Seguimiento registrado con éxito</h2>
+                    
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Nro. Seguimiento</span>
+                        {/* Renderizamos el número real de la BD */}
+                        <span style={styles.infoValue}>{datosExito.nro_seguimiento}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Fecha realizado</span>
+                        <span style={styles.infoValue}>{datosExito.fecha.split('-').reverse().join('/')}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Entorno</span>
+                        <span style={styles.infoValue}>{datosExito.entorno}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                        <span style={styles.infoLabel}>Estado animal</span>
+                        <span style={datosExito.estado_animal === 'No apto' ? styles.infoValueWarning : styles.infoValueSuccess}>
+                            {datosExito.estado_animal}
+                        </span>
+                    </div>
+
+                    <button style={styles.buttonBackLarge} onClick={handleOtroSeguimiento}>
+                        Realizar otro seguimiento
+                    </button>
+                </div>
             </div>
         );
     }
@@ -180,7 +235,7 @@ export default function RegistrarSeguimiento() {
     // -------------------------------------------------------------------------
     // VISTA 2: DATOS DEL SEGUIMIENTO (2-FE-datos_seguimiento)
     // -------------------------------------------------------------------------
-    if (currentView === 'REGISTER_SEGUIMIENTO') {
+if (currentView === 'REGISTER_SEGUIMIENTO') {
         return (
         <div style={styles.container}>
             <div style={styles.headerRow}>
@@ -189,13 +244,15 @@ export default function RegistrarSeguimiento() {
             </div>
 
             <form style={styles.formContainer} onSubmit={handleConfirmarSeguimiento}>
-            <label style={styles.labelCentered}>Definir fecha</label>
+            
+            {/* CAMBIOS AQUÍ: Etiqueta, readOnly y estilos */}
+            <label style={styles.labelCentered}>Fecha programada</label>
             <input 
-                style={styles.input} 
+                style={styles.inputReadOnly} // Usamos tu estilo para inputs bloqueados
                 type="date" 
                 value={fecha} 
-                onChange={e => setFecha(e.target.value)} 
-                required 
+                readOnly // Bloquea la edición del usuario
+                // Eliminamos el onChange porque el usuario ya no puede tipear aquí
             />
 
             <label style={styles.labelCentered}>Ingrese una descripcion del entorno</label>

@@ -57,6 +57,12 @@ export class CreateAdopcion {
             return { status: 400, success: false, messages: ["Adopción bloqueada. El animal no posee las vacunas al día."], data: undefined };
         }
 
+        const adopcionExistente = await this.adopcionRepository.findByAnimalAndAdoptante(animal, adoptante);
+
+        if (adopcionExistente) {
+            return { status: 400, success: false, messages: ["Ya existe una adopción registrada para este animal y adoptante."], data: undefined };
+        }
+
         // Creación y actualización de estado
         const nuevaAdopcion = new Adopcion();
         nuevaAdopcion.adoptante = adoptante;

@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { MikroORM } from '@mikro-orm/core';
 import { AdopcionRepositoryORM } from '../adopcion/adopcion.repositoryORM.js';
 import { CloudinaryService } from '../shared/cloudinary.service.js';
-import { RegistrarRetiroDTO, RegistrarRetiroMaltrato } from './CURegistrarRetiroMaltrato.js';
+import { RegistrarRetiroDTO, RegistrarRetiroMaltratoAiven } from './CURegistrarRetiroMaltratoAiven.js';
+import { RegistrarRetiroMaltratoMulter } from './CURegistrarRetiroMulter.js';
 
-export const registrarRetiro = async (req: Request, res: Response): Promise<void> => {
+export const registrarRetiroAiven = async (req: Request, res: Response): Promise<void> => {
     try {
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
@@ -12,7 +13,7 @@ export const registrarRetiro = async (req: Request, res: Response): Promise<void
         const adopcionRepo = new AdopcionRepositoryORM(em);
         const cloudinaryService = new CloudinaryService();
 
-        const casoUso = new RegistrarRetiroMaltrato(
+        const casoUso = new RegistrarRetiroMaltratoAiven(
             adopcionRepo, cloudinaryService, em
         );
 
@@ -29,6 +30,44 @@ export const registrarRetiro = async (req: Request, res: Response): Promise<void
         console.log('DTO recibido en el controlador:', dto);
         const resultado = await casoUso.ejecutar(dto);
         console.log('Resultado del caso de uso registrarRetiro:', resultado);
+        res.status(resultado.status).json({ 
+            success: resultado.success, 
+            messages: resultado.messages, 
+            data: resultado.data 
+        });
+        return;
+
+    } catch (error: unknown) {
+        console.error('Error crítico en controlador registrarRetiro:', error);
+        res.status(500).json({ 
+            success: false, 
+            messages: ["Error interno del servidor al procesar el retiro."] 
+        });
+        return;
+    }
+};
+
+export const registrarRetiroMulter = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const orm = (req.app.locals as { orm: MikroORM }).orm;
+        const em = orm.em.fork();
+        const adopcionRepo = new AdopcionRepositoryORM(em);
+        
+        const casoUso = new RegistrarRetiroMaltratoMulter(adopcionRepo, em);
+
+        // Armamos el DTO
+        const dto: RegistrarRetiroDTO = {
+            nro_adopcion: parseInt(req.body.nro_adopcion, 10), 
+            motivos: req.body.motivos,                           
+            descripcion_evidencia: req.body.descripcion_evidencia,
+            fecha_retiro: new Date(req.body.fecha_retiro),
+            archivos: (req.files as Express.Multer.File[]) || [] 
+        };
+
+        console.log('DTO recibido en el controlador Multer:', dto);
+        const resultado = await casoUso.ejecutar(dto);
+        console.log('Resultado del caso de uso registrarRetiroMulter:', resultado);
+        
         res.status(resultado.status).json({ 
             success: resultado.success, 
             messages: resultado.messages, 
