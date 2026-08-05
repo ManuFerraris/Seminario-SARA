@@ -10,7 +10,7 @@ import RetiroMaltrato from './CUU03/registrarRetiroPorMaltrato';
 import ColocacionVacunas from './CUU04/registrarColocacionVacunas';
 import AltaEntrevista from './CUU05/altaEntrevista';
 import RegistrarSeguimiento from './CUU06/registarSeguimiento';
-import RegistrarAdopcion from './CUU07/registrarAdopcion';
+//import RegistrarAdopcion from './CUU07/registrarAdopcion';
 import RegistrarRevision from './CUU08/registrarRevision';
 import RegistrarEntrevista from './CUU09/registrarEntrevista';
 import RegistrarDonacion from './CUU10/registrarDonacion';
@@ -37,7 +37,7 @@ function App() {
         <Route path="/colocacion-vacunas" element={<ColocacionVacunas />} />
         <Route path="/alta-entrevista" element={<AltaEntrevista />} />
         <Route path="/registrar-seguimiento" element={<RegistrarSeguimiento />} />
-        <Route path="/registrar-adopcion" element={<RegistrarAdopcion />} />
+        {/* <Route path="/registrar-adopcion" element={<RegistrarAdopcion />} /> */}
         <Route path="/registrar-revision" element={<RegistrarRevision />} />
         <Route path="/registrar-entrevista" element={<RegistrarEntrevista />} />
         <Route path="/registrar-donacion" element={<RegistrarDonacion />} />

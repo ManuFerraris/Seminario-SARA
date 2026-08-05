@@ -128,7 +128,7 @@ export default function RegistrarRevision() {
             const payload = {
                 nro_animal: parseInt(nroAnimal, 10),
                 observaciones: observaciones,
-                estado: estadoAnimal,
+                estado: 'Apto para vacunar',
                 dni_veterinario: obtenerDniDelToken()
             };
 
@@ -140,7 +140,7 @@ export default function RegistrarRevision() {
             setDatosExito({
                 nro_ficha: response.data.data.nro_ficha || response.data.data.id_ficha, // Ajustá según cómo se llame el ID de la ficha en tu BD
                 fecha: response.data.data.fecha, // La fecha que guardó el servidor
-                estado_animal: estadoAnimal,
+                estado_animal: response.data.data.animal.estado,
                 observaciones: observaciones
             });
 

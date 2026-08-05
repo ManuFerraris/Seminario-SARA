@@ -14,6 +14,9 @@ import { ReprogramarEntrevista } from "./CU/reprogramarEntrevista.js";
 import { RegistrarResultadoEntrevista } from "./CU/registrarResultadoEntrevista.js";
 import { ColaboradorRepositoryORM } from "../persona/col.repositoryORM.js";
 import { AdoptanteRepositoryORM } from "../persona/ado.repositoryORM.js";
+import { AdopcionRepositoryORM } from "../adopcion/adopcion.repositoryORM.js";
+import { SeguimientoRepositoryORM } from "../seguimiento/seg.repositoryORM.js";
+
 
 export const findAllEntrevistas = async (req: Request, res: Response) => {
     try{
@@ -200,16 +203,14 @@ export const registrarEntrevista = async (req: Request, res: Response): Promise<
         const colaboradorRepo = new ColaboradorRepositoryORM(em);
         const casoUso = new AltaEntrevistaCU(personaRepo, colaboradorRepo, adoptanteRepo, animalRepo, entrevistaRepo, em);
 
-        const { nro_animal, fecha_entrevista, hora_entrevista, dni_adoptante } = req.body;
-
-        const fechaString = `${fecha_entrevista}T${hora_entrevista}:00`;
+        const { nro_animal, fecha_hora, dni_adoptante } = req.body;
 
         // Armamos el DTO
         const dto = {
             dni_adoptante: dni_adoptante,
             dni_colaborador: "22222222",
             nro_animal: parseInt(nro_animal, 10),
-            fecha_hora: new Date(fechaString),
+            fecha_hora: new Date(fecha_hora),
             estado: "Pendiente",
         };
 
@@ -235,7 +236,12 @@ export const registrarResultadoEntrevista = async (req: Request, res: Response):
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const entRepo = new EntrevistaRepositoryORM(em);
-        const casoUso = new RegistrarResultadoEntrevista(entRepo);
+        const personaRepo = new PersonaRepositoryORM(em);
+        const animalRepo = new AnimalRepositoryORM(em);
+        const seguimientoRepo = new SeguimientoRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
+        const adopcionRepo = new AdopcionRepositoryORM(em);
+        const casoUso = new RegistrarResultadoEntrevista(entRepo, adopcionRepo, personaRepo, adoptanteRepo, animalRepo, seguimientoRepo);
 
         const { valor: codVaEnt, error: codErrorEnt } = validarCodigo(req.params.id_entrevista, "nro entrevista");
         if (codErrorEnt || codVaEnt === undefined) {
@@ -243,14 +249,15 @@ export const registrarResultadoEntrevista = async (req: Request, res: Response):
             return;
         }
         const dto = req.body;
+
         console.log('DTO recibido en el controlador registrarResultadoEntrevista:', dto);
         const resultado = await casoUso.ejecutar(codVaEnt, dto);
+        console.log('Resultado del caso de uso registrarResultadoEntrevista:', resultado);
         res.status(resultado.status).json({ 
             success: resultado.success, 
             messages: resultado.messages, 
             data: resultado.data 
         });
-        console.log('Resultado del caso de uso registrarResultadoEntrevista:', resultado);
         return;
     } catch (error: unknown) {
         console.error('Error crítico en controlador registrarResultadoEntrevista:', error);

@@ -73,7 +73,8 @@ export const create = async (req:Request, res:Response):Promise<void> => {
         const orm = (req.app.locals as { orm: MikroORM }).orm;
         const em = orm.em.fork();
         const repo = new PersonaRepositoryORM(em);
-        const casouso = new CreatePersona(repo);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
+        const casouso = new CreatePersona(repo, adoptanteRepo);
         
         const dto = req.body;
         console.log('DTO recibido en el controlador:', dto);

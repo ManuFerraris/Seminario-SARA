@@ -15,7 +15,7 @@ export class CreateFichaMedica {
         private readonly veterinarioRepo: VeterinarioRepository
     ) {}
 
-    async ejecutar(dto: FichaMedicaDTO): Promise<ServiceResponse<FichaMedica>> {
+    async ejecutar(dto: any): Promise<ServiceResponse<FichaMedica>> {
         dto.fecha = new Date();
         const errores = validarCreacionFichaMedica(dto);
         if (errores.length > 0) {
@@ -37,8 +37,13 @@ export class CreateFichaMedica {
             return { status: 404, success: false, messages: ["Veterinario no encontrado."], data: undefined };
         }
 
+        const animalActualizado = await this.animalRepository.cambiarEstado(animal, dto.estado || 'Apto para vacunar');
+        if (!animalActualizado) {
+            return { status: 500, success: false, messages: ["Error al actualizar el estado del animal."], data: undefined };
+        }
+
         const nuevaFicha = new FichaMedica();
-        nuevaFicha.animal = animal;
+        nuevaFicha.animal = animalActualizado;
         nuevaFicha.veterinario = veterinario;
         nuevaFicha.fecha = new Date(dto.fecha);
         if (dto.observaciones) nuevaFicha.observaciones = dto.observaciones.trim();

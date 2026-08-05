@@ -116,16 +116,17 @@ export default function AltaEntrevista() {
     }
 
     try {
-      const fechaHoraCombinada = `${fechaEntrevista}T${horaEntrevista}:00`;
+      const fechaHoraCombinadaString = `${fechaEntrevista}T${horaEntrevista}:00`;
+      const dateObject = new Date(fechaHoraCombinadaString);
 
       const payload = {
         nro_animal: selectedAnimalId,
-        fecha_hora: fechaHoraCombinada,
+        fecha_hora: dateObject.toISOString(),
         dni_adoptante: dni_adoptante
       };
 
       const response = await api.post('/entrevista/registrar', payload);
-      console.log('Respuesta del backend:', response);
+      console.log('Respuesta del backend en FRONTEND-CUU05:', response);
 
       setDatosExito({
         id_entrevista: response.data.data.id_entrevista,
@@ -133,8 +134,8 @@ export default function AltaEntrevista() {
         fecha: fechaEntrevista,
         hora: horaEntrevista,
         dni_adoptante: response.data.data.dni_adoptante, 
-        estado_entrevista: 'Activa',
-        estado_animal: 'No disponible'
+        estado_entrevista: response.data.data.estado_entrevista,
+        estado_animal: response.data.data.estado_animal
       });
 
       setCurrentView('SUCCESS');

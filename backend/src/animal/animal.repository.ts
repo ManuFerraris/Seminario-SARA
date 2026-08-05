@@ -9,4 +9,5 @@ export interface AnimalRepository {
     cambiarEstadoDisponible(animal:Animal):Promise<null>;
     cambiarEstadoFallecido(animal:Animal, dto:Partial<Animal>):Promise<null>;
     obtenerFichasMedicas(numero_animal:number):Promise<Animal | null>;
+    cambiarEstado(animal:Animal, nuevoEstado:string):Promise<Animal | null>;
 }

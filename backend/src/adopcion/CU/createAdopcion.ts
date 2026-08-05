@@ -15,7 +15,7 @@ export class CreateAdopcion {
         private readonly personaRepository: PersonaRepository,
         private readonly adoptanteRepository: AdoptanteRepository,
         private readonly animalRepository: AnimalRepository,
-        private readonly seguimientoRepository: SeguimientoRepository
+        private readonly seguimientoRepository: SeguimientoRepository,
     ) {}
 
     async ejecutar(dto: AdopcionDTO): Promise<ServiceResponse<Adopcion>> {
@@ -84,7 +84,7 @@ export class CreateAdopcion {
             fechaSeguimiento.setMonth(fechaSeguimiento.getMonth() + i);
             seguimiento.fecha_seguimiento = fechaSeguimiento;
             seguimiento.entorno = '';
-            seguimiento.estado_animal = '';
+            seguimiento.estado_animal = 'Pendiente Revision';
             await this.seguimientoRepository.createSeguimiento(seguimiento);
         }
 

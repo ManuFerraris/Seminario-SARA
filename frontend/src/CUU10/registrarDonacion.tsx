@@ -31,6 +31,7 @@ export default function RegistrarDonacion() {
     const [nuevoTelefono, setNuevoTelefono] = useState('');
     const [nuevoEmail, setNuevoEmail] = useState('');
     const [nuevaContrasena, setNuevaContrasena] = useState('');
+    const [nuevaDireccion, setNuevaDireccion] = useState('');
     const [confirmarContrasena, setConfirmarContrasena] = useState('');
 
     // Estados - Datos de Donación
@@ -84,7 +85,7 @@ export default function RegistrarDonacion() {
     const handleAltaDonante = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!nuevoNombre || !nuevoApellido || !nuevoTelefono || !nuevoEmail || !nuevaContrasena || !confirmarContrasena) {
+        if (!nuevoNombre || !nuevoApellido || !nuevoTelefono || !nuevaDireccion || !nuevoEmail || !nuevaContrasena || !confirmarContrasena) {
             Swal.fire({ icon: 'info', title: 'Atención', text: 'Complete todos los campos del donante.' });
             return;
         }
@@ -101,28 +102,78 @@ export default function RegistrarDonacion() {
                 apellido: nuevoApellido,
                 telefono: nuevoTelefono,
                 email: nuevoEmail,
+                domicilio: nuevaDireccion,
                 contrasenia: nuevaContrasena
-                // Si tu BD requiere un rol (ej: 'Donante'), agregalo acá
             };
 
-            await api.post('/persona/crear-persona', payload);
-            
-            setDonorFound(true);
-            setCurrentView('MAIN_FORM');
-            
+            const response = await api.post('/persona/crear-persona', payload);
+            const data = response.data.data;
+            console.log('Respuesta del backend al registrar donante:', data);
             Swal.fire({
                 icon: 'success',
                 title: 'Éxito',
-                text: 'Donante dado de alta correctamente. Proceda a registrar la donación.',
+                text: response.data.message,
                 timer: 2500,
                 showConfirmButton: false
             });
-
+            setDonorFound(true);
+            setCurrentView('MAIN_FORM');
         } catch (error: any) {
-            let mensajeBack = 'Ocurrió un error al registrar al donante.';
-            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
-            
-            Swal.fire({ icon: 'error', title: 'Error', text: mensajeBack });
+            console.error('Error capturado por Axios:', error);
+
+            // 1. Verificamos si el error viene con una respuesta HTTP del backend
+            if (error.response) {
+                const status = error.response.status;
+                const backendMessages = error.response.data?.messages || error.response.data?.message;
+
+                // Armamos el mensaje, soportando tanto arrays como strings simples
+                let mensajesFormateados = 'Ocurrió un error al procesar la solicitud.';
+                if (Array.isArray(backendMessages) && backendMessages.length > 0) {
+                    mensajesFormateados = backendMessages.join('<br/>');
+                } else if (typeof backendMessages === 'string') {
+                    mensajesFormateados = backendMessages;
+                }
+
+                // 2. Disparamos alertas distintas según el código de estado (Status Code)
+                if (status === 404) {
+                    // Ideal para "Donante no encontrado" o "Animal no encontrado"
+                    Swal.fire({ 
+                        icon: 'warning', 
+                        title: 'No encontrado', 
+                        html: mensajesFormateados 
+                    });
+                } else if (status === 400) {
+                    // Ideal para errores de validación (ej. falta un dato obligatorio)
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Datos inválidos', 
+                        html: mensajesFormateados 
+                    });
+                } else {
+                    // Errores 500 u otros
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error del servidor', 
+                        html: mensajesFormateados 
+                    });
+                }
+            } 
+            // 3. ¿Qué pasa si el servidor está apagado o no hay internet?
+            else if (error.request) {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error de conexión', 
+                    text: 'No se pudo contactar con el servidor. Revisa tu conexión o intenta más tarde.' 
+                });
+            } 
+            // 4. Cualquier otro error inesperado en el frontend
+            else {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error inesperado', 
+                    text: error.message 
+                });
+            }
         }
     };
 
@@ -144,6 +195,7 @@ export default function RegistrarDonacion() {
             };
 
             const response = await api.post('/donacion/registrar', payload);
+            console.log('Respuesta del backend al registrar donación:', response.data);
             const dataBack = response.data.data;
 
             // Guardamos los datos para la vista de éxito
@@ -157,14 +209,62 @@ export default function RegistrarDonacion() {
                 // Si tu backend devuelve el stock actualizado para las vacunas, lo guardamos
                 stock_actualizado: dataBack.stock_actualizado
             });
-
-            setCurrentView('SUCCESS');
-
         } catch (error: any) {
-            let mensajeBack = 'Ocurrió un error al registrar la donación.';
-            if (error.response?.data?.messages?.[0]) mensajeBack = error.response.data.messages[0];
-            
-            Swal.fire({ icon: 'error', title: 'Error', text: mensajeBack });
+            console.error('Error capturado por Axios:', error);
+
+            // 1. Verificamos si el error viene con una respuesta HTTP del backend
+            if (error.response) {
+                const status = error.response.status;
+                const backendMessages = error.response.data?.messages || error.response.data?.message;
+
+                // Armamos el mensaje, soportando tanto arrays como strings simples
+                let mensajesFormateados = 'Ocurrió un error al procesar la solicitud.';
+                if (Array.isArray(backendMessages) && backendMessages.length > 0) {
+                    mensajesFormateados = backendMessages.join('<br/>');
+                } else if (typeof backendMessages === 'string') {
+                    mensajesFormateados = backendMessages;
+                }
+
+                // 2. Disparamos alertas distintas según el código de estado (Status Code)
+                if (status === 404) {
+                    // Ideal para "Donante no encontrado" o "Animal no encontrado"
+                    Swal.fire({ 
+                        icon: 'warning', 
+                        title: 'No encontrado', 
+                        html: mensajesFormateados 
+                    });
+                } else if (status === 400) {
+                    // Ideal para errores de validación (ej. falta un dato obligatorio)
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Datos inválidos', 
+                        html: mensajesFormateados 
+                    });
+                } else {
+                    // Errores 500 u otros
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error del servidor', 
+                        html: mensajesFormateados 
+                    });
+                }
+            } 
+            // 3. ¿Qué pasa si el servidor está apagado o no hay internet?
+            else if (error.request) {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error de conexión', 
+                    text: 'No se pudo contactar con el servidor. Revisa tu conexión o intenta más tarde.' 
+                });
+            } 
+            // 4. Cualquier otro error inesperado en el frontend
+            else {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error inesperado', 
+                    text: error.message 
+                });
+            }
         }
     };
 
@@ -267,6 +367,9 @@ export default function RegistrarDonacion() {
 
             <label style={styles.labelCentered}>Ingrese el teléfono</label>
             <input style={styles.input} type="tel" value={nuevoTelefono} onChange={e => setNuevoTelefono(e.target.value.replace(/\D/g, ''))} required />
+
+            <label style={styles.labelCentered}>Ingrese la dirección</label>
+            <input style={styles.input} type="text" value={nuevaDireccion} onChange={e => setNuevaDireccion(e.target.value)} required />
 
             <label style={styles.labelCentered}>Ingrese el email</label>
             <input style={styles.input} type="email" value={nuevoEmail} onChange={e => setNuevoEmail(e.target.value)} required />

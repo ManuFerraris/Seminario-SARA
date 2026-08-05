@@ -10,11 +10,12 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { label: 'REGISTRAR RESCATE ANIMAL', path: '/registro-rescate', allowedRoles: ['Colaborador'] },
-  { label: 'REGISTRAR ALTA ANIMAL', path: '/alta-animal', allowedRoles: ['Colaborador'] },
-  { label: 'REGISTRAR COLOCACION DE VACUNAS', path: '/colocacion-vacunas', allowedRoles: ['Veterinario'] },
   { label: 'REGISTRAR REVISION MEDICA', path: '/registrar-revision', allowedRoles: ['Veterinario'] },
+  { label: 'REGISTRAR COLOCACION DE VACUNAS', path: '/colocacion-vacunas', allowedRoles: ['Veterinario'] },
+  { label: 'REGISTRAR ALTA ANIMAL', path: '/alta-animal', allowedRoles: ['Colaborador'] },
+  
   { label: 'REGISTRAR ALTA DE ENTREVISTA', path: '/registrar-entrevista', allowedRoles: ['Colaborador'] },
-  { label: 'REGISTRAR ADOPCION', path: '/registrar-adopcion', allowedRoles: ['Colaborador'] },
+  //{ label: 'REGISTRAR ADOPCION', path: '/registrar-adopcion', allowedRoles: ['Colaborador'] },
   { label: 'REGISTRAR SEGUIMIENTO', path: '/registrar-seguimiento', allowedRoles: ['Colaborador'] },
   { label: 'REGISTAR RETIRO POR MALTRATO', path: '/retiro-maltrato', allowedRoles: ['Colaborador'] },
   // Baja animal podría ser ejecutada por ambos roles

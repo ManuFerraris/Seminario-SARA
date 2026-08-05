@@ -1,9 +1,25 @@
 import { Entrevista } from "../../entities/entrevista.entity.js";
 import { ServiceResponse } from "../../types/service.response.js";
 import { EntrevistaRepository } from "../entrevista.repository.js";
+import { CreateAdopcion } from "../../adopcion/CU/createAdopcion.js";
+import { AdopcionRepository } from "../../adopcion/adopcion.repository.js";
+import { PersonaRepository } from "../../persona/persona.repository.js";
+import { AdoptanteRepository } from "../../persona/ado.repository.js";
+import { AnimalRepository } from "../../animal/animal.repository.js";
+import { SeguimientoRepository } from "../../seguimiento/seg.repository.js";
+
+const dataAEnviar: any = {};
 
 export class RegistrarResultadoEntrevista {
-    constructor(private entRepo: EntrevistaRepository) {}
+    constructor(
+        private entRepo: EntrevistaRepository,
+    
+        private readonly adopcionRepository: AdopcionRepository,
+        private readonly personaRepository: PersonaRepository,
+        private readonly adoptanteRepository: AdoptanteRepository,
+        private readonly animalRepository: AnimalRepository,
+        private readonly seguimientoRepository: SeguimientoRepository
+    ) {}
 
     async ejecutar(id_entrevista: number, dto: any): Promise<ServiceResponse<Entrevista>> {
         
@@ -45,11 +61,51 @@ export class RegistrarResultadoEntrevista {
         // Como Mikro-ORM trackea las entidades, al hacer flush() guardará tanto la entrevista como el cambio en el animal.
         const entrevistaActualizada = await this.entRepo.actualizarEntrevista(entrevista);
 
+        const dtoAdopcion = {
+            dni_adoptante: entrevistaActualizada.adoptante.persona.dni,
+            nro_animal: entrevistaActualizada.animal.nro_animal,
+        };
+
+        let dataAEnviar: any = {
+            entrevista: entrevistaActualizada,
+        };
+        if(entrevistaActualizada.estado === 'Aprobada') {
+            // Generamos la logica del CUU07 de registrar adopcion:
+            const createAdopcionCU = new CreateAdopcion(
+                this.adopcionRepository, 
+                this.personaRepository, 
+                this.adoptanteRepository, 
+                this.animalRepository, 
+                this.seguimientoRepository
+            );
+            const response = await createAdopcionCU.ejecutar(dtoAdopcion);
+            if(!response.success) {
+                return {
+                    success: false,
+                    status: response.status,
+                    messages: response.messages,
+                    data: undefined
+                };
+            };
+            if(!response.data){
+                return {
+                    success: false,
+                    status: response.status,
+                    messages: response.messages,
+                    data: undefined
+                };
+            }
+
+            dataAEnviar = {
+                entrevista: entrevistaActualizada,
+                adopcion: response.data
+            }
+        }
         return {
             success: true,
             status: 200,
             messages: [`Entrevista ${dto.estado.toLowerCase()} exitosamente.`],
-            data: entrevistaActualizada
+            data: dataAEnviar
         };
     }
 }

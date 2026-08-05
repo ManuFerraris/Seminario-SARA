@@ -7,9 +7,12 @@ import { validarCreacionPersona } from "../validarCreacionPersona.js";
 import { Veterinario } from '../../entities/veterinario.entity.js';
 import { Colaborador } from '../../entities/colaborador.entity.js';
 import { Adoptante } from '../../entities/adoptante.entity.js';
+import { AdoptanteRepository } from '../ado.repository.js';
 
 export class CreatePersona {
-    constructor(private readonly repo: PersonaRepository) {}
+    constructor(private readonly repo: PersonaRepository,
+        private readonly adopRepo: AdoptanteRepository,
+    ) {}
 
     async ejecutar(dto: PersonaDTO): Promise<ServiceResponse<Persona>> {
         const errores = validarCreacionPersona(dto);
@@ -49,6 +52,7 @@ export class CreatePersona {
         nuevaPersona.nombre = dto.nombre;
         nuevaPersona.apellido = dto.apellido;
         nuevaPersona.email = dto.email;
+        nuevaPersona.domicilio = dto.domicilio;
 
         const SALT_ROUNDS = 10;
         const hashedPassword = await bcrypt.hash(dto.contrasenia, SALT_ROUNDS);
@@ -77,6 +81,12 @@ export class CreatePersona {
         if (dto.domicilio) nuevaPersona.domicilio = dto.domicilio;
 
         await this.repo.create(nuevaPersona);
+
+        //Si o si es adoptante.
+        const adoptante = new Adoptante();
+        nuevaPersona.adoptante = adoptante;
+        adoptante.estado = 'Apto';
+        await this.adopRepo.create(adoptante);
         
         return {
             success: true,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../axiosConfig'; // Asegurate de importar la instancia de axios configurada
+import jsPDF from 'jspdf';
 
 type ViewState = 
     | 'MAIN_FORM' 
@@ -11,11 +12,21 @@ type ViewState =
     | 'REPROGRAM_FORM' 
     | 'SUCCESS_REPROGRAMMED';
 
+interface AdopcionExitosa {
+    nro_adopcion: number;
+    fecha_adopcion: string;
+    nro_animal: string;
+    dni_adoptante: string;
+    seguimientos: any[];
+}
+
 interface EntrevistaData {
     // Datos crudos del backend
     nro_entrevista?: string | number;
     fecha?: string;
     hora?: string;
+    fecha_hora?: string;
+    fecha_hora_rep?: string;
     estadoEntrevista: string;
     
     // Datos aplanados para mostrar
@@ -46,6 +57,7 @@ export default function ResultadoEntrevista() {
     // Estados - Resultado
     const [resultado, setResultado] = useState('');
     const [descripcionResultado, setDescripcionResultado] = useState('');
+    const [datosExito, setDatosExito] = useState<AdopcionExitosa | null>(null);
 
     // Estados - Reprogramación
     const [nuevaFecha, setNuevaFecha] = useState('');
@@ -91,6 +103,8 @@ export default function ResultadoEntrevista() {
                 nro_entrevista: data.id_entrevista,
                 fecha: fecha,
                 hora: hora,
+                fecha_hora: data.fecha_hora,
+                fecha_hora_rep: data.fecha_hora_rep,
                 estadoEntrevista: data.estado || '-',
                 // Ahora sí accedemos a las propiedades del objeto populado
                 dniAdoptante: data.adoptante?.persona?.dni || '-',
@@ -150,39 +164,48 @@ export default function ResultadoEntrevista() {
 
             // Ajustá la ruta según tu Controlador
             const response = await api.post(`/entrevista/${id_entrevista}/resultado`, payload);
-            console.log('Respuesta del backend al registrar resultado:', response.data);
+            console.log('Respuesta del backend al registrar Entrevista y Adopcion unificadas:', response.data);
 
             const data = response.data.data;
-            const fechaCruda = data.fecha_hora_rep || data.fecha_hora;
+            const fechaCruda = data.entrevista.fecha_hora_rep || data.entrevista.fecha_hora;
             const [fecha, horaCompleta] = fechaCruda.split('T');
             const hora = horaCompleta.substring(0, 5);
 
             setEntrevistaData({
-                nro_entrevista: data.id_entrevista,
+                nro_entrevista: data.entrevista.id_entrevista,
                 fecha: fecha,
                 hora: hora,
-                estadoEntrevista: data.estado || '-',
+                fecha_hora: data.entrevista.fecha_hora,
+                fecha_hora_rep: data.entrevista.fecha_hora_rep || '-',
+                estadoEntrevista: data.entrevista.estado || '-',
                 // Ahora sí accedemos a las propiedades del objeto populado
-                dniAdoptante: data.adoptante?.persona?.dni || '-',
-                nombreAdoptante: data.adoptante?.persona?.nombre || '-',
-                apellidoAdoptante: data.adoptante?.persona?.apellido || '-',
+                dniAdoptante: data.entrevista.adoptante?.persona?.dni || '-',
+                nombreAdoptante: data.entrevista.adoptante?.persona?.nombre || '-',
+                apellidoAdoptante: data.entrevista.adoptante?.persona?.apellido || '-',
                 
                 // Mapeamos los datos del animal (ajustá si los nombres de tus columnas varían)
-                nroAnimal: data.animal?.nro_animal || '-',
-                especieAnimal: data.animal?.especie || '-',
-                raza: data.animal?.raza || '-',
-                edad: data.animal?.edad_estimada?.toString() || '-',
-                sexo: data.animal?.sexo || '-',
-                peso: data.animal?.peso?.toString() || '-',
-                descripcion: data.animal?.descripcion || '-',
+                nroAnimal: data.entrevista.animal?.nro_animal || '-',
+                especieAnimal: data.entrevista.animal?.especie || '-',
+                raza: data.entrevista.animal?.raza || '-',
+                edad: data.entrevista.animal?.edad_estimada?.toString() || '-',
+                sexo: data.entrevista.animal?.sexo || '-',
+                peso: data.entrevista.animal?.peso?.toString() || '-',
+                descripcion: data.entrevista.animal?.descripcion || '-',
                 
-                id_colaborador: data.colaborador?.id_colaborador || '-', // O id_colaborador, según tu entidad
-                estadoAnimal: data.animal?.estado || '-'
+                id_colaborador: data.entrevista.colaborador?.id_colaborador || '-', // O id_colaborador, según tu entidad
+                estadoAnimal: data.entrevista.animal?.estado || '-'
             });
 
             // Cambiamos de vista según el resultado exitoso
             switch (resultado) {
                 case 'Aprobada':
+                    setDatosExito({
+                        nro_adopcion: data.adopcion.nro_adopcion,
+                        fecha_adopcion: data.adopcion.fecha_adopcion, 
+                        nro_animal: data.adopcion.nroAnimal,
+                        dni_adoptante: data.adopcion.dni,
+                        seguimientos: data.adopcion.seguimientos
+                    });
                     setCurrentView('SUCCESS_APPROVED');
                     break;
                 case 'Rechazada':
@@ -246,6 +269,60 @@ export default function ResultadoEntrevista() {
             navigate(-1);
         }
     };
+
+    const handleDescargarPDF = () => {
+            // Si no hay datos de éxito, no hacemos nada
+            if (!datosExito) return; 
+    
+            // 1. Instanciamos el documento (tamaño A4 por defecto)
+            const doc = new jsPDF();
+    
+            // 2. Título principal
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            // (Texto, posX, posY en milímetros)
+            doc.text("Certificado de Adopción - Protectora SARA", 20, 20); 
+    
+            // 3. Datos de la Adopción
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            doc.text(`Nro. de Adopción: ${datosExito.nro_adopcion}`, 20, 35);
+            doc.text(`Fecha de Adopción: ${datosExito.fecha_adopcion}`, 20, 42);
+    
+            // 4. Línea separadora
+            doc.line(20, 48, 190, 48); 
+    
+            // 5. Cronograma de Seguimientos (El 1{ ... }4)
+            doc.setFont("helvetica", "bold");
+            doc.text("Cronograma de Seguimientos Obligatorios:", 20, 60);
+    
+            doc.setFont("helvetica", "normal");
+            
+            // Iteramos sobre el arreglo de 4 seguimientos que devolvió el backend
+            // Asumo que vienen en datosExito.seguimientos
+            datosExito.seguimientos.forEach((seguimiento: any, index: number) => {
+                // Incrementamos la posición Y para que cada línea baje 10mm
+                const posicionY = 70 + (index * 10); 
+    
+                const fechaLimpia = formatearFecha(seguimiento.fecha_seguimiento);
+                
+                doc.text(
+                    `${index + 1}. Seguimiento Nro: ${seguimiento.id_seguimiento} - Fecha Programada: ${fechaLimpia}`, 
+                    25, 
+                    posicionY
+                );
+            });
+    
+            // 6. Firmas (al fondo de la hoja)
+            doc.line(30, 140, 90, 140);
+            doc.text("Firma del Adoptante", 45, 146);
+    
+            doc.line(120, 140, 180, 140);
+            doc.text("Firma Protectora SARA", 130, 146);
+    
+            // 7. Descargar el archivo automáticamente
+            doc.save(`Adopcion_${datosExito.nro_adopcion}_SARA.pdf`);
+        };
 
     // -------------------------------------------------------------------------
     // RENDERIZADO DE VISTAS
@@ -330,22 +407,27 @@ export default function ResultadoEntrevista() {
         return (
         <div style={styles.container}>
             <div style={styles.headerRow}>
-            <h1 style={styles.title}>Entrevista aprobada</h1>
-            <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
+                <h1 style={styles.title}>Entrevista aprobada</h1>
+                <button style={styles.volverHeaderBtn} onClick={handleVolver}>Volver</button>
             </div>
             <div style={styles.successCard}>
-            {/* Como de acá se deriva a Registrar Adopción, informamos los IDs clave para esa pantalla */}
+
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha y hora</span><span style={styles.infoValue}>{entrevistaData.fecha_hora}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Colaborador asig.</span><span style={styles.infoValue}>{entrevistaData.id_colaborador}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. DNI adoptante</span><span style={styles.infoValue}>{entrevistaData.dniAdoptante}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. de animal</span><span style={styles.infoValue}>{entrevistaData.nroAnimal}</span></div>
-            
-            <div style={styles.infoColumn}>
-                <span style={styles.infoLabel}>Próximo paso sugerido:</span>
-                <span style={{textAlign: 'center', marginTop: '10px', color: '#7F8C8D'}}>
-                    Dirigirse al módulo de <strong>Registrar Adopción</strong> utilizando el DNI {entrevistaData.dniAdoptante}.
-                </span>
-            </div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Estado animal</span><span style={styles.infoValueSuccess}>{entrevistaData.estadoAnimal}</span></div>
+            <button 
+                style={{
+                    ...styles.buttonSubmit,
+                    backgroundColor: '#E67E22', 
+                    marginTop: '20px'
+                }} 
+                onClick={handleDescargarPDF}
+            >
+                📄 Descargar Comprobante (PDF)
+            </button>
 
             <button style={styles.buttonBackLarge} onClick={handleReiniciarFlujo}>Evaluar otra entrevista</button>
             </div>
@@ -392,7 +474,11 @@ export default function ResultadoEntrevista() {
 
             {entrevistaData && (
                 <form onSubmit={handleRegistrarResultado} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
-                
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+                    <label style={styles.labelCentered}>Fecha y hora de la entrevista</label>
+                    <input style={styles.inputReadOnly} type="text" value={entrevistaData.fecha_hora} readOnly />
+                </div>
+
                 <div style={styles.grid2Cols}>
                     <div style={styles.inputGroup}><label style={styles.labelCentered}>Nombre adoptante</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.nombreAdoptante} readOnly /></div>
                     <div style={styles.inputGroup}><label style={styles.labelCentered}>Apellido adoptante</label><input style={styles.inputReadOnly} type="text" value={entrevistaData.apellidoAdoptante} readOnly /></div>

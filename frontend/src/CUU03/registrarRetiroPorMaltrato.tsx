@@ -12,6 +12,8 @@ interface AdopcionData {
   especieAnimal: string;
   razaAnimal: string;
   fechaAdopcion: string;
+  estadoAdoptante?: string;
+  estadoAnimal?: string;
 }
 
 export default function RetiroMaltrato() {
@@ -28,6 +30,8 @@ export default function RetiroMaltrato() {
   const [motivosRetiro, setMotivosRetiro] = useState('');
   const [evidenciaMaltrato, setEvidenciaMaltrato] = useState('');
   const [fechaRetiro, setFechaRetiro] = useState('');
+  const [estadoAdoptante, setEstadoAdoptante] = useState('');
+  const [estadoAnimal, setEstadoAnimal] = useState('');
   
   // ESTADO: Para guardar los archivos seleccionados
   const [archivosEvidencia, setArchivosEvidencia] = useState<File[]>([]);
@@ -93,6 +97,10 @@ export default function RetiroMaltrato() {
 
       const response = await api.post('/retiro/registrar', formData);
       console.log('Retiro registrado con éxito:', response);
+      const data = response.data.data;
+      setEstadoAdoptante(data.estado_adoptante);
+      setEstadoAnimal(data.estado_animal);
+
       setCurrentView('SUCCESS');
 
     } catch (error: any) {
@@ -146,11 +154,11 @@ export default function RetiroMaltrato() {
           </div>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Estado adoptante</span>
-            <span style={styles.infoValueDanger}>No apto</span>
+            <span style={styles.infoValueDanger}>{estadoAdoptante}</span>
           </div>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Estado animal</span>
-            <span style={styles.infoValueWarning}>No disponible</span>
+            <span style={styles.infoValueWarning}>{estadoAnimal}</span>
           </div>
 
           <button style={styles.buttonBackLarge} onClick={handleRegresar}>

@@ -95,7 +95,7 @@ export class AltaEntrevistaCU {
             const nuevaEntrevista = await this.em.transactional(async (emTransaccional) => {
                 
                 // A. Cambiamos el estado del animal para "bloquearlo" temporalmente
-                animal.estado = 'No disponible';
+                animal.estado = 'Reservado';
                 emTransaccional.persist(animal);
 
                 // B. Creamos la entrevista
@@ -122,7 +122,8 @@ export class AltaEntrevistaCU {
                     id_entrevista: nuevaEntrevista.id_entrevista,
                     nro_animal: animal.nro_animal,
                     dni_adoptante: adoptante.persona.dni,
-                    estado_animal: animal.estado
+                    estado_animal: animal.estado,
+                    estado_entrevista: nuevaEntrevista.estado
                 } 
             };
 

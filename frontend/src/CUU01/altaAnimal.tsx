@@ -24,7 +24,7 @@ export default function AltaAnimal() {
     try {
       // 1. Petición GET al backend para buscar el animal por su número
       const response = await api.get(`/animal/${numeroBusqueda}`);
-      
+      console.log('Respuesta del backend:', response.data);
       // Asumimos que tu backend devuelve { success: true, data: { ...animal } }
       const animal = response.data.data;
 

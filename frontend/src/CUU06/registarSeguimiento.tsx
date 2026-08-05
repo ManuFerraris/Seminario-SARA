@@ -9,6 +9,7 @@ interface AdopcionData {
     nombreAdoptante: string;
     apellidoAdoptante: string;
     especieAnimal: string;
+    numeroAnimal: number;
 }
 
 // Agregamos esta interfaz para guardar lo que responde el backend al final
@@ -17,6 +18,7 @@ interface SeguimientoExitoso {
     fecha: string;
     entorno: string;
     estado_animal: string;
+    numeroAnimal: number;
 }
 
 // Reutilizamos la función para sacar el DNI de quien está logueado (el Colaborador)
@@ -45,6 +47,7 @@ export default function RegistrarSeguimiento() {
     const [fecha, setFecha] = useState('');
     const [descripcionEntorno, setDescripcionEntorno] = useState('');
     const [estadoAnimal, setEstadoAnimal] = useState('');
+    const [numeroAnimal, setNumeroAnimal] = useState<number | null>(null);
     const [datosExito, setDatosExito] = useState<SeguimientoExitoso | null>(null);
 
     // -------------------------------------------------------------------------
@@ -57,6 +60,7 @@ export default function RegistrarSeguimiento() {
         try {
             const response = await api.get(`/adopcion/${nroAdopcion}`);
             const datosAdopcion = response.data.data;
+            console.log('Datos de adopción recibidos del backend:', datosAdopcion);
 
             // 1. Verificamos que la adopción traiga un seguimiento pendiente
             if (!datosAdopcion.seguimiento_pendiente_id) {
@@ -86,6 +90,7 @@ export default function RegistrarSeguimiento() {
             setAdopcionData({
                 nombreAdoptante: datosAdopcion.adoptante.persona.nombre,
                 apellidoAdoptante: datosAdopcion.adoptante.persona.apellido,
+                numeroAnimal: datosAdopcion.animal.nro_animal,
                 especieAnimal: datosAdopcion.animal.especie,
             });
             
@@ -130,7 +135,6 @@ export default function RegistrarSeguimiento() {
         }
 
         try {
-            // Ya no mandamos nro_adopcion, mandamos directamente los datos a actualizar
             const payload = {
                 fecha_seguimiento: fecha, 
                 entorno: descripcionEntorno,
@@ -138,21 +142,27 @@ export default function RegistrarSeguimiento() {
                 dni_colaborador: dni_colaborador
             };
 
-            // LÓGICA NUEVA: Cambiamos de POST a PUT y apuntamos al ID del seguimiento
             const nro_seguimiento = idSeguimientoPendiente;
             const response = await api.put(`/seguimiento/${nro_seguimiento}/completar`, payload);
             console.log('Respuesta del backend al completar seguimiento:', response.data);
             
+            // Accedemos correctamente a los datos basándonos en la estructura de tu console.log
             setDatosExito({
                 nro_seguimiento: response.data.data.id_seguimiento, 
                 fecha: response.data.data.fecha_seguimiento,        
                 entorno: response.data.data.entorno,                
-                estado_animal: response.data.data.estado_animal     
+                estado_animal: response.data.data.estado_animal,
+                
+                // CORRECCIÓN: El animal está dentro de 'adopcion' y es directamente un número
+                numeroAnimal: response.data.data.adopcion.animal 
             });
 
             setCurrentView('SUCCESS');
             
         } catch (error: any) {
+            // Te agrego este log. Es vital para cazar este tipo de errores "invisibles" de JavaScript.
+            console.error('Error detallado:', error); 
+
             const backendMessages = error.response?.data?.messages || error.response?.data?.message;
             let textoError = 'Ocurrió un problema al registrar el seguimiento.';
             if (backendMessages && Array.isArray(backendMessages) && backendMessages.length > 0) {

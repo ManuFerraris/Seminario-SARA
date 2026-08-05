@@ -1,4 +1,5 @@
 import { AdopcionRepository } from "../../adopcion/adopcion.repository.js";
+import { AnimalRepository } from "../../animal/animal.repository.js";
 import { Seguimiento } from "../../entities/seguimiento.entity.js";
 import { ServiceResponse } from "../../types/service.response.js";
 import { SeguimientoRepository } from "../seg.repository.js";
@@ -8,7 +9,8 @@ import { validarActualizacionSeguimiento } from "../validarActualizacionSeguimie
 export class UpdateSeguimiento {
     constructor(
         private readonly seguimientoRepository: SeguimientoRepository,
-        private readonly adopcionRepository: AdopcionRepository
+        private readonly adopcionRepository: AdopcionRepository,
+        private readonly animalRepository: AnimalRepository
     ) {}
 
     async ejecutar(id_seguimiento: number, dto: Partial<SeguimientoDTO>): Promise<ServiceResponse<Seguimiento>> {
@@ -67,7 +69,14 @@ export class UpdateSeguimiento {
         if (dto.entorno !== undefined) datosActualizados.entorno = dto.entorno.trim();
 
         await this.seguimientoRepository.updateSeguimiento(seguimiento, datosActualizados);
-
+        const animal = await this.animalRepository.getOne(adopcionReferencia.animal.nro_animal);
+        if (!animal) {
+            return { status: 404, success: false, messages: ["Animal asociado a la adopción no encontrado para cambiar estado en seguimiento."], data: undefined };
+        };
+        
+        animal.estado = dto.estado_animal!;
+        await this.animalRepository.update(animal, { estado: animal.estado });
+        
         return { 
             status: 200,
             success: true,

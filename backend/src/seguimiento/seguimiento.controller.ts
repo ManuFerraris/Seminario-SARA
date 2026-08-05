@@ -8,6 +8,7 @@ import { AdopcionRepositoryORM } from "../adopcion/adopcion.repositoryORM.js";
 import { CreateSeguimiento } from "./CU/createSeg.js";
 import { UpdateSeguimiento } from "./CU/updateSeg.js";
 import { DeleteSeguimiento } from "./CU/deleteSeg.js";
+import { AnimalRepositoryORM } from "../animal/animal.repositoryORM.js";
 
 export const findAll = async (req:Request, res:Response):Promise<void> => {
     try{
@@ -95,7 +96,8 @@ export const update = async (req:Request, res:Response):Promise<void> => {
         const em = orm.em.fork();
         const segRepo = new SeguimientoRepositoryORM(em);
         const adopcionRepo = new AdopcionRepositoryORM(em);
-        const casouso = new UpdateSeguimiento(segRepo, adopcionRepo);
+        const animalRepo = new AnimalRepositoryORM(em);
+        const casouso = new UpdateSeguimiento(segRepo, adopcionRepo, animalRepo);
 
         console.log('Nro de seguimiento recibido en el controlador:', req.params.nro_seguimiento);
         const {valor: codVal, error:codError} = validarCodigo(req.params.nro_seguimiento, 'numero de seguimiento');
