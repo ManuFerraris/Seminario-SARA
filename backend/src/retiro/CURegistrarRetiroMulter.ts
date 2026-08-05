@@ -57,7 +57,7 @@ export class RegistrarRetiroMaltratoMulter {
                 
                 // A. Actualizamos estados
                 const animal = adopcion.animal;
-                animal.estado = 'No disponible';
+                animal.estado = 'No apto';
                 emTransaccional.persist(animal);
 
                 const adoptante = adopcion.adoptante;

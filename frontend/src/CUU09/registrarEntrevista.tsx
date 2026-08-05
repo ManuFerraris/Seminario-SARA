@@ -461,14 +461,9 @@ export default function ResultadoEntrevista() {
                 />
                 <button 
                 type="button" 
-                style={{
-                    backgroundColor: '#ECF0F1', color: '#3498DB', border: '2px solid #3498DB',
-                    borderLeft: 'none', borderRadius: '0 5px 5px 0', padding: '0 20px',
-                    cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center'
-                }} 
-                onClick={handleBuscarEntrevista}
+                style={{...styles.searchButton }} onClick={handleBuscarEntrevista}
                 >
-                🔍
+                🔍 Buscar
                 </button>
             </div>
 
@@ -533,6 +528,16 @@ export default function ResultadoEntrevista() {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    searchButton: {
+        backgroundColor: '#3498DB',
+        color: '#FFF',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '0 15px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
+
     dateInput: {
         backgroundColor: '#FFFFFF', border: '1px solid #BDC3C7', borderRadius: '5px', padding: '12px', 
         marginBottom: '20px', fontSize: '14px', textAlign: 'center', 

@@ -435,14 +435,10 @@ export default function RegistrarDonacion() {
                 />
                 <button 
                 type="button" 
-                style={{
-                    backgroundColor: '#ECF0F1', color: '#3498DB', border: '2px solid #3498DB',
-                    borderLeft: 'none', borderRadius: '0 5px 5px 0', padding: '0 20px',
-                    cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center'
-                }} 
+                style={{ ...styles.searchButton}} 
                 onClick={handleBuscarDonante}
                 >
-                🔍
+                🔍 Buscar
                 </button>
             </div>
 
@@ -532,6 +528,15 @@ export default function RegistrarDonacion() {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    searchButton: {
+        backgroundColor: '#3498DB',
+        color: '#FFF',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '0 15px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
     container: {
         display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh',
         backgroundColor: '#FFFFFF', fontFamily: 'Arial, sans-serif', padding: '40px 20px',

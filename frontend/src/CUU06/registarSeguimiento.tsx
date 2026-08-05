@@ -329,22 +329,9 @@ if (currentView === 'REGISTER_SEGUIMIENTO') {
             />
             <button 
                 type="button" 
-                style={{
-                backgroundColor: '#ECF0F1',
-                color: '#3498DB',
-                border: '2px solid #3498DB',
-                borderLeft: 'none',
-                borderRadius: '0 5px 5px 0',
-                padding: '0 20px',
-                cursor: 'pointer',
-                fontSize: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-                }} 
-                onClick={handleBuscarAdopcion}
+                style={{...styles.searchButton}} onClick={handleBuscarAdopcion}
             >
-                🔍
+                🔍 Buscar
             </button>
             </div>
 
@@ -374,6 +361,16 @@ if (currentView === 'REGISTER_SEGUIMIENTO') {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    searchButton: {
+        backgroundColor: '#3498DB',
+        color: '#FFF',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '0 15px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
+
     container: {
         display: 'flex',
         flexDirection: 'column',
