@@ -41,8 +41,8 @@ app.use("/api/fichamedica", fichaMedicaRouter);
 app.use("/api/colocacion", colocacionRouter);
 app.use("/api/seguimiento", seguimientoRouter);
 app.use("/api/auth", authRouter);
-//app.use("/api/seed/veterinario", seedPersonaVeterinario);
-//app.use("/api/seed/colaborador", seedPersonaColaborador);
+app.use("/api/seed/veterinario", seedPersonaVeterinario);
+app.use("/api/seed/colaborador", seedPersonaColaborador);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:3000/`);

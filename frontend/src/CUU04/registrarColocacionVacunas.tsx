@@ -17,6 +17,7 @@ interface VacunaRow {
   nroVacuna: string;
   cantidad: string;
   stockActualizado?: number;
+  nombreVacuna?: string; // Nuevo campo para el nombre de la vacuna
 }
 
 export default function ColocacionVacunas() {
@@ -31,7 +32,7 @@ export default function ColocacionVacunas() {
 
   // Estados - Registro de Vacunas
   const [vacunas, setVacunas] = useState<VacunaRow[]>(() => [
-    { id: Date.now(), nroVacuna: '', cantidad: '' }
+    { id: Date.now(), nroVacuna: '', cantidad: '', nombreVacuna: '' }
   ]);
   
   // Estado para la fecha real de éxito
@@ -81,7 +82,7 @@ export default function ColocacionVacunas() {
   };
 
   const handleAddVacunaRow = () => {
-    setVacunas([...vacunas, { id: Date.now(), nroVacuna: '', cantidad: '' }]);
+    setVacunas([...vacunas, { id: Date.now(), nroVacuna: '', cantidad: '', nombreVacuna: '' }]);
   };
 
   const handleVacunaChange = (id: number, field: keyof VacunaRow, value: string) => {
@@ -118,6 +119,7 @@ export default function ColocacionVacunas() {
 
       // 2. Enviamos todo al backend de forma transaccional
       const response = await api.post('/colocacion/registrar', payload);
+      console.log('Respuesta del backend tras registrar colocación:', response.data);
 
       // 3. Asumimos que el backend nos devuelve el detalle con el stock actualizado
       // Ej: response.data.data.vacunas_actualizadas
@@ -128,7 +130,8 @@ export default function ColocacionVacunas() {
         const dataBack = vacunasActualizadasBack.find((vb: any) => vb.nro_vacuna.toString() === v.nroVacuna);
         return {
           ...v,
-          stockActualizado: dataBack ? dataBack.stock_actualizado : 'N/A'
+          stockActualizado: dataBack ? dataBack.stock_actualizado : 'N/A',
+          nombreVacuna: dataBack ? dataBack.nombre_vacuna : 'N/A' // Asignamos el nombre de la vacuna
         };
       });
       
@@ -151,7 +154,7 @@ export default function ColocacionVacunas() {
   const handleRegistrarMasColocaciones = () => {
     setNroFicha('');
     setFichaData(null);
-    setVacunas([{ id: Date.now(), nroVacuna: '', cantidad: '' }]);
+    setVacunas([{ id: Date.now(), nroVacuna: '', cantidad: '', nombreVacuna: '' }]);
     setCurrentView('SEARCH_FICHA');
   };
 
@@ -192,6 +195,7 @@ export default function ColocacionVacunas() {
 
           <div style={styles.tableHeader}>
             <span style={styles.columnTitle}>Nro. de Vacuna</span>
+            <span style={styles.columnTitle}>Nombre de la Vacuna</span>
             <span style={styles.columnTitle}>Cantidad de vacunas</span>
             <span style={styles.columnTitle}>Stock actualizado</span>
           </div>
@@ -199,6 +203,7 @@ export default function ColocacionVacunas() {
           {vacunas.map(v => (
             <div key={v.id} style={styles.tableRow}>
               <div style={styles.readOnlyBoxSmall}>{v.nroVacuna}</div>
+              <div style={styles.readOnlyBoxSmall}>{v.nombreVacuna}</div>
               <div style={styles.readOnlyBoxSmall}>{v.cantidad}</div>
               <div style={styles.readOnlyBoxSmall}>{v.stockActualizado}</div>
             </div>

@@ -209,6 +209,14 @@ export default function RegistrarDonacion() {
                 // Si tu backend devuelve el stock actualizado para las vacunas, lo guardamos
                 stock_actualizado: dataBack.stock_actualizado
             });
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: response.data.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            setCurrentView('SUCCESS');
         } catch (error: any) {
             console.error('Error capturado por Axios:', error);
 

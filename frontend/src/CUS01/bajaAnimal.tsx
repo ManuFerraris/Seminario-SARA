@@ -18,7 +18,8 @@ export default function BajaAnimal() {
     try {
       // 1. Armamos el payload (la fecha del input type="date" viene en formato YYYY-MM-DD)
       const payload = {
-        fecha_defuncion: fechaDefuncion
+        fecha_defuncion: fechaDefuncion,
+        estado: 'Fallecido'
       };
 
       // 2. Disparamos la petición al backend
