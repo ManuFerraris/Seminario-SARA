@@ -62,31 +62,31 @@ export default function RegistrarSeguimiento() {
             const datosAdopcion = response.data.data;
             console.log('Datos de adopción recibidos del backend:', datosAdopcion);
 
-            // 1. Verificamos que la adopción traiga un seguimiento pendiente
-            if (!datosAdopcion.seguimiento_pendiente_id) {
+            // 1. Buscamos el primer seguimiento que esté pendiente en el array devuelto
+            // Para asegurar el orden, podrías ordenar el array por fecha si hiciera falta, 
+            // pero el find() agarrará el primero que cumpla la condición.
+            const seguimientoPendiente = datosAdopcion.seguimientos?.find(
+                (seg: any) => seg.estado_animal === 'Pendiente Revision' || seg.estado_animal === 'Pendiente'
+            );
+
+            // 2. Si no encontramos NINGÚN seguimiento pendiente, disparamos la alerta
+            if (!seguimientoPendiente) {
                 Swal.fire({
                     icon: 'info',
-                    title: 'Sin seguimientos',
-                    text: 'Esta adopción no tiene seguimientos pendientes programados.',
+                    title: 'Sin seguimientos pendientes',
+                    text: 'Esta adopción no tiene seguimientos pendientes programados o ya fueron todos completados.',
                     confirmButtonColor: '#3498DB',
                 });
                 return;
             }
 
-            // 2. Buscamos el objeto de seguimiento específico dentro del array
-            const seguimientoPendiente = datosAdopcion.seguimientos.find(
-                (seg: any) => seg.id_seguimiento === datosAdopcion.seguimiento_pendiente_id
-            );
+            // 3. Seteamos la fecha basándonos en el seguimiento encontrado
+            setFecha(seguimientoPendiente.fecha_seguimiento);
 
-            // 3. Si lo encontramos, seteamos la fecha. Si por alguna razón falla, evitamos que la app crashee.
-            if (seguimientoPendiente) {
-                setFecha(seguimientoPendiente.fecha_seguimiento);
-            }
+            // 4. Guardamos el ID del seguimiento encontrado para el PUT posterior
+            setIdSeguimientoPendiente(seguimientoPendiente.id_seguimiento);
 
-            // 4. Guardamos el ID para el PUT posterior
-            setIdSeguimientoPendiente(datosAdopcion.seguimiento_pendiente_id);
-
-            // 5. Seteamos los datos visuales
+            // 5. Seteamos los datos visuales del animal y adoptante
             setAdopcionData({
                 nombreAdoptante: datosAdopcion.adoptante.persona.nombre,
                 apellidoAdoptante: datosAdopcion.adoptante.persona.apellido,
@@ -274,7 +274,7 @@ if (currentView === 'REGISTER_SEGUIMIENTO') {
                 required 
             />
 
-            <label style={styles.labelCentered}>Seleccione el estado del animal</label>
+            <label style={styles.labelCentered}>Seleccione el estado del seguimiento</label>
             <select 
                 style={styles.selectInput} 
                 value={estadoAnimal} 
@@ -329,22 +329,9 @@ if (currentView === 'REGISTER_SEGUIMIENTO') {
             />
             <button 
                 type="button" 
-                style={{
-                backgroundColor: '#ECF0F1',
-                color: '#3498DB',
-                border: '2px solid #3498DB',
-                borderLeft: 'none',
-                borderRadius: '0 5px 5px 0',
-                padding: '0 20px',
-                cursor: 'pointer',
-                fontSize: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-                }} 
-                onClick={handleBuscarAdopcion}
+                style={{...styles.searchButton}} onClick={handleBuscarAdopcion}
             >
-                🔍
+                🔍 Buscar
             </button>
             </div>
 
@@ -374,6 +361,16 @@ if (currentView === 'REGISTER_SEGUIMIENTO') {
     // ESTILOS
     // -------------------------------------------------------------------------
     const styles: { [key: string]: React.CSSProperties } = {
+    searchButton: {
+        backgroundColor: '#3498DB',
+        color: '#FFF',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '0 15px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+    },
+
     container: {
         display: 'flex',
         flexDirection: 'column',

@@ -71,7 +71,8 @@ export class RegistrarColocacionesMasivas {
                     // Preparamos la respuesta que espera tu frontend
                     vacunasActualizadas.push({
                         nro_vacuna: vacuna.nro_vacuna,
-                        stock_actualizado: vacuna.stock
+                        stock_actualizado: vacuna.stock,
+                        nombre_vacuna: vacuna.droga
                     });
                 }
             });

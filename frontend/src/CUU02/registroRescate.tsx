@@ -332,7 +332,7 @@ export default function RegistroRescate() {
                 }} 
                 onClick={handleBuscarDNI}
                 >
-                🔍
+                🔍Buscar
                 </button>
             </div>
 
