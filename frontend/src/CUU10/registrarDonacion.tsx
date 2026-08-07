@@ -69,6 +69,7 @@ export default function RegistrarDonacion() {
             
         } catch (error: any) {
             setDonorFound(false);
+            console.log('Error al buscar el donante:', error.response);
             
             // Si devuelve 404 (o el código que uses para no encontrado)
             Swal.fire({
@@ -198,6 +199,13 @@ export default function RegistrarDonacion() {
             console.log('Respuesta del backend al registrar donación:', response.data);
             const dataBack = response.data.data;
 
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: response.data.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
             // Guardamos los datos para la vista de éxito
             setDatosExito({
                 nro_donacion: dataBack.nro_donacion || dataBack.id_donacion,
@@ -209,6 +217,7 @@ export default function RegistrarDonacion() {
                 // Si tu backend devuelve el stock actualizado para las vacunas, lo guardamos
                 stock_actualizado: dataBack.stock_actualizado
             });
+
         } catch (error: any) {
             console.error('Error capturado por Axios:', error);
 

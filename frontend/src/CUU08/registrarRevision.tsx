@@ -128,7 +128,7 @@ export default function RegistrarRevision() {
             const payload = {
                 nro_animal: parseInt(nroAnimal, 10),
                 observaciones: observaciones,
-                estado: 'Apto para vacunar',
+                estado: estadoAnimal,
                 dni_veterinario: obtenerDniDelToken()
             };
 

@@ -170,8 +170,9 @@ export const gestionPersonal = async (req:Request, res:Response):Promise<void> =
         const personaRepo = new PersonaRepositoryORM(em);
         const veterinarioRepo = new VeterinarioRepositoryORM(em);
         const colaboradorRepo = new ColaboradorRepositoryORM(em);
+        const adoptanteRepo = new AdoptanteRepositoryORM(em);
 
-        const casouso = new GestionPersonal(personaRepo, veterinarioRepo, colaboradorRepo);
+        const casouso = new GestionPersonal(personaRepo, veterinarioRepo, colaboradorRepo, adoptanteRepo);
 
         const payload = req.body;
         console.log('Payload recibido en el controlador:', payload);

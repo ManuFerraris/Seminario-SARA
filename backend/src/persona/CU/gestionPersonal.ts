@@ -7,6 +7,8 @@ import { validarCreacionPersona } from "../validarCreacionPersona.js";
 import { Veterinario } from '../../entities/veterinario.entity.js';
 import { Colaborador } from '../../entities/colaborador.entity.js';
 import { Persona } from '../../entities/persona.entity.js';
+import { Adoptante } from '../../entities/adoptante.entity.js';
+import { AdoptanteRepository } from '../ado.repository.js';
 
 interface payloadFront {
     dni: string,
@@ -27,7 +29,8 @@ export class GestionPersonal {
     constructor(
         private readonly personaRepository: PersonaRepository,
         private readonly veterinarioRepository: VeterinarioRepository,
-        private readonly colaboradorRepository: ColaboradorRepository
+        private readonly colaboradorRepository: ColaboradorRepository,
+        private readonly adoptanteRepository: AdoptanteRepository
     ) {}
 
     async ejecutar(payload: payloadFront): Promise<ServiceResponse<Persona | Veterinario | Colaborador>> {
@@ -43,6 +46,30 @@ export class GestionPersonal {
                 data: undefined
             };
         }
+
+        // --- SOLUCIÓN: VALIDACIÓN GLOBAL DE MATRÍCULA ---
+        // Lo verificamos primero, antes de crear o actualizar nada.
+        if (payload.isVeterinario) {
+            if (!payload.matricula) {
+                return {
+                    status: 400,
+                    success: false,
+                    messages: ["La matrícula es obligatoria para registrar un veterinario"],
+                    data: undefined
+                };
+            }
+
+            const vetExistente = await this.veterinarioRepository.findOne(payload.matricula);
+            if (vetExistente) {
+                return {
+                    status: 400,
+                    success: false,
+                    messages: ["Ya existe un veterinario registrado con esa matrícula"],
+                    data: undefined
+                };
+            }
+        }
+        // ------------------------------------------------
         
         const personaExistente = await this.personaRepository.findOne(payload.dni);
         let personaTarget: Persona;
@@ -99,6 +126,8 @@ export class GestionPersonal {
                 };
             }
 
+            // Ya no buscamos la matricula aquí porque lo hicimos arriba
+
             const SALT_ROUNDS = 10;
             const hashedPassword = await bcrypt.hash(payload.contrasenia, SALT_ROUNDS);
             
@@ -133,9 +162,16 @@ export class GestionPersonal {
             resultados.push("Colaborador creado exitosamente");
         }
 
+        const adoptanteExistente = await this.adoptanteRepository.findOneByPersona(personaTarget);
+        if (!adoptanteExistente) {
+            const nuevoAdoptante = new Adoptante();
+            nuevoAdoptante.persona = personaTarget;
+            nuevoAdoptante.estado = 'Apto'; // Pre-aprobado
+            await this.adoptanteRepository.create(nuevoAdoptante);
+        }
+
         // 5. Retorno Exitoso
         return {
-            // Si la persona ya existía, semánticamente es un 200 OK (actualización). Si es nueva, 201 Created.
             status: personaExistente ? 200 : 201, 
             success: true,
             messages: resultados,

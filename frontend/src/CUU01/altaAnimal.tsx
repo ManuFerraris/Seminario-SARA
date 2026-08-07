@@ -45,6 +45,7 @@ export default function AltaAnimal() {
 
     } catch (error: any) {
       setAnimalData(null);
+      console.log('Error al buscar el animal:', error.response);
       // Si el backend devuelve 404 u otro error
       Swal.fire({
         icon: 'warning',
