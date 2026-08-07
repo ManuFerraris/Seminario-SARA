@@ -40,6 +40,13 @@ export default function AltaEntrevista() {
   const [cargandoAnimales, setCargandoAnimales] = useState(false);
   const [datosExito, setDatosExito] = useState<EntrevistaExitosa | null>(null);
 
+  const horariosDisponibles = [];
+  for (let i = 8; i <= 20; i++) {
+    const hora = i.toString().padStart(2, '0');
+    horariosDisponibles.push(`${hora}:00`);
+    horariosDisponibles.push(`${hora}:30`);
+  }
+
   const obtenerDniDelToken = (): string | null => {
     const token = localStorage.getItem('token');
     if (!token) return null;
@@ -271,13 +278,19 @@ export default function AltaEntrevista() {
           />
 
           <label style={styles.labelCentered}>Seleccionar el horario</label>
-          <input 
+          <select 
             style={styles.input} 
-            type="time" 
             value={horaEntrevista} 
             onChange={e => setHoraEntrevista(e.target.value)} 
             required 
-          />
+          >
+            <option value="" disabled>Seleccione un horario</option>
+            {horariosDisponibles.map((horario) => (
+              <option key={horario} value={horario}>
+                {horario} hs
+              </option>
+            ))}
+          </select>
 
           <button type="submit" style={styles.buttonSubmit}>
             Confirmar fecha y hora

@@ -63,6 +63,14 @@ export default function ResultadoEntrevista() {
     const [nuevaFecha, setNuevaFecha] = useState('');
     const [nuevaHora, setNuevaHora] = useState('');
 
+    // Generamos un array con los horarios (ej: de 08:00 a 20:00 cada media hora)
+    const horariosDisponibles = [];
+    for (let i = 8; i <= 20; i++) {
+        const hora = i.toString().padStart(2, '0');
+        horariosDisponibles.push(`${hora}:00`);
+        horariosDisponibles.push(`${hora}:30`);
+    }
+
     // -------------------------------------------------------------------------
     // FORMATEADORES
     // -------------------------------------------------------------------------
@@ -287,7 +295,8 @@ export default function ResultadoEntrevista() {
             doc.setFont("helvetica", "normal");
             doc.setFontSize(12);
             doc.text(`Nro. de Adopción: ${datosExito.nro_adopcion}`, 20, 35);
-            doc.text(`Fecha de Adopción: ${datosExito.fecha_adopcion}`, 20, 42);
+            const fechaAdopcionLimpia = formatearFecha(datosExito.fecha_adopcion);
+            doc.text(`Fecha de Adopción: ${fechaAdopcionLimpia}`, 20, 42);
     
             // 4. Línea separadora
             doc.line(20, 48, 190, 48); 
@@ -358,7 +367,19 @@ export default function ResultadoEntrevista() {
             <label style={styles.labelCentered}>Fecha de reprogramacion</label>
             <input style={styles.dateInput} type="date" value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} required />
             <label style={styles.labelCentered}>Hora de reprogramacion</label>
-            <input style={styles.dateInput} type="time" value={nuevaHora} onChange={e => setNuevaHora(e.target.value)} required />
+            <select 
+                style={styles.dateInput} // Puedes mantener el mismo estilo para que coincida con la fecha
+                value={nuevaHora} 
+                onChange={e => setNuevaHora(e.target.value)} 
+                required 
+            >
+                <option value="" disabled>Seleccione un horario</option>
+                {horariosDisponibles.map((horario) => (
+                    <option key={horario} value={horario}>
+                        {horario} hs
+                    </option>
+                ))}
+            </select>
             <button type="submit" style={styles.buttonSubmit}>Confirmar reprogramacion</button>
             </form>
         </div>
@@ -412,7 +433,7 @@ export default function ResultadoEntrevista() {
             </div>
             <div style={styles.successCard}>
 
-            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha y hora</span><span style={styles.infoValue}>{entrevistaData.fecha_hora}</span></div>
+            <div style={styles.infoRow}><span style={styles.infoLabel}>Fecha y hora</span><span style={styles.infoValue}>{entrevistaData.fecha} a las {entrevistaData.hora} hs</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Entrevista</span><span style={styles.infoValue}>{id_entrevista}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. Colaborador asig.</span><span style={styles.infoValue}>{entrevistaData.id_colaborador}</span></div>
             <div style={styles.infoRow}><span style={styles.infoLabel}>Nro. DNI adoptante</span><span style={styles.infoValue}>{entrevistaData.dniAdoptante}</span></div>
@@ -471,7 +492,7 @@ export default function ResultadoEntrevista() {
                 <form onSubmit={handleRegistrarResultado} style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
                     <label style={styles.labelCentered}>Fecha y hora de la entrevista</label>
-                    <input style={styles.inputReadOnly} type="text" value={entrevistaData.fecha_hora} readOnly />
+                    <input style={styles.inputReadOnly} type="text" value={`${entrevistaData.fecha} a las ${entrevistaData.hora} hs`} readOnly />
                 </div>
 
                 <div style={styles.grid2Cols}>

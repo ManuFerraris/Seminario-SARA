@@ -28,6 +28,28 @@ export default function AltaAnimal() {
       // Asumimos que tu backend devuelve { success: true, data: { ...animal } }
       const animal = response.data.data;
 
+      if(animal.estado === 'Disponible') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Atención',
+          text: `El animal con el número ${numeroBusqueda} ya está disponible para adopción.`,
+          confirmButtonColor: '#3498DB',
+        });
+        setAnimalData(null);
+        return;
+      }
+
+      if(animal.estado !== 'Apto para vacunar') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Atención',
+          text: `El animal con el número ${numeroBusqueda} debe pasar por la revisión médica primero.`,
+          confirmButtonColor: '#3498DB',
+        });
+        setAnimalData(null);
+        return;
+      }
+
       // 2. Mapeamos los datos reales al estado
       setAnimalData({
         especie: animal.especie,
